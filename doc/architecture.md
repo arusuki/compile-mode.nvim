@@ -37,7 +37,8 @@ flowchart TD
     run --> job[runner.run_job: jobstart]
     job --> chunk[stdout / stderr callback]
     chunk --> queue[bounded memory queue with temporary-file overflow]
-    queue --> normalize[output.normalize]
+    queue --> stream[per-stream collector: retain fragments and bound prefix replay]
+    stream --> normalize[output.normalize]
     normalize --> limit[stream tail placement and output budget]
     limit --> ansi[ansi.buf_set_lines: escapes and buffer write]
     ansi --> wait[scheduled continuation]
@@ -56,7 +57,7 @@ preparation can yield. Resumed work checks that it still owns that session.
 It expands the command if requested, opens or reuses the compilation buffer,
 writes the header, and starts the job. `run_job` owns the callback-data count,
 pending queue, consumer flag, exit status and line-limit flag. Stdout and stderr
-have independent unfinished text, output-row locations and ANSI contexts.
+have independent output collectors, published-row locations and ANSI contexts.
 `Compile!` waits through `jobwait`; normal compilation runs asynchronously.
 
 Callbacks enqueue raw data. The queue retains approximately 1 MiB of accounted
@@ -64,16 +65,27 @@ data or 1,024 records in Lua memory, then appends overflow to a FIFO temporary
 file. Records are encoded separately without constructing a second complete
 callback string. Completion, cancellation and failures close the temporary file;
 I/O errors fail the compilation explicitly. The bound applies to retained queue
-data, not to the callback table Neovim has already allocated, a single oversized
-line being processed, or output retained in the buffer.
+data, not to the callback table Neovim has already allocated, unfinished stream
+tails, a single oversized line being processed, or output retained in the buffer.
 
 One consumer combines adjacent tails from the same stream with linear fragment
 concatenation, and takes approximately 128 callback line entries
 or approximately 64 KiB per batch (plus a trailing empty line when splitting a
 callback). These are soft bounds: a single entry can exceed the byte limit.
-Normalization precedes ANSI processing. Without hidden-output patterns, its tail
-retains only the last visible CR segment and one pending CR. Arbitrary hidden
-patterns can span CR boundaries, so that path retains the raw tail for replay.
+Each stream's collector stores its last published raw tail and unpublished
+fragments separately. Up to 64 KiB, batches stay live. Longer unfinished lines
+publish only when retained raw bytes double, a newline arrives, or the process
+exits. Deferred batches skip normalization, ANSI rendering, buffer writes and
+parsing. This bounds cumulative prefix replay by a fixed short-line budget plus
+O(N); it delays intermediate display without truncating final output.
+
+Normalization precedes ANSI processing and is the single owner of replay
+metadata. Without hidden-output patterns, the collector detects an effective
+CR overwrite and publishes its pending bytes once, allowing normalization and
+ANSI processing to consume discarded controls before compacting the tail to its
+last visible segment and one pending CR. Pure trailing CRs do not repeatedly
+force large snapshots. Arbitrary hidden patterns can span CR boundaries, so that
+path retains raw history and schedules snapshots by its length before filtering.
 Both forms contain partial escape bytes. Normalization also describes reused
 prefix bytes, newly effective CR overwrites, and controls discarded before a CR.
 The ANSI writer reuses handler results only for replayed events; new OSC events
@@ -97,11 +109,14 @@ skip error, directory and command-prefix recognition. Zero disables that bound.
 `_parse_errors` invokes both stages synchronously.
 Rescanning a full edited log also removes metadata beyond its new end.
 
-Process exit records a status; completion waits until the consumer and queue are
-empty. `runner.run` then checks job ownership, flushes pending ANSI text, appends
+Process exit records a status; completion waits until the consumer, queue and both
+collectors' deferred tails are drained. EOF snapshots use the same bounded
+consumer and parsing path, including when output from the other stream has moved
+an unfinished row away from the buffer end. `runner.run` then checks job ownership,
+flushes pending ANSI text, appends
 the footer, updates status, and emits `CompilationFinished`. Explicit interruption
 revokes ownership before yielding and emits `CompilationInterrupted`; obsolete
-queued output is discarded. Job deletion handlers are removed on completion.
+queued output and deferred tails are discarded. Job deletion handlers are removed on completion.
 Starting a replacement command does not impose a fixed one-second delay.
 Startup and consumer failures publish a nonzero completion status; cancelled
 sessions cannot publish a later completion into the replacement session.
@@ -187,7 +202,7 @@ Use the following functions to isolate costs before choosing an optimization.
 
 | Area | Entry points | Useful workload dimensions |
 | --- | --- | --- |
-| Text preparation | `output.normalize`, `output.limit` | Bytes/chunk, chunk count, partial-line splits, hidden patterns, CR/NUL content, output limit |
+| Text preparation | `output.new_stream`, `output.normalize`, `output.limit` | Bytes/chunk, chunk count, partial-line splits, retained raw bytes, hidden patterns, CR/NUL content, output limit |
 | Error recognition | `errors.parse`, `utils.matchlistpos` | Matching/nonmatching lines, line length, matcher count/order, exclusions, cold/warm regex caches |
 | Range scanning | `parser.scan` | Lines/range, accumulated errors, directory messages, command prefixes; disable auto-jump to exclude source navigation |
 | Error rendering | `parser.render`, `errors.highlight`, `utils.add_highlight` | New and accumulated errors, extmark count, already-highlighted versus fresh errors |
@@ -233,11 +248,11 @@ buffer responsiveness in a real editor as a separate workload.
 - The batch byte budget cannot interrupt a single expensive Vim regex call.
   The line-length bound limits input to parsing, but does not bound buffer writes,
   ANSI rendering, or arbitrary custom regex complexity below that threshold.
-  `max_lines` remains the finite-output guard. Growing lines without newlines
-  still replay and rewrite their whole tail, with quadratic cumulative work;
-  hidden patterns may also retain old CR history. This audit deliberately leaves
-  that long-line algorithm unchanged. Temporary-file overflow bounds the pending
-  memory queue, but does not bound total disk use or retained buffer output.
+  `max_lines` remains the finite-output guard. Geometric snapshots bound repeated
+  prefix replay, not unfinished-tail memory, arbitrary regex complexity, or the
+  latency of a final huge write. Hidden patterns may retain old CR history.
+  Temporary-file overflow bounds the pending callback queue, but does not bound
+  total disk use or retained buffer output. See [long-line measurements](long-lines.md).
 
 ## Validation map
 
@@ -247,8 +262,8 @@ can be run as `make test/output` or `make test/parser`.
 
 | Behavior | Existing/focused suites in `spec/` |
 | --- | --- |
-| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command`, `runner`, `runner_review`, `runner_lifecycle`, `audit_integration` |
-| Output and escapes | `output`, `output_queue`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi`, `ansi_lifecycle`, `ansi_stream`, `ftplugin` |
+| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command`, `runner`, `runner_review`, `runner_lifecycle`, `audit_integration`, `long_output` |
+| Output and escapes | `output`, `output_stream`, `output_queue`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi`, `ansi_lifecycle`, `ansi_stream`, `ftplugin` |
 | Parsing and navigation | `parser`, `error`, `threshold`, `auto_jump`, `matcher_optimization`, `diagnostics`, `metadata_audit`, `log_updates` |
 | Directory and environment | `directory_change`, `compilation_directory`, `environment` |
 | Scrolling | `auto_scroll` |

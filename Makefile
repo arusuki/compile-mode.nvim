@@ -42,7 +42,7 @@ setup-ci:
 	@echo "===> Set Up CI"
 	nvim --headless --clean -u spec/configs/ci.vim -c "q"
 
-.PHONY: issues bench
+.PHONY: issues bench bench-long-lines
 
 # Standalone assertions of issue expectations; exits nonzero for reproduced bugs.
 issues:
@@ -51,3 +51,7 @@ issues:
 # Separate from correctness tests: timing thresholds are machine-dependent.
 bench:
 	$(PYTHON) scripts/run_checks.py benchmark $(CHECK_ARGS)
+
+# Fragmented long-line scaling, including work-count correctness assertions.
+bench-long-lines:
+	$(PYTHON) scripts/run_checks.py long_lines $(CHECK_ARGS)

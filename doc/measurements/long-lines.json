@@ -1,0 +1,358 @@
+{
+  "baseline": "f7d20fa968e23e8a3787d613cdcff263c2252bd7",
+  "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+  "nvim": [
+    "NVIM v0.12.5",
+    "Build type: Release",
+    "LuaJIT 2.1.1788856981"
+  ],
+  "samples": 5,
+  "warmups": 1,
+  "results": {
+    "before": [
+      {
+        "median_ms": 37.3495,
+        "p95_ms": 40.566625,
+        "retained_lua_kib": [
+          315.1015625,
+          315.0546875,
+          314.8359375,
+          314.02734375,
+          314.05859375
+        ],
+        "fragment_bytes": 256,
+        "name": "normalization/1000",
+        "stream": false,
+        "passed": true,
+        "replayed_bytes": 128128000,
+        "writes": 1000,
+        "input_bytes": 256000,
+        "units": 1000,
+        "samples_ms": [
+          34.8845,
+          37.525541,
+          37.3495,
+          35.889875,
+          40.566625
+        ]
+      },
+      {
+        "stream": false,
+        "retained_lua_kib": [
+          629.1015625,
+          632.03125,
+          628.04296875,
+          628.02734375,
+          628.05859375
+        ],
+        "replayed_bytes": 512256000,
+        "name": "normalization/2000",
+        "input_bytes": 512000,
+        "samples_ms": [
+          154.382959,
+          158.684458,
+          152.825625,
+          148.175333,
+          132.326334
+        ],
+        "median_ms": 152.825625,
+        "p95_ms": 158.684458,
+        "fragment_bytes": 256,
+        "passed": true,
+        "writes": 2000,
+        "units": 2000
+      },
+      {
+        "name": "normalization/4000",
+        "units": 4000,
+        "passed": true,
+        "replayed_bytes": 2048512000,
+        "writes": 4000,
+        "stream": false,
+        "median_ms": 497.103584,
+        "p95_ms": 634.412792,
+        "samples_ms": [
+          634.412792,
+          598.045,
+          497.103584,
+          370.580667,
+          337.063708
+        ],
+        "input_bytes": 1024000,
+        "fragment_bytes": 256,
+        "retained_lua_kib": [
+          1260.0546875,
+          1258.08203125,
+          1256.04296875,
+          1256.02734375,
+          1256.6953125
+        ]
+      },
+      {
+        "passed": true,
+        "stream": false,
+        "writes": 1000,
+        "samples_ms": [
+          4388.663458,
+          4508.39625,
+          4225.698792,
+          4235.607166,
+          4232.971875
+        ],
+        "name": "pipeline/1000",
+        "p95_ms": 4508.39625,
+        "retained_lua_kib": [
+          86.1103515625,
+          81.7783203125,
+          72.6572265625,
+          73.7666015625,
+          76.5634765625
+        ],
+        "replayed_bytes": 128128000,
+        "median_ms": 4235.607166,
+        "units": 1000,
+        "input_bytes": 256000,
+        "fragment_bytes": 256
+      },
+      {
+        "replayed_bytes": 512256000,
+        "units": 2000,
+        "stream": false,
+        "passed": true,
+        "writes": 2000,
+        "name": "pipeline/2000",
+        "median_ms": 15778.868459,
+        "p95_ms": 16101.67275,
+        "samples_ms": [
+          15726.609167,
+          15758.352625,
+          15791.886083,
+          16101.67275,
+          15778.868459
+        ],
+        "input_bytes": 512000,
+        "fragment_bytes": 256,
+        "retained_lua_kib": [
+          139.05078125,
+          148.3291015625,
+          136.2236328125,
+          136.7197265625,
+          139.7392578125
+        ]
+      },
+      {
+        "name": "pipeline/4000",
+        "skipped": "Omitted after the 2000-fragment baseline pipeline took 15.78 seconds per sample."
+      }
+    ],
+    "after": [
+      {
+        "samples_ms": [
+          7.485333,
+          7.990625,
+          7.654667,
+          7.762416,
+          7.875959
+        ],
+        "input_bytes": 256000,
+        "fragment_bytes": 256,
+        "name": "normalization/1000",
+        "units": 1000,
+        "passed": true,
+        "writes": 258,
+        "replayed_bytes": 8808448,
+        "retained_lua_kib": [
+          73.7421875,
+          73.39453125,
+          64.015625,
+          64,
+          64.03125
+        ],
+        "stream": true,
+        "p95_ms": 7.990625,
+        "median_ms": 7.762416
+      },
+      {
+        "name": "normalization/2000",
+        "replayed_bytes": 9326592,
+        "samples_ms": [
+          13.27975,
+          13.795833,
+          13.204167,
+          12.936,
+          12.897667
+        ],
+        "median_ms": 13.204167,
+        "p95_ms": 13.795833,
+        "retained_lua_kib": [
+          137.98046875,
+          134.8828125,
+          128.015625,
+          129.1796875,
+          128.03125
+        ],
+        "input_bytes": 512000,
+        "fragment_bytes": 256,
+        "passed": true,
+        "stream": true,
+        "writes": 259,
+        "units": 2000
+      },
+      {
+        "passed": true,
+        "samples_ms": [
+          26.176041,
+          25.09175,
+          24.213833,
+          23.959667,
+          24.649125
+        ],
+        "median_ms": 24.649125,
+        "p95_ms": 26.176041,
+        "retained_lua_kib": [
+          263.77734375,
+          266.61328125,
+          256.015625,
+          256,
+          257.46484375
+        ],
+        "fragment_bytes": 256,
+        "name": "normalization/4000",
+        "replayed_bytes": 10362880,
+        "stream": true,
+        "writes": 260,
+        "units": 4000,
+        "input_bytes": 1024000
+      },
+      {
+        "passed": true,
+        "input_bytes": 256000,
+        "fragment_bytes": 256,
+        "replayed_bytes": 8808448,
+        "writes": 258,
+        "samples_ms": [
+          743.837667,
+          690.304,
+          686.055042,
+          687.100917,
+          685.922042
+        ],
+        "median_ms": 687.100917,
+        "p95_ms": 743.837667,
+        "retained_lua_kib": [
+          99.7822265625,
+          89.3134765625,
+          73.7314453125,
+          74.1728515625,
+          76.9853515625
+        ],
+        "stream": true,
+        "units": 1000,
+        "name": "pipeline/1000"
+      },
+      {
+        "retained_lua_kib": [
+          150.6796875,
+          155.5947265625,
+          139.4267578125,
+          141.2470703125,
+          145.2158203125
+        ],
+        "name": "pipeline/2000",
+        "units": 2000,
+        "passed": true,
+        "stream": true,
+        "writes": 259,
+        "input_bytes": 512000,
+        "fragment_bytes": 256,
+        "replayed_bytes": 9326592,
+        "samples_ms": [
+          734.44325,
+          714.553542,
+          716.115417,
+          733.650084,
+          781.772292
+        ],
+        "median_ms": 733.650084,
+        "p95_ms": 781.772292
+      },
+      {
+        "replayed_bytes": 10362880,
+        "name": "pipeline/4000",
+        "median_ms": 798.030709,
+        "input_bytes": 1024000,
+        "retained_lua_kib": [
+          278.4921875,
+          274.6171875,
+          259.75,
+          260.3125,
+          260.9453125
+        ],
+        "passed": true,
+        "stream": true,
+        "units": 4000,
+        "writes": 260,
+        "p95_ms": 869.95125,
+        "samples_ms": [
+          869.95125,
+          860.478959,
+          798.030709,
+          791.488792,
+          790.522875
+        ],
+        "fragment_bytes": 256
+      }
+    ]
+  },
+  "runtime_hashes": {
+    "before": {
+      "lua/compile-mode/window_highlights.lua": "97b96b586c024a252894cc6d8d8012f373f7c7d023f6c446993e7981d27ff658",
+      "lua/compile-mode/init.lua": "b95528c0eb03cb93ef62baa08856868101c291691456890b467527dae8004339",
+      "lua/compile-mode/statusline.lua": "6c6be8a4aa7437f8533183a21c822897725739477afc4fa0033951d1ef027f40",
+      "lua/compile-mode/parser.lua": "6787983c95833c8a971e315d6b69706c0ae1486ca0a6e7c73bb2b38e0899c302",
+      "lua/compile-mode/health.lua": "f6a4b22a1e12a5d5ec4f0c41dda1a9931f14846dc8dd9f7fd9f23a5a3a1a9561",
+      "lua/compile-mode/ansi.lua": "d6b5dd07ef9b18a786c478d971d14d35876a1203cb8795f6894338c66fd29ec6",
+      "lua/compile-mode/ansi_fast.lua": "328094c2dfac2959822a671d7c2fe9fe13f3d4db7e20d0f12b5b090c909bf4f5",
+      "lua/compile-mode/dir.lua": "62922aa4ae4cad89ca9c14c1c6d1375d00e9509a370adba5d8f31c1d4e74ed2c",
+      "lua/compile-mode/constants.lua": "953850663528ee715d5955152b768e0715a1afc538733195775bdbfd20816cac",
+      "lua/compile-mode/state.lua": "c40cb8c1e59687dad590cb4104ac226e6bb920e2167718f9c8e65ccde861505c",
+      "lua/compile-mode/output.lua": "8b1cb9324aef6ff64a317eb5b8e33e753b2142bce20689b8c9f95eac85a05038",
+      "lua/compile-mode/buffer.lua": "e903ca43c859607166d6056b3e04bf1bbdbad286dce089350ebdf7c05cbd7622",
+      "lua/compile-mode/log.lua": "21aaff9bb49471c8d8e82722bd14f4af5472aeba232e7f08cd63b0ad2ad4c582",
+      "lua/compile-mode/utils.lua": "49fe95a7f100ad186c65e6631755a9b1990cf2359154b9adef23cec66f430f44",
+      "lua/compile-mode/navigation.lua": "e9d62efe757bf9934713b89f8b8db1f08acf546cb3bea649151591ff5655e6ef",
+      "lua/compile-mode/runner.lua": "283441b2821860c7483f7539924b4b55b0012a8cee111a0ff0971e1263ccef11"
+    },
+    "after": {
+      "lua/compile-mode/window_highlights.lua": "97b96b586c024a252894cc6d8d8012f373f7c7d023f6c446993e7981d27ff658",
+      "lua/compile-mode/init.lua": "b95528c0eb03cb93ef62baa08856868101c291691456890b467527dae8004339",
+      "lua/compile-mode/statusline.lua": "6c6be8a4aa7437f8533183a21c822897725739477afc4fa0033951d1ef027f40",
+      "lua/compile-mode/parser.lua": "6787983c95833c8a971e315d6b69706c0ae1486ca0a6e7c73bb2b38e0899c302",
+      "lua/compile-mode/health.lua": "f6a4b22a1e12a5d5ec4f0c41dda1a9931f14846dc8dd9f7fd9f23a5a3a1a9561",
+      "lua/compile-mode/ansi.lua": "d6b5dd07ef9b18a786c478d971d14d35876a1203cb8795f6894338c66fd29ec6",
+      "lua/compile-mode/ansi_fast.lua": "328094c2dfac2959822a671d7c2fe9fe13f3d4db7e20d0f12b5b090c909bf4f5",
+      "lua/compile-mode/dir.lua": "62922aa4ae4cad89ca9c14c1c6d1375d00e9509a370adba5d8f31c1d4e74ed2c",
+      "lua/compile-mode/constants.lua": "953850663528ee715d5955152b768e0715a1afc538733195775bdbfd20816cac",
+      "lua/compile-mode/state.lua": "c40cb8c1e59687dad590cb4104ac226e6bb920e2167718f9c8e65ccde861505c",
+      "lua/compile-mode/output.lua": "5761ab204e1d793abf74f5f7a7437bac1a48fed6aa9865e2abb65ddeee4ad121",
+      "lua/compile-mode/buffer.lua": "e903ca43c859607166d6056b3e04bf1bbdbad286dce089350ebdf7c05cbd7622",
+      "lua/compile-mode/log.lua": "21aaff9bb49471c8d8e82722bd14f4af5472aeba232e7f08cd63b0ad2ad4c582",
+      "lua/compile-mode/utils.lua": "49fe95a7f100ad186c65e6631755a9b1990cf2359154b9adef23cec66f430f44",
+      "lua/compile-mode/navigation.lua": "e9d62efe757bf9934713b89f8b8db1f08acf546cb3bea649151591ff5655e6ef",
+      "lua/compile-mode/runner.lua": "989b20ec71e6249151f8895dfcc292aa0d3b86726191987def0ba4f712c681df"
+    }
+  },
+  "recorded_at": "2026-11-06T20:24:54.468687+00:00",
+  "benchmark_sha256": "5007fed9fd1356f8068440811fc4983980d570ae212c1370d4b659ddb8bdd44b",
+  "notes": [
+    "Each measured case ran in its own clean headless Neovim, with one warmup and five samples.",
+    "Pipeline callbacks are deterministic mocks separated by scheduled drains, and use the actual runner/ANSI/buffer/parser path. Child process startup is excluded.",
+    "Baseline pipeline/4000 was stopped and omitted after pipeline/2000 took 15.78 seconds per sample; no extrapolated wall time is reported.",
+    "The final optimized measurements were run after stopping the baseline high-point process; preliminary overlapping measurements were discarded.",
+    "Wall times may be affected by other local work; exact replay-byte bounds and final-content assertions are the primary acceptance criteria."
+  ],
+  "dependencies": {
+    "plenary": "74b06c6c75e4eeb3108ec01852001636d85a932b",
+    "baleia": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+  }
+}

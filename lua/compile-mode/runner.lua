@@ -32,8 +32,8 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 	local finished, pumping, started, line_limit_exceeded = false, false, false, false
 	local lookahead
 	local streams = {
-		stdout = { partial = "", ansi = {} },
-		stderr = { partial = "", ansi = {} },
+		stdout = { output = output.new_stream(config.hidden_output), ansi = {} },
+		stderr = { output = output.new_stream(config.hidden_output), ansi = {} },
 	}
 	owner.streams = streams
 	local empty_tail = true
@@ -52,8 +52,26 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		owner.cancel = nil
 	end
 
+	local function pending_flush()
+		if exit_status ~= nil and not line_limit_exceeded and not owner.failure then
+			for _, name in ipairs({ "stdout", "stderr" }) do
+				if streams[name].output.has_pending() then
+					return name
+				end
+			end
+		end
+	end
+
 	local function complete()
-		if finished or not started or exit_status == nil or pumping or lookahead or not queue.empty() then
+		if
+			finished
+			or not started
+			or exit_status == nil
+			or pumping
+			or lookahead
+			or not queue.empty()
+			or pending_flush()
+		then
 			return
 		end
 		finished = true
@@ -136,14 +154,24 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 	end
 
 	pump = function()
-		if not lookahead and queue.empty() then
-			pumping = false
-			complete()
+		local stream_name, data, lines, partial, replay
+		if lookahead or not queue.empty() then
+			stream_name, data = take_batch()
+			lines, partial, replay = streams[stream_name].output.push(data)
+		else
+			stream_name = pending_flush()
+			if not stream_name then
+				pumping = false
+				complete()
+				return
+			end
+			lines, partial, replay = streams[stream_name].output.flush()
+		end
+		if #lines == 0 then
+			later(pump)
 			return
 		end
-		local stream_name, data = take_batch()
 		local stream = streams[stream_name]
-		local lines, partial, replay = output.normalize(data, stream.partial, config.hidden_output)
 		local ranges = {}
 		local function write(start, finish, values, first, offset)
 			if #values == 0 then
@@ -171,9 +199,7 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 			-- Replace only this row; subsequent lines append in arrival order.
 			write(old_row, old_row + 1, { lines[1] }, true)
 			table.remove(lines, 1)
-			if #lines == 0 then
-				stream.partial = partial
-			else
+			if #lines > 0 then
 				stream.row = nil
 			end
 		end
@@ -194,7 +220,6 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 				old_row and old_row < line_count - 1 and 2 or 1
 			)
 			if #lines > 0 then
-				stream.partial = partial
 				empty_tail = partial == ""
 				stream.row = not empty_tail and append + #lines - 1 or nil
 			end
@@ -228,7 +253,7 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 				end
 			end
 			buffer.scroll(bufnr)
-			if line_limit_exceeded or (not lookahead and queue.empty()) then
+			if line_limit_exceeded or (not lookahead and queue.empty() and not pending_flush()) then
 				pumping = false
 				complete()
 			else
@@ -272,6 +297,10 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		on_exit = function(_, code)
 			if not owner.failure then
 				exit_status = code
+			end
+			if pending_flush() and not pumping then
+				pumping = true
+				later(pump)
 			end
 			complete()
 		end,

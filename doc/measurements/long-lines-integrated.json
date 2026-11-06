@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T20:40:20.198564+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "40919810849152c299b27856c6df468e928971bb",
+    "git_dirty": true,
+    "source_sha256": "f8338fe038617c221e727bacd83ff4ec08a2d00bd5266787820e61e3806c663c",
+    "suite": "long_lines",
+    "samples": 3,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "samples_ms": [
+        4.6095,
+        4.587417,
+        4.427584
+      ],
+      "median_ms": 4.587417,
+      "input_bytes": 256000,
+      "fragment_bytes": 256,
+      "writes": 258,
+      "replayed_bytes": 8808448,
+      "units": 1000,
+      "passed": true,
+      "retained_lua_kib": [
+        73.2421875,
+        72.59375,
+        64.26171875
+      ],
+      "stream": true,
+      "name": "normalization/1000",
+      "p95_ms": 4.6095
+    },
+    {
+      "passed": true,
+      "input_bytes": 512000,
+      "name": "normalization/2000",
+      "stream": true,
+      "retained_lua_kib": [
+        136.3828125,
+        134.4921875,
+        128.015625
+      ],
+      "samples_ms": [
+        7.552292,
+        7.406417,
+        7.171333
+      ],
+      "median_ms": 7.406417,
+      "p95_ms": 7.552292,
+      "fragment_bytes": 256,
+      "writes": 259,
+      "replayed_bytes": 9326592,
+      "units": 2000
+    },
+    {
+      "input_bytes": 1024000,
+      "fragment_bytes": 256,
+      "writes": 260,
+      "replayed_bytes": 10362880,
+      "units": 4000,
+      "samples_ms": [
+        13.711959,
+        13.704875,
+        13.534167
+      ],
+      "median_ms": 13.704875,
+      "p95_ms": 13.711959,
+      "name": "normalization/4000",
+      "stream": true,
+      "passed": true,
+      "retained_lua_kib": [
+        262.7890625,
+        262.08984375,
+        256.015625
+      ]
+    },
+    {
+      "passed": true,
+      "name": "pipeline/1000",
+      "replayed_bytes": 8808448,
+      "samples_ms": [
+        693.824333,
+        699.805,
+        688.720083
+      ],
+      "median_ms": 693.824333,
+      "p95_ms": 699.805,
+      "retained_lua_kib": [
+        257.8515625,
+        184.6630859375,
+        171.498046875
+      ],
+      "writes": 258,
+      "stream": true,
+      "units": 1000,
+      "input_bytes": 256000,
+      "fragment_bytes": 256,
+      "process_output": "Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$"
+    },
+    {
+      "retained_lua_kib": [
+        148.0078125,
+        152.6787109375,
+        138.673828125
+      ],
+      "writes": 259,
+      "replayed_bytes": 9326592,
+      "units": 2000,
+      "name": "pipeline/2000",
+      "stream": true,
+      "passed": true,
+      "p95_ms": 760.634125,
+      "fragment_bytes": 256,
+      "samples_ms": [
+        755.774833,
+        760.634125,
+        758.676042
+      ],
+      "median_ms": 758.676042,
+      "input_bytes": 512000,
+      "process_output": "Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$"
+    },
+    {
+      "stream": true,
+      "samples_ms": [
+        891.108292,
+        927.542167,
+        895.025541
+      ],
+      "median_ms": 895.025541,
+      "input_bytes": 1024000,
+      "retained_lua_kib": [
+        281.734375,
+        280.4326171875,
+        266.146484375
+      ],
+      "writes": 260,
+      "replayed_bytes": 10362880,
+      "units": 4000,
+      "name": "pipeline/4000",
+      "passed": true,
+      "p95_ms": 927.542167,
+      "fragment_bytes": 256,
+      "process_output": "Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$"
+    }
+  ],
+  "integration_base": "40919810849152c299b27856c6df468e928971bb",
+  "validation": {
+    "plenary": {
+      "passed": 285,
+      "failed": 0,
+      "errors": 0
+    },
+    "stylua": "passed",
+    "luals": "passed",
+    "randomized_final_text_cases": 1000,
+    "independent_reference_cases": 6,
+    "reference_case_checks": [
+      "final text SHA-256",
+      "color ranges",
+      "OSC handler calls"
+    ]
+  }
+}

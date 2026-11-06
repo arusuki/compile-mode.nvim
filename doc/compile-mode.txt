@@ -560,6 +560,13 @@ max_parse_line_length                     *compile-mode.max_parse_line_length*
     This bounds the input size of each synchronous regex call when a job emits
     one enormous line; the output batch size and max_lines do not bound individual line size.
 
+    Independently of this parsing limit, unfinished output longer than 64 KiB
+    is refreshed when its retained byte count doubles, at a newline, or when
+    the process exits. This avoids repeatedly processing an entire growing
+    line. Final output stays complete; intermediate long-line display can lag.
+    With hidden_output, retained bytes include the raw text before filtering.
+    Interrupting a command discards deferred text along with queued output.
+
 max_lines                                           *compile-mode.max_lines*
     The maximum number of command output lines allowed in the compilation
     buffer.

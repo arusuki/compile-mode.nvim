@@ -67,6 +67,84 @@ function M.normalize(data, partial_line, hidden_output)
 	return new_lines, partial_line, replay
 end
 
+---Collect a stream's unfinished line without replaying every growing prefix.
+---Retain unpublished bytes verbatim so normalize() can distinguish replayed OSC
+---events from new controls, including controls discarded by a carriage return.
+---@param hidden_output string[]
+---@return CompileModeOutputStream
+function M.new_stream(hidden_output)
+	local threshold = 65536
+	local published, fragments, pending_bytes = "", {}, 0
+	local next_flush, pending_cr = threshold, false
+	local compact = #hidden_output == 0
+
+	local function publish(data)
+		if #fragments > 0 then
+			fragments[#fragments + 1] = data[1]
+			data[1] = table.concat(fragments)
+		end
+		local lines, tail, replay = M.normalize(data, published, hidden_output)
+		published, fragments, pending_bytes = tail, {}, 0
+		next_flush = math.max(threshold, #tail * 2)
+		pending_cr = tail:sub(-1) == "\r"
+		return lines, tail, replay
+	end
+
+	---@class CompileModeOutputStream
+	local stream = {}
+
+	---Return normalized replacement lines and replay metadata, or no lines while deferred.
+	---@param data string[]
+	---@return string[]
+	---@return string partial_line
+	---@return table replay
+	function stream.push(data)
+		-- Newlines finish the old tail. Normalize ordinary batches directly,
+		-- preserving the original single-pass path and its ANSI replay contract.
+		if #data > 1 or (#fragments == 0 and #published + #data[1] <= threshold) then
+			return publish(vim.list_slice(data))
+		end
+
+		local text = data[1]:gsub("\n", "") -- callback-encoded NUL bytes
+		local overwrite = false
+		if compact and text ~= "" then
+			local last = #text
+			while last > 0 and text:byte(last) == 13 do
+				last = last - 1
+			end
+			-- A CR becomes effective only when subsequent text arrives. Let the
+			-- normalizer see all pending controls before discarding the old text.
+			overwrite = last > 0 and (pending_cr or text:sub(1, last):find("\r", 1, true) ~= nil)
+			pending_cr = last < #text
+		end
+		if text ~= "" then
+			fragments[#fragments + 1] = text
+			pending_bytes = pending_bytes + #text
+		end
+		if overwrite or #published + pending_bytes >= next_flush then
+			return publish({ "" })
+		end
+		return {}, published, { prefix = #published, reset = false }
+	end
+
+	---Publish deferred EOF text before parsing/completion, even without a newline.
+	---@return string[]
+	---@return string partial_line
+	---@return table replay
+	function stream.flush()
+		if #fragments > 0 then
+			return publish({ "" })
+		end
+		return {}, published, { prefix = #published, reset = false }
+	end
+
+	function stream.has_pending()
+		return #fragments > 0
+	end
+
+	return stream
+end
+
 ---Limit replacement of the buffer's unfinished last line to the output budget.
 ---@param lines string[]
 ---@param line_count integer current buffer line count, including the header

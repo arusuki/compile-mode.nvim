@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=("issues", "benchmark", "hotspots"))
+    parser.add_argument("suite", choices=("issues", "benchmark", "hotspots", "long_lines"))
     parser.add_argument("--cases", help="comma-separated case names (default: all)")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--samples", type=int, default=7)
