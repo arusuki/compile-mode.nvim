@@ -1,4 +1,6 @@
-FORMAT_FILES := lua/ spec/ plugin/ ftplugin/
+FORMAT_FILES := lua/ spec/ plugin/ ftplugin/ scripts/
+
+PYTHON ?= python3
 
 fmt:
 	@echo "===> Format"
@@ -39,3 +41,13 @@ typecheck:
 setup-ci:
 	@echo "===> Set Up CI"
 	nvim --headless --clean -u spec/configs/ci.vim -c "q"
+
+.PHONY: issues bench
+
+# Standalone assertions of issue expectations; exits nonzero for reproduced bugs.
+issues:
+	$(PYTHON) scripts/run_checks.py issues $(CHECK_ARGS)
+
+# Separate from correctness tests: timing thresholds are machine-dependent.
+bench:
+	$(PYTHON) scripts/run_checks.py benchmark $(CHECK_ARGS)
