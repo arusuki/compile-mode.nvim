@@ -9,6 +9,127 @@ M.level = require("compile-mode.constants").level
 ---@type table<integer, CompileModeError>
 M.error_list = {}
 
+local indexed_errors
+local ordered_lines = {}
+local counts = { error = 0, warning = 0, info = 0 }
+local revision = 0
+local level_keys = { [M.level.ERROR] = "error", [M.level.WARNING] = "warning", [M.level.INFO] = "info" }
+
+local function lower_bound(lines, line)
+	local first, last = 1, #lines + 1
+	while first < last do
+		local middle = math.floor((first + last) / 2)
+		if lines[middle] < line then
+			first = middle + 1
+		else
+			last = middle
+		end
+	end
+	return first
+end
+
+local function count_error(error, amount)
+	local key = error and level_keys[error.level]
+	if key then
+		counts[key] = counts[key] + amount
+	end
+end
+
+local function ensure_index()
+	if indexed_errors == M.error_list then
+		return
+	end
+	indexed_errors = M.error_list
+	ordered_lines = {}
+	counts = { error = 0, warning = 0, info = 0 }
+	for line, error in pairs(M.error_list) do
+		ordered_lines[#ordered_lines + 1] = line
+		count_error(error, 1)
+	end
+	table.sort(ordered_lines)
+	revision = revision + 1
+end
+
+---Invalidate after an external in-place edit of the legacy error table or records.
+---Replacing the entire table is detected automatically.
+function M.invalidate()
+	indexed_errors = nil
+end
+
+---Set or remove a parsed error and update all metadata cache dependencies.
+---@param line integer
+---@param error? CompileModeError
+function M.set_error(line, error)
+	ensure_index()
+	local previous = M.error_list[line]
+	if previous == error then
+		return
+	end
+	count_error(previous, -1)
+	count_error(error, 1)
+	if ordered_lines then
+		if previous == nil then
+			if #ordered_lines == 0 or ordered_lines[#ordered_lines] < line then
+				ordered_lines[#ordered_lines + 1] = line
+			else
+				-- Reparsing a prefix must not shift a retained suffix for each
+				-- inserted error. Sort once when a consumer next needs order.
+				ordered_lines = nil
+			end
+		elseif error == nil then
+			table.remove(ordered_lines, lower_bound(ordered_lines, line))
+		end
+	end
+	M.error_list[line] = error
+	revision = revision + 1
+end
+
+---Remove metadata for an inclusive output-line range in one pass.
+---@param first integer
+---@param last integer
+function M.clear_range(first, last)
+	if first > last then
+		return
+	end
+	local lines = M.ordered_lines()
+	local start = lower_bound(lines, first)
+	local finish = lower_bound(lines, last + 1)
+	local removed = finish - start
+	if removed == 0 then
+		return
+	end
+	for i = start, finish - 1 do
+		local line = lines[i]
+		count_error(M.error_list[line], -1)
+		M.error_list[line] = nil
+	end
+	local length = #lines
+	for i = finish, length do
+		lines[i - removed] = lines[i]
+	end
+	for i = length - removed + 1, length do
+		lines[i] = nil
+	end
+	revision = revision + 1
+end
+
+---Return the shared ascending index. Internal consumers must not modify it.
+---@return integer[]
+function M.ordered_lines()
+	ensure_index()
+	if not ordered_lines then
+		ordered_lines = vim.tbl_keys(M.error_list)
+		table.sort(ordered_lines)
+	end
+	return ordered_lines
+end
+
+---@return {error: integer, warning: integer, info: integer}
+function M.counts()
+	ensure_index()
+	return { error = counts.error, warning = counts.warning, info = counts.info }
+end
+
 M.error_regexp_table = require("compile-mode.errors.matchers")
 
 ---Given a `matchlistpos` result and a capture-group matcher, return the location of the relevant capture group(s).
@@ -193,6 +314,65 @@ function M.todiagnostic(bufnr, error_list)
 			end
 		end
 	end
+	return diagnostics
+end
+
+local diagnostic_index
+local diagnostic_revision, directory_revision, diagnostic_directory
+local diagnostic_results = {}
+
+---Return session diagnostics for one source buffer. Resolve/group the complete
+---error list only when errors or directory context change, then convert only
+---the requested file. The generic todiagnostic() API remains an uncached export.
+---@param bufnr integer
+---@return vim.Diagnostic[]
+function M.diagnostics_for_buffer(bufnr)
+	ensure_index()
+	local directory_version = cdir.version()
+	local directory = cdir.compilation_directory or vim.fn.getcwd()
+	if
+		not diagnostic_index
+		or diagnostic_revision ~= revision
+		or directory_revision ~= directory_version
+		or diagnostic_directory ~= directory
+	then
+		diagnostic_index = {}
+		diagnostic_results = {}
+		local filenames = {}
+		for _, line in ipairs(M.ordered_lines()) do
+			local error = M.error_list[line]
+			if error.row then
+				local resolved = cdir.resolve_filename(error.filename.value, error.linenum)
+				local filename = filenames[resolved]
+				if not filename then
+					-- Let Neovim canonicalize paths exactly as the generic export
+					-- does; storing names also survives source buffer deletion.
+					filename = vim.api.nvim_buf_get_name(vim.fn.bufadd(resolved))
+					filenames[resolved] = filename
+				end
+				local group = diagnostic_index[filename]
+				if not group then
+					group = {}
+					diagnostic_index[filename] = group
+				end
+				group[#group + 1] = error
+			end
+		end
+		diagnostic_revision = revision
+		directory_revision = directory_version
+		diagnostic_directory = directory
+	end
+
+	local filename = vim.api.nvim_buf_get_name(bufnr)
+	local cached = diagnostic_results[bufnr]
+	if cached and cached.filename == filename then
+		return cached.diagnostics
+	end
+	local diagnostics = {}
+	for _, error in ipairs(diagnostic_index[filename] or {}) do
+		diagnostics[#diagnostics + 1] = map_to_diagnostic(bufnr, error)
+	end
+	diagnostic_results[bufnr] = { filename = filename, diagnostics = diagnostics }
 	return diagnostics
 end
 

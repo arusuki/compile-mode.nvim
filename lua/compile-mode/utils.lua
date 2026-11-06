@@ -242,7 +242,7 @@ local function jump_to_file(filename, error, smods)
 
 	if config.use_diagnostics then
 		local errors = require("compile-mode.errors")
-		local diagnostics = errors.todiagnostic(target_bufnr, errors.error_list)
+		local diagnostics = errors.diagnostics_for_buffer(target_bufnr)
 		vim.diagnostic.set(compile_mode_ns, target_bufnr, diagnostics, {})
 		M.delay(100)
 		vim.diagnostic.open_float()

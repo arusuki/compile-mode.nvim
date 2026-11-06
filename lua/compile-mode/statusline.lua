@@ -12,21 +12,7 @@ local exit_code = require("compile-mode.constants").exit_code
 function M.info()
 	local info = {
 		status = nil,
-		counts = vim.iter(pairs(errors.error_list)):fold({ error = 0, warning = 0, info = 0 }, function(acc, _, v)
-			if not v then
-				return acc
-			end
-
-			if v.level == errors.level.ERROR then
-				acc.error = acc.error + 1
-			elseif v.level == errors.level.WARNING then
-				acc.warning = acc.warning + 1
-			elseif v.level == errors.level.INFO then
-				acc.info = acc.info + 1
-			end
-
-			return acc
-		end),
+		counts = errors.counts(),
 	}
 
 	if vim.g.compile_job_id then

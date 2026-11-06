@@ -62,10 +62,10 @@ local function act_from_current_error(action, direction, different_file)
 		local count = param.count or 1
 		local current_error = errors.error_list[state.error_cursor]
 
-		local lines = vim.tbl_keys(errors.error_list)
-		table.sort(lines)
+		local lines = errors.ordered_lines()
+		local first, last, step = 1, #lines, 1
 		if direction == "prev" then
-			lines = vim.fn.reverse(lines)
+			first, last, step = #lines, 1, -1
 		end
 
 		local function fits_constraints(line)
@@ -81,12 +81,28 @@ local function act_from_current_error(action, direction, different_file)
 
 		local error_line = nil
 		local errors_found = 0
-		local past_cursor = state.error_cursor == 0
+		local start = first
+		if state.error_cursor ~= 0 then
+			-- Locate the cursor in the shared index instead of walking all
+			-- preceding errors on every navigation command.
+			local low, high = 1, #lines
+			start = last + step
+			while low <= high do
+				local middle = math.floor((low + high) / 2)
+				if lines[middle] == state.error_cursor then
+					start = middle + step
+					break
+				elseif lines[middle] < state.error_cursor then
+					low = middle + 1
+				else
+					high = middle - 1
+				end
+			end
+		end
 
-		for _, line in ipairs(lines) do
-			if line == state.error_cursor then
-				past_cursor = true
-			elseif past_cursor and fits_constraints(line) then
+		for i = start, last, step do
+			local line = lines[i]
+			if fits_constraints(line) then
 				errors_found = errors_found + 1
 				if errors_found == count then
 					error_line = line
@@ -97,7 +113,8 @@ local function act_from_current_error(action, direction, different_file)
 
 		if not error_line and config.use_circular_error_navigation then
 			local remaining_count = count - errors_found
-			for _, line in ipairs(lines) do
+			for i = first, last, step do
+				local line = lines[i]
 				if fits_constraints(line) then
 					remaining_count = remaining_count - 1
 					if remaining_count == 0 then
@@ -141,28 +158,28 @@ M.first_error = a.void(
 		local count = param.count or 1
 		log.fmt_debug("count = %d", count)
 
-		local lines = vim.iter(pairs(errors.error_list))
-			:filter(function(_, error)
-				return error.level >= config.error_threshold
-			end)
-			:map(function(line, _)
-				return line
-			end)
-			:totable()
-
 		if count < 1 then
 			vim.notify("Moved back before first error")
 			return
 		end
 
-		if count > #lines then
+		local error_line
+		for _, line in ipairs(errors.ordered_lines()) do
+			if errors.error_list[line].level >= config.error_threshold then
+				count = count - 1
+				if count == 0 then
+					error_line = line
+					break
+				end
+			end
+		end
+
+		if not error_line then
 			vim.notify("Moved past last error")
 			return
 		end
 
-		table.sort(lines)
-
-		state.error_cursor = assert(lines[count])
+		state.error_cursor = error_line
 		local error = assert(errors.error_list[state.error_cursor])
 
 		local dir = cdir.find_directory_for_line(state.error_cursor)
