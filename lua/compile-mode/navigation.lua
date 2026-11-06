@@ -38,6 +38,12 @@ local function goto_file(same_window)
 	end
 end
 
+---@param error CompileModeError
+---@return string
+local function source_file(error)
+	return vim.fs.normalize(vim.fn.fnamemodify(cdir.resolve_filename(error.filename.value, error.linenum), ":p"))
+end
+
 ---Create a command that takes some action on the next/previous error from the current error cursor.
 ---The command is repeated equal to the `count` that it receives, which defaults to `1`.
 ---
@@ -61,6 +67,7 @@ local function act_from_current_error(action, direction, different_file)
 
 		local count = param.count or 1
 		local current_error = errors.error_list[state.error_cursor]
+		local current_file = different_file and current_error and source_file(current_error)
 
 		local lines = errors.ordered_lines()
 		local first, last, step = 1, #lines, 1
@@ -73,7 +80,7 @@ local function act_from_current_error(action, direction, different_file)
 			if error.level < config.error_threshold then
 				return false
 			end
-			if different_file and current_error and error.filename.value == current_error.filename.value then
+			if current_file and source_file(error) == current_file then
 				return false
 			end
 			return true
@@ -86,18 +93,17 @@ local function act_from_current_error(action, direction, different_file)
 			-- Locate the cursor in the shared index instead of walking all
 			-- preceding errors on every navigation command.
 			local low, high = 1, #lines
-			start = last + step
 			while low <= high do
 				local middle = math.floor((low + high) / 2)
-				if lines[middle] == state.error_cursor then
-					start = middle + step
-					break
-				elseif lines[middle] < state.error_cursor then
+				if lines[middle] < state.error_cursor or (step == 1 and lines[middle] == state.error_cursor) then
 					low = middle + 1
 				else
 					high = middle - 1
 				end
 			end
+			-- An edited log may have removed the selected error. The insertion
+			-- point still identifies its nearest successor/predecessor.
+			start = step == 1 and low or high
 		end
 
 		for i = start, last, step do

@@ -1,5 +1,6 @@
 local compile_mode = require("compile-mode")
 local config = require("compile-mode.config.internal")
+local parser = require("compile-mode.parser")
 local bufnr = vim.api.nvim_get_current_buf()
 local group = vim.api.nvim_create_augroup("compile-mode.nvim", { clear = false })
 -- Setting the filetype again on Recompile must replace these handlers.
@@ -35,7 +36,9 @@ local function autocmd(event, opts)
 	)
 end
 
-vim.g.compilation_buffer = bufnr
+if vim.b[bufnr].compilation_main_buffer then
+	vim.g.compilation_buffer = bufnr
+end
 
 matchadd("CompileModeInfo", "^Compilation \\zsfinished\\ze.*")
 matchadd(
@@ -65,7 +68,7 @@ for _, matcher in ipairs(config.directory_change_matchers) do
 end
 require("compile-mode.window_highlights").attach(bufnr, matches)
 local undo =
-	"lua require('compile-mode.window_highlights').detach(0); vim.api.nvim_clear_autocmds({ group = 'compile-mode.nvim', buffer = 0 })"
+	"lua require('compile-mode.window_highlights').detach(0); require('compile-mode.parser').detach_log(0); vim.api.nvim_clear_autocmds({ group = 'compile-mode.nvim', buffer = 0 })"
 local previous_undo = vim.b[bufnr].undo_ftplugin
 vim.b[bufnr].undo_ftplugin = previous_undo and (previous_undo .. " | " .. undo) or undo
 
@@ -101,14 +104,16 @@ autocmd("CursorMoved", {
 	callback = compile_mode._follow_cursor,
 })
 
-if not vim.b[bufnr].compilation_main_buffer then
-	compile_mode._parse_errors(bufnr, 0, -1)
+autocmd("BufEnter", {
+	desc = "Compilation metadata ownership",
+	buffer = bufnr,
+	callback = function()
+		parser.activate(bufnr)
+	end,
+})
 
-	autocmd({ "TextChanged", "TextChangedI" }, {
-		desc = "Error Parsing",
-		buffer = bufnr,
-		callback = function()
-			compile_mode._parse_errors(bufnr, 0, -1)
-		end,
-	})
+if not vim.b[bufnr].compilation_main_buffer then
+	parser.attach_log(bufnr)
+else
+	parser.detach_log(bufnr)
 end

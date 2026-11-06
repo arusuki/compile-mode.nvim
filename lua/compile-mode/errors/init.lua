@@ -276,7 +276,7 @@ local function map_to_diagnostic(bufnr, error)
 	if error.level == M.level.ERROR then
 		level = vim.diagnostic.severity.ERROR
 	elseif error.level == M.level.WARNING then
-		level = vim.diagnostic.severity.ERROR
+		level = vim.diagnostic.severity.WARN
 	else
 		level = vim.diagnostic.severity.INFO
 	end

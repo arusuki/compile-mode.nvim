@@ -10,13 +10,38 @@ local highlight_timer
 ---@type fun() | nil
 local highlight_cancel = nil
 
----@param error CompileModeError
-local function highlight_locus_jump(bufnr, error)
+-- Clamp both the cursor and its highlight to the same surviving source text.
+-- Error positions can outlive edits, and some tools report zero/out-of-range rows.
+local function locus_range(bufnr, error)
+	local last_row = vim.api.nvim_buf_line_count(bufnr) - 1
+	local function position(row, col)
+		row = math.max(0, math.min(last_row, row))
+		local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+		col = math.max(0, math.min(math.max(0, #line - 1), col or #line))
+		-- A byte offset at/past EOL must not land inside a UTF-8 character.
+		while col > 0 and (line:byte(col + 1) or 0) >= 128 and line:byte(col + 1) <= 191 do
+			col = col - 1
+		end
+		return { row, col }
+	end
+	local start = position((error.row and error.row.value or 1) - 1, (error.col and error.col.value or 1) - 1)
+	local finish = position(
+		error.end_row and error.end_row.value - 1 or start[1],
+		error.end_col and error.end_col.value - 1 or nil
+	)
+	if finish[1] < start[1] or (finish[1] == start[1] and finish[2] < start[2]) then
+		finish = { start[1], start[2] }
+	end
+	return start, finish
+end
+
+local function highlight_locus_jump(bufnr, start, finish)
 	local config = require("compile-mode.config.internal")
 
 	if highlight_timer then
 		highlight_timer:close()
-		assert(highlight_cancel)
+	end
+	if highlight_cancel then
 		highlight_cancel()
 	end
 
@@ -24,30 +49,19 @@ local function highlight_locus_jump(bufnr, error)
 		return
 	end
 
-	local start = {
-		error.row and error.row.value - 1 or 0,
-		error.col and error.col.value or 1,
-	}
-	local line = vim.api.nvim_buf_get_lines(bufnr, start[1], start[1] + 1, false)[1]
-	local end_ = {
-		error.end_row and error.end_row.value - 1 or start[1],
-		error.end_col and error.end_col.value or line:len(),
-	}
-
-	vim.highlight.range(bufnr, highlight_ns, "CompileModeErrorLocus", start, end_, {
+	vim.highlight.range(bufnr, highlight_ns, "CompileModeErrorLocus", start, finish, {
 		inclusive = true,
 		priority = vim.highlight.priorities.diagnostics,
 		regtype = "v",
 	})
 
+	highlight_cancel = function()
+		highlight_timer = nil
+		highlight_cancel = nil
+		pcall(vim.api.nvim_buf_clear_namespace, bufnr, highlight_ns, 0, -1)
+	end
 	local timeout = config.error_locus_highlight
 	if type(timeout) == "number" then
-		highlight_cancel = function()
-			highlight_timer = nil
-			highlight_cancel = nil
-			pcall(vim.api.nvim_buf_clear_namespace, bufnr, highlight_ns, 0, -1)
-		end
-
 		highlight_timer = vim.defer_fn(highlight_cancel, timeout)
 	end
 end
@@ -198,13 +212,6 @@ local function jump_to_file(filename, error, smods)
 		vim.api.nvim_win_set_cursor(compilation_win_id, { error.linenum, 0 })
 	end
 
-	local row = error.row and error.row.value or 1
-
-	local col = (error.col and error.col.value or 1) - 1
-	if col < 0 then
-		col = 0
-	end
-
 	local target_bufnr = vim.fn.bufadd(filename)
 	local current_bufnr = vim.api.nvim_get_current_buf()
 
@@ -233,12 +240,9 @@ local function jump_to_file(filename, error, smods)
 
 	local target_win_id = vim.fn.win_findbuf(target_bufnr)[1]
 
-	local last_row = vim.api.nvim_buf_line_count(target_bufnr)
-	if row > last_row then
-		row = last_row
-	end
-	vim.api.nvim_win_set_cursor(target_win_id, { row, col })
-	highlight_locus_jump(target_bufnr, error)
+	local start, finish = locus_range(target_bufnr, error)
+	vim.api.nvim_win_set_cursor(target_win_id, { start[1] + 1, start[2] })
+	highlight_locus_jump(target_bufnr, start, finish)
 
 	if config.use_diagnostics then
 		local errors = require("compile-mode.errors")
