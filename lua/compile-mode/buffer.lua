@@ -45,6 +45,9 @@ function M.set_lines(bufnr, start, end_, data, trim)
 	end
 
 	vim.schedule(function()
+		if not vim.api.nvim_buf_is_valid(bufnr) then
+			return
+		end
 		utils.buf_set_opt(bufnr, "modifiable", false)
 		utils.buf_set_opt(bufnr, "modified", false)
 	end)

@@ -25,7 +25,6 @@ local a = require("plenary.async")
 local errors = require("compile-mode.errors")
 local utils = require("compile-mode.utils")
 local log = require("compile-mode.log")
-local cdir = require("compile-mode.dir")
 local runner = require("compile-mode.runner")
 local buffer = require("compile-mode.buffer")
 local parser = require("compile-mode.parser")
@@ -101,10 +100,8 @@ M.compile = a.void(
 			return
 		end
 
-		vim.g.compile_command = command
-		cdir.compilation_directory = vim.g.compilation_directory or vim.fn.getcwd()
-
-		runner.run(command, param)
+		local directory = vim.g.compilation_directory or vim.fn.getcwd()
+		runner.run(command, param, directory)
 		vim.g.compilation_directory = nil
 	end
 )

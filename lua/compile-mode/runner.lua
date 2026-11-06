@@ -15,166 +15,308 @@ local constants = require("compile-mode.constants")
 local header_line_count = constants.header_line_count
 local exit_code = constants.exit_code
 
+-- Ownership starts before buffer setup yields, not only after jobstart().
+local current_session
+
+function M.is_busy()
+	return current_session ~= nil
+end
+
 ---Await a subprocess; the first result counts callback entries, not complete lines.
 ---@type fun(cmd: string, bufnr: integer, param: CommandParam): integer, integer, integer, boolean
-M.run_job = a.wrap(
-	---@param cmd string
-	---@param bufnr integer
-	---@param param CommandParam
-	---@param callback fun(integer, integer, integer, boolean)
-	function(cmd, bufnr, param, callback)
-		local config = require("compile-mode.config.internal")
+M.run_job = a.wrap(function(cmd, bufnr, param, callback)
+	local config = require("compile-mode.config.internal")
+	local owner = assert(current_session)
+	local queue = require("compile-mode.output_queue").new()
+	local count, job_id, exit_status, delete_event = 0, nil, nil, nil
+	local finished, pumping, started, line_limit_exceeded = false, false, false, false
+	local lookahead
+	local streams = {
+		stdout = { partial = "", ansi = {} },
+		stderr = { partial = "", ansi = {} },
+	}
+	owner.streams = streams
+	local empty_tail = true
 
-		log.debug("calling runjob()")
+	local function active()
+		return current_session == owner and vim.api.nvim_buf_is_valid(bufnr)
+	end
 
-		local count = 0
-		local partial_line = ""
-		local line_limit_exceeded = false
-		local job_id, exit_status, delete_event
-		local finished, pumping = false, false
-		local pending, head, tail = {}, 1, 0
-
-		local function active()
-			return vim.g.compile_job_id == job_id and vim.api.nvim_buf_is_valid(bufnr)
+	local function cleanup()
+		queue.close()
+		lookahead = nil
+		if delete_event then
+			pcall(vim.api.nvim_del_autocmd, delete_event)
+			delete_event = nil
 		end
+		owner.cancel = nil
+	end
 
-		local function complete()
-			if finished or exit_status == nil or pumping or head <= tail then
-				return
-			end
-			finished = true
-			if delete_event then
-				pcall(vim.api.nvim_del_autocmd, delete_event)
-			end
-			callback(count, line_limit_exceeded and exit_code.SIGTERM or exit_status, job_id, line_limit_exceeded)
+	local function complete()
+		if finished or not started or exit_status == nil or pumping or lookahead or not queue.empty() then
+			return
 		end
+		finished = true
+		cleanup()
+		callback(count, line_limit_exceeded and exit_code.SIGTERM or exit_status, job_id, line_limit_exceeded)
+	end
 
-		-- Merge adjacent callback tails, while bounding each write/scan. Keep a
-		-- head index instead of shifting the backlog on every dequeue.
-		local function take_batch()
-			local data, bytes = {}, 0
-			local fragments
-			local function join_tail()
-				if fragments then
-					data[#data] = table.concat(fragments)
-					fragments = nil
-				end
-			end
-			while head <= tail and #data < 128 and bytes < 65536 do
-				local item = pending[head]
-				while item.index <= #item.data and #data < 128 and bytes < 65536 do
-					local value = item.data[item.index]
-					if item.index == 1 and #data > 0 then
-						fragments = fragments or { data[#data] }
-						fragments[#fragments + 1] = value
-					else
-						join_tail()
-						data[#data + 1] = value
-					end
-					bytes = bytes + #value
-					item.index = item.index + 1
-				end
-				if item.index <= #item.data then
-					-- The next entry follows a newline. Leave a replaceable empty
-					-- tail, just like a callback ending at that newline would.
-					join_tail()
-					data[#data + 1] = ""
-					break
-				end
-				pending[head] = nil
-				head = head + 1
-			end
-			join_tail()
-			return data
+	local function fail(reason)
+		if finished then
+			return
 		end
+		owner.failure = tostring(reason)
+		exit_status, pumping = -1, false
+		cleanup()
+		if job_id and job_id > 0 then
+			pcall(vim.fn.jobstop, job_id)
+		end
+		complete()
+	end
 
-		local pump = a.void(function()
-			while head <= tail and active() and not line_limit_exceeded do
-				local line_count = vim.api.nvim_buf_line_count(bufnr)
-				local new_lines
-				new_lines, partial_line = output.normalize(take_batch(), partial_line, config.hidden_output)
-				new_lines, line_limit_exceeded = output.limit(new_lines, line_count, config.max_lines)
-				if #new_lines > 0 then
-					ansi.buf_set_lines(bufnr, -2, -1, new_lines, true)
-					-- Baleia schedules highlights. Finish those before interpreting
-					-- the written range or publishing CompilationFinished.
-					utils.wait()
-					if not active() then
-						break
-					end
-					parser.parse(bufnr, line_count - 1, line_count - 1 + #new_lines)
-					buffer.scroll(bufnr)
-				end
-				if line_limit_exceeded then
-					vim.fn.jobstop(job_id)
-				end
-				-- A single scheduled callback must not drain an unbounded log.
-				utils.wait()
+	owner.cancel = function()
+		if finished then
+			return
+		end
+		finished = true
+		cleanup()
+		callback(count, exit_code.SIGTERM, job_id, false)
+	end
+
+	local function guarded(fn)
+		if finished then
+			return
+		end
+		if not active() then
+			if owner.cancel then
+				owner.cancel()
 			end
-			if not active() or line_limit_exceeded then
-				pending, head, tail = {}, 1, 0
+			return
+		end
+		local ok, reason = xpcall(fn, debug.traceback)
+		if not ok then
+			fail(reason)
+		end
+	end
+
+	local function take_batch()
+		local item = assert(lookahead or queue.pop())
+		lookahead = nil
+		local data, bytes = item.data, item.bytes
+		local fragments = { data[#data] }
+		while #data < 128 and bytes < 65536 and not queue.empty() do
+			local next_item = assert(queue.pop())
+			if
+				next_item.stream ~= item.stream
+				or #data + #next_item.data - 1 > 128
+				or bytes + next_item.bytes > 65536
+			then
+				lookahead = next_item
+				break
 			end
+			fragments[#fragments + 1] = next_item.data[1]
+			for i = 2, #next_item.data do
+				data[#data] = table.concat(fragments)
+				data[#data + 1] = next_item.data[i]
+				fragments = { next_item.data[i] }
+			end
+			bytes = bytes + next_item.bytes
+		end
+		data[#data] = table.concat(fragments)
+		return item.stream, data
+	end
+
+	local pump
+	local function later(fn)
+		-- A timer forces an event-loop poll; recursively scheduled continuations
+		-- can otherwise starve timers/input while a complete backlog drains.
+		vim.defer_fn(function()
+			guarded(fn)
+		end, 0)
+	end
+
+	pump = function()
+		if not lookahead and queue.empty() then
 			pumping = false
-			complete()
-		end)
-
-		local function on_either(_, data)
-			if finished or line_limit_exceeded or not data or #data < 1 or (#data == 1 and data[1] == "") then
-				return
-			end
-			count = count + #data
-			tail = tail + 1
-			pending[tail] = { data = data, index = 1 }
-			if not pumping then
-				pumping = true
-				vim.schedule(pump)
-			end
-		end
-
-		log.debug("starting job...")
-		job_id = vim.fn.jobstart(cmd, {
-			cwd = cdir.compilation_directory,
-			on_stdout = on_either,
-			on_stderr = on_either,
-			on_exit = function(_, code)
-				exit_status = code
-				complete()
-			end,
-			pty = config.use_pseudo_terminal,
-			env = config.environment,
-			clear_env = config.clear_environment,
-		})
-		log.fmt_debug("job_id = %d", job_id)
-
-		if job_id <= 0 then
-			vim.notify("Failed to start job with command " .. cmd, vim.log.levels.ERROR)
-			exit_status = job_id
 			complete()
 			return
 		end
-
-		vim.g.compile_job_id = job_id
-		vim.cmd.redrawstatus()
-
-		delete_event = vim.api.nvim_create_autocmd("BufDelete", {
-			buffer = bufnr,
-			once = true,
-			callback = function()
-				if vim.g.compile_job_id == job_id then
-					vim.g.compilation_exit_code = nil
-					vim.g.compile_job_id = nil
+		local stream_name, data = take_batch()
+		local stream = streams[stream_name]
+		local lines, partial, replay = output.normalize(data, stream.partial, config.hidden_output)
+		local ranges = {}
+		local function write(start, finish, values, first, offset)
+			if #values == 0 then
+				return
+			end
+			stream.ansi.replay_prefix = first and replay.prefix or nil
+			stream.ansi.replay_reset = first and replay.reset or nil
+			stream.ansi.discarded_prefix = first and replay.discarded or nil
+			if replay.discarded_prefixes then
+				stream.ansi.discarded_prefixes = {}
+				for i = 1, #values do
+					stream.ansi.discarded_prefixes[i] = replay.discarded_prefixes[i + (offset or 1) - 1]
 				end
-				vim.fn.jobstop(job_id)
-			end,
-		})
-
-		if param.bang then
-			log.debug("sync mode - waiting for job to finish...")
-			vim.fn.jobwait({ job_id })
+			else
+				stream.ansi.discarded_prefixes = nil
+			end
+			ansi.buf_set_lines(bufnr, start, finish, values, true, stream.ansi)
+			ranges[#ranges + 1] = { start, start + #values }
 		end
-	end,
-	4
-)
+
+		local line_count = vim.api.nvim_buf_line_count(bufnr)
+		local old_row = stream.row
+		if old_row and old_row < line_count - 1 then
+			-- The other stream has appended output since this unfinished line.
+			-- Replace only this row; subsequent lines append in arrival order.
+			write(old_row, old_row + 1, { lines[1] }, true)
+			table.remove(lines, 1)
+			if #lines == 0 then
+				stream.partial = partial
+			else
+				stream.row = nil
+			end
+		end
+		if #lines > 0 then
+			local append = stream.row or (empty_tail and line_count - 1 or line_count)
+			local replacing = append < line_count
+			local available = config.max_lines
+				and config.max_lines + header_line_count - line_count + (replacing and 1 or 0)
+			if available and #lines > available then
+				lines = vim.list_slice(lines, 1, math.max(0, available))
+				line_limit_exceeded = true
+			end
+			write(
+				append,
+				replacing and append + 1 or append,
+				lines,
+				not old_row or old_row == line_count - 1,
+				old_row and old_row < line_count - 1 and 2 or 1
+			)
+			if #lines > 0 then
+				stream.partial = partial
+				empty_tail = partial == ""
+				stream.row = not empty_tail and append + #lines - 1 or nil
+			end
+		end
+		if line_limit_exceeded then
+			queue.close()
+			lookahead = nil
+			pcall(vim.fn.jobstop, job_id)
+		end
+
+		-- Let ANSI's scheduled marks finish before parsing. Parsing itself uses
+		-- small slices plus an elapsed budget, including unusually costly regexes.
+		local range_index, row = 1, ranges[1] and ranges[1][1]
+		local function parse_ranges()
+			local started_at = vim.uv.hrtime()
+			while range_index <= #ranges do
+				local range = ranges[range_index]
+				local finish = math.min(row + 16, range[2])
+				parser.parse(bufnr, row, finish)
+				if finished or not active() then
+					return
+				end
+				row = finish
+				if row == range[2] then
+					range_index = range_index + 1
+					row = ranges[range_index] and ranges[range_index][1]
+				end
+				if vim.uv.hrtime() - started_at >= 5000000 and range_index <= #ranges then
+					later(parse_ranges)
+					return
+				end
+			end
+			buffer.scroll(bufnr)
+			if line_limit_exceeded or (not lookahead and queue.empty()) then
+				pumping = false
+				complete()
+			else
+				later(pump)
+			end
+		end
+		vim.schedule(function()
+			guarded(parse_ranges)
+		end)
+	end
+
+	local function receive(stream, data)
+		if
+			finished
+			or line_limit_exceeded
+			or not active()
+			or not data
+			or #data == 0
+			or (#data == 1 and data[1] == "")
+		then
+			return
+		end
+		guarded(function()
+			count = count + #data
+			queue.push(stream, data)
+			if not pumping then
+				pumping = true
+				later(pump)
+			end
+		end)
+	end
+
+	local ok, result = pcall(vim.fn.jobstart, cmd, {
+		cwd = owner.directory,
+		on_stdout = function(_, data)
+			receive("stdout", data)
+		end,
+		on_stderr = function(_, data)
+			receive("stderr", data)
+		end,
+		on_exit = function(_, code)
+			if not owner.failure then
+				exit_status = code
+			end
+			complete()
+		end,
+		pty = config.use_pseudo_terminal,
+		env = config.environment,
+		clear_env = config.clear_environment,
+	})
+	started = true
+	job_id = ok and result or -1
+	owner.job_id = job_id
+	if finished or not active() then
+		if job_id > 0 then
+			pcall(vim.fn.jobstop, job_id)
+		end
+		if owner.cancel then
+			owner.cancel()
+		end
+		return
+	end
+	if not ok or job_id <= 0 then
+		fail(ok and ("Failed to start job: " .. tostring(job_id)) or result)
+		return
+	end
+	vim.g.compile_job_id = job_id
+	vim.cmd.redrawstatus()
+	delete_event = vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
+		buffer = bufnr,
+		once = true,
+		callback = function()
+			if current_session == owner then
+				current_session = nil
+				vim.g.compilation_exit_code = nil
+				vim.g.compile_job_id = nil
+			end
+			if owner.cancel then
+				owner.cancel()
+			end
+			pcall(vim.fn.jobstop, job_id)
+		end,
+	})
+	complete()
+	if param.bang and not finished then
+		vim.fn.jobwait({ job_id })
+	end
+end, 4)
 
 ---Get the current time, formatted.
 local function time()
@@ -190,141 +332,198 @@ end
 
 ---Run `command` and place the results in the "Compilation" buffer.
 ---
----@type fun(command: string, param: CommandParam)
+---@type fun(command: string, param: CommandParam, directory?: string)
 M.run = a.void(
 	---@param command string
 	---@param param CommandParam
-	function(command, param)
-		local config = require("compile-mode.config.internal")
+	function(command, param, directory)
+		local session
+		local ok, reason = xpcall(function()
+			local config = require("compile-mode.config.internal")
 
-		log.debug("calling runcommand()")
+			log.debug("calling runcommand()")
 
-		if config.ask_about_save and utils.ask_to_save(param.smods or {}) then
-			return
-		end
-
-		if vim.g.compile_job_id then
-			if config.ask_to_interrupt then
-				local response = vim.fn.confirm("Interrupt running process?", "&Yes\n&No")
-				if response ~= 1 then
-					return
-				end
+			if config.ask_about_save and utils.ask_to_save(param.smods or {}) then
+				return
 			end
 
-			M.interrupt()
+			if current_session or vim.g.compile_job_id then
+				if config.ask_to_interrupt then
+					local response = vim.fn.confirm("Interrupt running process?", "&Yes\n&No")
+					if response ~= 1 then
+						return
+					end
+				end
 
-			utils.delay(1000)
+				M.interrupt()
+			end
+
+			cdir.compilation_directory = directory or cdir.compilation_directory or vim.fn.getcwd()
+			vim.g.compile_command = command
+			session = { directory = cdir.compilation_directory }
+			current_session = session
+			vim.g.compilation_exit_code = nil
+			local function owned()
+				if current_session == session and session.bufnr and not vim.api.nvim_buf_is_valid(session.bufnr) then
+					current_session = nil
+				end
+				return current_session == session
+			end
+
+			state.reset()
+			utils.clear_diagnostics()
+
+			if config.bang_expansion then
+				command = vim.fn.expandcmd(command)
+			end
+
+			local error = errors.parse(command, header_line_count)
+			if error then
+				errors.set_error(header_line_count, error)
+			end
+
+			log.debug("opening compilation buffer...")
+
+			local prev_win = vim.api.nvim_get_current_win()
+			local bufnr = utils.split_unless_open(
+				{ fname = config.buffer_name },
+				vim.tbl_extend("force", param.smods or {}, { noswapfile = true }),
+				param.count
+			)
+			session.bufnr = bufnr
+			utils.wait()
+			if not owned() then
+				return
+			end
+
+			utils.clear_highlights(bufnr)
+			ansi.reset(bufnr)
+
+			if config.focus_compilation_buffer then
+				local win = vim.fn.win_findbuf(bufnr)[1]
+				if win then
+					vim.api.nvim_set_current_win(win)
+				end
+			elseif vim.api.nvim_win_is_valid(prev_win) then
+				vim.api.nvim_set_current_win(prev_win)
+			end
+
+			log.fmt_debug("bufnr = %d", bufnr)
+
+			utils.buf_set_opt(bufnr, "buftype", "nofile")
+			utils.buf_set_opt(bufnr, "buflisted", not config.hidden_buffer)
+
+			-- reset compilation buffer
+			buffer.set_lines(bufnr, 0, -1, {})
+			utils.wait()
+			if not owned() then
+				return
+			end
+
+			vim.b[bufnr].compilation_main_buffer = true
+			utils.buf_set_opt(bufnr, "filetype", "compilation")
+
+			buffer.set_lines(bufnr, 0, 0, {
+				"vim: filetype=compilation:path+=" .. default_dir(),
+				"Compilation started at " .. time(),
+				"",
+				command,
+			})
+
+			utils.wait()
+			if not owned() then
+				return
+			end
+			parser.parse(bufnr, 0, -1)
+			errors.highlight(bufnr)
+
+			log.fmt_debug("running command: %s", command)
+
+			local start_time = vim.loop.hrtime()
+
+			local line_count, code, _, line_limit_exceeded = M.run_job(command, bufnr, param)
+
+			local elapsed = (vim.loop.hrtime() - start_time) / 1e9
+
+			if not owned() then
+				return
+			end
+			vim.g.compile_job_id = nil
+
+			for _, stream in pairs(session.streams or {}) do
+				ansi.flush(bufnr, stream.ansi)
+			end
+
+			if line_count == 0 then
+				state.trim_lines(buffer.set_lines(bufnr, -1, -1, { "" }))
+			end
+
+			local compilation_message
+			if session.failure then
+				compilation_message = "Compilation failed: " .. session.failure:match("^[^\n]*")
+			elseif line_limit_exceeded then
+				compilation_message = "Compilation terminated: max_lines reached"
+			elseif code == exit_code.SUCCESS then
+				compilation_message = "Compilation finished"
+			elseif code == exit_code.SIGSEGV then
+				compilation_message = "Compilation segmentation fault (core dumped)"
+			elseif code == exit_code.SIGTERM then
+				compilation_message = "Compilation terminated"
+			else
+				compilation_message = "Compilation exited abnormally with code " .. tostring(code)
+			end
+			vim.g.compilation_exit_code = code
+			vim.cmd.redrawstatus()
+
+			local fmt_elapsed = string.format(", duration %.2f s", elapsed)
+
+			buffer.set_lines(bufnr, -1, -1, {
+				compilation_message .. " at " .. time() .. fmt_elapsed,
+				"",
+			}, false)
+
+			if not param.smods or not param.smods.silent then
+				vim.notify(compilation_message)
+			end
+
+			current_session = nil
+			vim.api.nvim_exec_autocmds("User", {
+				pattern = "CompilationFinished",
+				data = {
+					command = command,
+					code = code,
+					bufnr = bufnr,
+				},
+			})
+
+			utils.wait()
+		end, debug.traceback)
+		if not ok and session and current_session == session then
+			current_session = nil
+			vim.g.compile_job_id = nil
+			vim.g.compilation_exit_code = -1
+			if session.cancel then
+				session.cancel()
+			end
+			if session.job_id and session.job_id > 0 then
+				pcall(vim.fn.jobstop, session.job_id)
+			end
+			if session.bufnr and vim.api.nvim_buf_is_valid(session.bufnr) then
+				pcall(
+					buffer.set_lines,
+					session.bufnr,
+					-1,
+					-1,
+					{ "Compilation failed: " .. tostring(reason):match("^[^\n]*"), "" },
+					false
+				)
+			end
+			vim.notify(tostring(reason), vim.log.levels.ERROR)
+			vim.api.nvim_exec_autocmds("User", {
+				pattern = "CompilationFinished",
+				data = { command = command, code = -1, bufnr = session.bufnr },
+			})
 		end
-
-		state.reset()
-		utils.clear_diagnostics()
-
-		if config.bang_expansion then
-			command = vim.fn.expandcmd(command)
-		end
-
-		local error = errors.parse(command, header_line_count)
-		if error then
-			errors.set_error(header_line_count, error)
-		end
-
-		log.debug("opening compilation buffer...")
-
-		local prev_win = vim.api.nvim_get_current_win()
-		local bufnr = utils.split_unless_open(
-			{ fname = config.buffer_name },
-			vim.tbl_extend("force", param.smods or {}, { noswapfile = true }),
-			param.count
-		)
-		utils.wait()
-
-		utils.clear_highlights(bufnr)
-		ansi.reset(bufnr)
-
-		if config.focus_compilation_buffer then
-			vim.api.nvim_set_current_win(vim.fn.win_findbuf(bufnr)[1])
-		else
-			vim.api.nvim_set_current_win(prev_win)
-		end
-
-		log.fmt_debug("bufnr = %d", bufnr)
-
-		utils.buf_set_opt(bufnr, "buftype", "nofile")
-		utils.buf_set_opt(bufnr, "buflisted", not config.hidden_buffer)
-
-		-- reset compilation buffer
-		buffer.set_lines(bufnr, 0, -1, {})
-		utils.wait()
-
-		vim.b[bufnr].compilation_main_buffer = true
-		utils.buf_set_opt(bufnr, "filetype", "compilation")
-
-		buffer.set_lines(bufnr, 0, 0, {
-			"vim: filetype=compilation:path+=" .. default_dir(),
-			"Compilation started at " .. time(),
-			"",
-			command,
-		})
-
-		utils.wait()
-		parser.parse(bufnr, 0, -1)
-		errors.highlight(bufnr)
-
-		log.fmt_debug("running command: %s", command)
-
-		local start_time = vim.loop.hrtime()
-
-		local line_count, code, job_id, line_limit_exceeded = M.run_job(command, bufnr, param)
-
-		local elapsed = (vim.loop.hrtime() - start_time) / 1e9
-
-		if job_id ~= vim.g.compile_job_id then
-			return
-		end
-		vim.g.compile_job_id = nil
-
-		ansi.flush(bufnr)
-
-		if line_count == 0 then
-			state.trim_lines(buffer.set_lines(bufnr, -1, -1, { "" }))
-		end
-
-		local compilation_message
-		if line_limit_exceeded then
-			compilation_message = "Compilation terminated: max_lines reached"
-		elseif code == exit_code.SUCCESS then
-			compilation_message = "Compilation finished"
-		elseif code == exit_code.SIGSEGV then
-			compilation_message = "Compilation segmentation fault (core dumped)"
-		elseif code == exit_code.SIGTERM then
-			compilation_message = "Compilation terminated"
-		else
-			compilation_message = "Compilation exited abnormally with code " .. tostring(code)
-		end
-		vim.g.compilation_exit_code = code
-		vim.cmd.redrawstatus()
-
-		local fmt_elapsed = string.format(", duration %.2f s", elapsed)
-
-		buffer.set_lines(bufnr, -1, -1, {
-			compilation_message .. " at " .. time() .. fmt_elapsed,
-			"",
-		}, false)
-
-		if not param.smods or not param.smods.silent then
-			vim.notify(compilation_message)
-		end
-
-		vim.api.nvim_exec_autocmds("User", {
-			pattern = "CompilationFinished",
-			data = {
-				command = command,
-				code = code,
-				bufnr = bufnr,
-			},
-		})
-
-		utils.wait()
 	end
 )
 
@@ -332,38 +531,32 @@ M.run = a.void(
 ---
 ---@type fun()
 M.interrupt = a.void(function()
-	log.debug("calling interrupt()")
-
-	if not vim.g.compile_job_id then
-		log.debug("nothing to interrupt")
+	local session = current_session
+	local job_id = session and session.job_id or vim.g.compile_job_id
+	if not session and not job_id then
 		return
 	end
-
-	log.debug("interrupting compilation")
-	log.fmt_debug("vim.g.compile_job_id = %d", vim.g.compile_job_id)
-
-	local bufnr = vim.g.compilation_buffer
-	log.fmt_debug("bufnr = %d", bufnr)
-	-- Revoke ownership before yielding so queued output cannot overwrite the
-	-- interruption message or leak into a subsequent compilation.
-	local job_id = vim.g.compile_job_id
+	local bufnr = session and session.bufnr or vim.g.compilation_buffer
+	current_session = nil
 	vim.g.compile_job_id = nil
-	vim.fn.jobstop(job_id)
-
-	local interrupt_message = "Compilation interrupted"
-
-	buffer.set_lines(bufnr, -1, -1, {
-		"",
-		interrupt_message .. " at " .. time(),
-	})
+	vim.g.compilation_exit_code = nil
+	if session and session.cancel then
+		session.cancel()
+	end
+	if job_id and job_id > 0 then
+		pcall(vim.fn.jobstop, job_id)
+	end
+	if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+		state.trim_lines(buffer.set_lines(bufnr, -1, -1, {
+			"",
+			"Compilation interrupted at " .. time(),
+		}))
+	end
+	vim.cmd.redrawstatus()
 	utils.wait()
-
 	vim.api.nvim_exec_autocmds("User", {
 		pattern = "CompilationInterrupted",
-		data = {
-			job_id = job_id,
-			bufnr = bufnr,
-		},
+		data = { job_id = job_id, bufnr = bufnr },
 	})
 end)
 

@@ -11,7 +11,9 @@ local M = {}
 ---@param hidden_output string[]
 ---@return string[] lines
 ---@return string partial_line
+---@return {prefix: integer, reset: boolean, discarded?: string, discarded_prefixes?: table<integer, string>} replay
 function M.normalize(data, partial_line, hidden_output)
+	local replay = { prefix = #partial_line, reset = false }
 	local new_lines = { partial_line .. (data[1]:gsub("\n", "")) }
 	for i = 2, #data do
 		table.insert(new_lines, (data[i]:gsub("\n", "")))
@@ -21,6 +23,12 @@ function M.normalize(data, partial_line, hidden_output)
 
 	for i, line in ipairs(new_lines) do
 		for _, re in ipairs(hidden_output) do
+			if i == 1 and replay.prefix > 0 then
+				local match = vim.fn.matchstrpos(line, re)
+				if match[2] >= 0 and match[2] < replay.prefix then
+					replay.prefix = replay.prefix - (math.min(match[3], replay.prefix) - match[2])
+				end
+			end
 			line = vim.fn.substitute(line, re, "", "")
 			new_lines[i] = line
 		end
@@ -31,8 +39,23 @@ function M.normalize(data, partial_line, hidden_output)
 		end
 		local pending_cr = last < #line
 		line = line:sub(1, last)
+		if i == 1 then
+			replay.prefix = math.min(replay.prefix, last)
+		end
 		local last_carriage_return = line:find("\r", 1, true) and line:match("^.*()\r")
 		if last_carriage_return then
+			if i == 1 then
+				replay.reset = last_carriage_return >= replay.prefix
+				if replay.reset then
+					replay.discarded = line:sub(replay.prefix + 1, last_carriage_return)
+					replay.discarded_prefixes = replay.discarded_prefixes or {}
+					replay.discarded_prefixes[i] = replay.discarded
+				end
+				replay.prefix = math.max(0, replay.prefix - last_carriage_return)
+			else
+				replay.discarded_prefixes = replay.discarded_prefixes or {}
+				replay.discarded_prefixes[i] = line:sub(1, last_carriage_return)
+			end
 			line = line:sub(last_carriage_return + 1)
 		end
 		if compact_tail and i == #new_lines then
@@ -41,7 +64,7 @@ function M.normalize(data, partial_line, hidden_output)
 
 		new_lines[i] = line
 	end
-	return new_lines, partial_line
+	return new_lines, partial_line, replay
 end
 
 ---Limit replacement of the buffer's unfinished last line to the output budget.
