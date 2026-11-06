@@ -35,6 +35,7 @@ describe("incremental editable compilation logs", function()
 		end
 		local runner = require("compile-mode.runner")
 		busy = runner.is_busy
+		---@diagnostic disable-next-line: duplicate-set-field
 		runner.is_busy = function()
 			return false
 		end
@@ -142,6 +143,7 @@ describe("incremental editable compilation logs", function()
 	it("does not steal a preparing/running command's metadata and restores main ownership", function()
 		local main = log_buffer({ "main.c:1:1: error: main" }, true)
 		local main_error = errors.error_list[1]
+		---@diagnostic disable-next-line: duplicate-set-field
 		require("compile-mode.runner").is_busy = function()
 			return true
 		end
@@ -150,6 +152,7 @@ describe("incremental editable compilation logs", function()
 		s.drain()
 		assert.are.equal(main, vim.g.compilation_buffer)
 		assert.are.equal(main_error, errors.error_list[1])
+		---@diagnostic disable-next-line: duplicate-set-field
 		require("compile-mode.runner").is_busy = function()
 			return false
 		end

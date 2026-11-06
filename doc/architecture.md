@@ -12,8 +12,8 @@ remains `require("compile-mode")`.
 | --- | --- | --- |
 | Command entry and completion | `plugin/command.lua`, `plugin/completion.vim`, `init.lua` | `Compile`, `Recompile`, default commands, input completion, command history and working-directory selection |
 | Compilation lifecycle | `runner.lua` | Save/interrupt prompts, command expansion, buffer initialization, subprocess callbacks, environment/PTY options, exit messages and user events |
-| Output normalization | `output.lua` | Reassemble unfinished lines, remove callback-encoded NULs, apply hidden-output patterns, handle carriage returns and enforce the output budget |
-| Terminal sequences | `ansi.lua` | CSI/SGR filtering or Baleia rendering, OSC handlers, hyperlinks and incomplete escape sequences |
+| Output queue and normalization | `output_queue.lua`, `output.lua` | Bound retained callback data with temporary-file overflow, reassemble independent stream tails, remove callback-encoded NULs, filter hidden output and handle carriage returns |
+| Terminal sequences | `ansi.lua`, `ansi_render.lua`, `ansi_fast.lua` | Stream-local CSI/SGR and OSC state, Baleia style interpretation, hyperlinks, incomplete sequences and independent whole-line color acceleration |
 | Buffer operations | `buffer.lua` | Header/footer writes, optional trimming, buffer options, scrolling and window closing |
 | Buffer interpretation | `parser.lua` | Scan output ranges, collect errors/directory changes/command-prefix highlights, then render highlights and refresh status |
 | Error recognition | `errors/init.lua`, `errors/matchers.lua`, `errors/prefilters.lua` | Built-in matcher data, configured matcher ordering, capture ranges, severity, filename exclusions, error highlighting and quickfix/diagnostic conversion |
@@ -33,12 +33,12 @@ Paths in the table are relative to `lua/compile-mode/` unless they begin with
 ```mermaid
 flowchart TD
     command[Compile / Recompile] --> entry[init: command and directory selection]
-    entry --> run[runner.run: reset state and prepare buffer]
+    entry --> run[runner.run: claim session, reset state and prepare buffer]
     run --> job[runner.run_job: jobstart]
     job --> chunk[stdout / stderr callback]
-    chunk --> queue[per-job queue: merge tails and bound batches]
+    chunk --> queue[bounded memory queue with temporary-file overflow]
     queue --> normalize[output.normalize]
-    normalize --> limit[output.limit]
+    normalize --> limit[stream tail placement and output budget]
     limit --> ansi[ansi.buf_set_lines: escapes and buffer write]
     ansi --> wait[scheduled continuation]
     wait --> scan[parser.scan: errors and directory context]
@@ -51,24 +51,42 @@ flowchart TD
     metadata --> navigation[error navigation / quickfix / diagnostics / statusline]
 ```
 
-`runner.run` checks save/interrupt preferences, expands the command if requested,
-opens or reuses the compilation buffer, writes the header, and starts the job.
-`run_job` owns the job-local partial line, callback-data count, pending queue,
-consumer flag, exit status, and line-limit flag. Stdout and stderr currently use
-the same callback and partial line. `Compile!` waits through `jobwait`; normal
-compilation runs asynchronously.
+`runner.run` checks save/interrupt preferences and claims a session before buffer
+preparation can yield. Resumed work checks that it still owns that session.
+It expands the command if requested, opens or reuses the compilation buffer,
+writes the header, and starts the job. `run_job` owns the callback-data count,
+pending queue, consumer flag, exit status and line-limit flag. Stdout and stderr
+have independent unfinished text, output-row locations and ANSI contexts.
+`Compile!` waits through `jobwait`; normal compilation runs asynchronously.
 
-Callbacks enqueue raw data. One consumer combines adjacent partial tails, with
-linear concatenation of fragments, and takes at most 128 callback line entries
+Callbacks enqueue raw data. The queue retains approximately 1 MiB of accounted
+data or 1,024 records in Lua memory, then appends overflow to a FIFO temporary
+file. Records are encoded separately without constructing a second complete
+callback string. Completion, cancellation and failures close the temporary file;
+I/O errors fail the compilation explicitly. The bound applies to retained queue
+data, not to the callback table Neovim has already allocated, a single oversized
+line being processed, or output retained in the buffer.
+
+One consumer combines adjacent tails from the same stream with linear fragment
+concatenation, and takes approximately 128 callback line entries
 or approximately 64 KiB per batch (plus a trailing empty line when splitting a
 callback). These are soft bounds: a single entry can exceed the byte limit.
 Normalization precedes ANSI processing. Without hidden-output patterns, its tail
 retains only the last visible CR segment and one pending CR. Arbitrary hidden
 patterns can span CR boundaries, so that path retains the raw tail for replay.
-Both forms contain any partial escape bytes; the ANSI writer's `replay_partial`
-flag prevents prepending them twice. Each batch replaces the unfinished buffer line, yields for
-scheduled Baleia work, scans/renders the changed range, follows output if enabled,
-and yields again. Queue dequeue advances an index instead of shifting an array.
+Both forms contain partial escape bytes. Normalization also describes reused
+prefix bytes, newly effective CR overwrites, and controls discarded before a CR.
+The ANSI writer reuses handler results only for replayed events; new OSC events
+still run even when they overwrite the same screen position. Completed rows
+discard their replay cache. SGR and hyperlink state carry between rows and
+batches; visible color and URL marks stay within one row so replacing another
+stream's tail cannot erase earlier spans.
+
+When streams interleave, an existing unfinished row is replaced in place and
+additional rows append in arrival order. Batches wait for scheduled color marks,
+scan/render changed ranges, and follow output if enabled. Parser slices check an
+elapsed budget, and zero-delay timers between consumer turns allow the event loop
+to poll instead of draining an entire backlog through recursive `vim.schedule`.
 
 `parser.scan` replaces range metadata and clears only owned range highlights.
 Its returned highlight list carries the newly parsed errors and scan identity;
@@ -84,13 +102,21 @@ empty. `runner.run` then checks job ownership, flushes pending ANSI text, append
 the footer, updates status, and emits `CompilationFinished`. Explicit interruption
 revokes ownership before yielding and emits `CompilationInterrupted`; obsolete
 queued output is discarded. Job deletion handlers are removed on completion.
+Starting a replacement command does not impose a fixed one-second delay.
+Startup and consumer failures publish a nonzero completion status; cancelled
+sessions cannot publish a later completion into the replacement session.
 The event establishes completion of output parsing and queued Baleia writes,
 but is not a promise that the editor has drawn a frame.
 
-Existing buffers with the `compilation` filetype take a second path:
-`ftplugin/compilation.lua` calls `_parse_errors` over the full buffer, initially
-and after text changes. These buffers share the same error/directory tables as
-the command-driven session.
+Existing editable buffers with the `compilation` filetype take a second path.
+`parser.attach_log` observes `on_lines`, records the earliest changed row, and
+coalesces one deferred scan from that row to EOF. Insertions, deletions and
+directory transitions therefore rebuild the affected suffix; a tail edit leaves
+the prefix intact. Reloads invalidate the full log. Background logs retain dirty
+ranges without taking ownership from another log or a preparing/running command.
+Entering a different compilation buffer while idle rebuilds the shared metadata
+for that buffer. Attachment versions reject stale deferred rendering, and
+filetype changes or deletion invalidate pending log work.
 
 ## State and coordinate contracts
 
@@ -100,7 +126,7 @@ the command-driven session.
 | `vim.g.compilation_directory` | One-shot user override consumed by `Compile` |
 | `dir.compilation_directory` | Working directory retained for recompilation and source lookup |
 | `vim.g.compile_job_id` | Current subprocess identifier, also consumed by interruption and statusline code |
-| `vim.g.compilation_buffer` | Buffer identifier set by the compilation ftplugin |
+| `vim.g.compilation_buffer` | Main compilation buffer while a command owns the session; otherwise the compilation buffer selected by parser activation |
 | `vim.g.compilation_exit_code` | Last completion status; also cleared by the job's buffer-deletion handler |
 | `errors.error_list` | Sparse table keyed by one-based compilation-buffer line number |
 | `dir.dir_changes` | Directory transitions keyed by one-based compilation-buffer line number |
@@ -108,7 +134,8 @@ the command-driven session.
 | `state.has_auto_jumped` | Reset for each run |
 | `state.in_next_error_mode` | User toggle; persists across recompilation |
 | Job callback locals | Fresh for each `run_job` invocation |
-| ANSI partial text, mode and renderer | Module-local state in `ansi.lua`; `flush` handles completion and `reset(bufnr)` clears initialization, partial text, and owned ANSI marks on buffer reuse |
+| Runner ownership | Private session object claimed before preparation yields; `runner.is_busy()` also covers preparation, independently of the subprocess ID |
+| ANSI partial text and styles | Per-stream contexts supplied to `ansi.buf_set_lines(..., replay_partial, context)` and `ansi.flush(bufnr, context)`; callers omitting a context use a buffer-local default. `reset(bufnr)` invalidates contexts and clears owned marks on reuse |
 | Error matcher caches | Ordered matcher list keyed by config table identity, compiled regexes on matcher tables, and mandatory-literal preconditions keyed by exact builtin regex text |
 
 `state.reset()` resets error metadata, directory transitions, the error cursor
@@ -195,16 +222,22 @@ buffer responsiveness in a real editor as a separate workload.
   native `match_str` validation. Other formats and ambiguous GNU cases still pay
   `matchlist` capture extraction. Custom regexes retain the general path.
 - Independent closed whole-line ANSI colors can reuse Baleia-generated style
-  plans and omit empty reset spans. Other layouts and incompatible optional
-  Baleia helpers use its public writer; multi-span rendering still costs more
-  than stripping escapes.
-- ANSI state and session metadata are shared; stdout/stderr share an unfinished
-  line. Independent stream reconstruction needs a separate compatibility design.
+  plans and omit empty reset spans. Other layouts use the stateful adapter with
+  bounded style caches. Incompatible optional Baleia helpers fall back to its
+  public writer; stream-state correctness is validated with Baleia 1.3.0, not
+  unknown private-helper versions. Multi-span rendering still costs more than
+  stripping escapes.
+- Error/directory metadata still have one active owner. Switching idle logs
+  rebuilds that owner's metadata; changing an early row conservatively rescans
+  the dependent suffix.
 - The batch byte budget cannot interrupt a single expensive Vim regex call.
   The line-length bound limits input to parsing, but does not bound buffer writes,
   ANSI rendering, or arbitrary custom regex complexity below that threshold.
-  `max_lines` remains the finite-output guard; it does not bound an unfinished
-  raw tail when hidden patterns require replay.
+  `max_lines` remains the finite-output guard. Growing lines without newlines
+  still replay and rewrite their whole tail, with quadratic cumulative work;
+  hidden patterns may also retain old CR history. This audit deliberately leaves
+  that long-line algorithm unchanged. Temporary-file overflow bounds the pending
+  memory queue, but does not bound total disk use or retained buffer output.
 
 ## Validation map
 
@@ -214,9 +247,9 @@ can be run as `make test/output` or `make test/parser`.
 
 | Behavior | Existing/focused suites in `spec/` |
 | --- | --- |
-| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command`, `runner`, `runner_review` |
-| Output and escapes | `output`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi`, `ansi_lifecycle`, `ftplugin` |
-| Parsing and navigation | `parser`, `error`, `threshold`, `auto_jump`, `matcher_optimization`, `diagnostics` |
+| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command`, `runner`, `runner_review`, `runner_lifecycle`, `audit_integration` |
+| Output and escapes | `output`, `output_queue`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi`, `ansi_lifecycle`, `ansi_stream`, `ftplugin` |
+| Parsing and navigation | `parser`, `error`, `threshold`, `auto_jump`, `matcher_optimization`, `diagnostics`, `metadata_audit`, `log_updates` |
 | Directory and environment | `directory_change`, `compilation_directory`, `environment` |
 | Scrolling | `auto_scroll` |
 
@@ -224,3 +257,7 @@ The focused `output` tests exercise deterministic callback boundaries without
 depending on how a shell chunks its output. The `parser` tests exercise a log
 buffer without a subprocess, checking output/source coordinates, directory
 context, and the scan/render separation.
+
+The [audit validation record](measurements/audit-validation.json) records the
+integrated regression results and serial before/after measurements. Its heartbeat
+gaps measure event-loop availability, not GUI frame latency or a hard deadline.

@@ -1,0 +1,1183 @@
+{
+  "recorded_at": "2026-11-06T20:25:46.057704+00:00",
+  "baseline_revision": "f7d20fa",
+  "implementation_revision": "32f89bd3d8486d34ba567fa5e4fb813af01f180b",
+  "runtime": [
+    "NVIM v0.12.5",
+    "Build type: Release",
+    "LuaJIT 2.1.1788856981"
+  ],
+  "scope": "Audit fixes excluding quadratic growing-line replay/rewrite.",
+  "validation": {
+    "regression_tests": {
+      "passed": 267,
+      "failed": 0,
+      "errors": 0
+    },
+    "standalone_issues": {
+      "passed": 16,
+      "failed": 0
+    },
+    "audit_probes": [
+      {
+        "case": "warning",
+        "result": {
+          "parsed_level": 1,
+          "diagnostic_level": 2,
+          "expected_warning": 2
+        },
+        "passed": true
+      },
+      {
+        "result": {
+          "expected": 3,
+          "remaining_errors": [
+            1,
+            3
+          ],
+          "cursor": 3
+        },
+        "case": "navigation",
+        "passed": true
+      },
+      {
+        "case": "locus",
+        "result": {
+          "ok": true
+        },
+        "passed": true
+      },
+      {
+        "case": "osc",
+        "result": {
+          "split": 2,
+          "whole": 2,
+          "text": [
+            "first",
+            "second",
+            ""
+          ]
+        },
+        "passed": true
+      },
+      {
+        "case": "osc_replay",
+        "result": {
+          "expected": 1,
+          "notifications": 1
+        },
+        "passed": true
+      },
+      {
+        "case": "race",
+        "result": {
+          "text": [
+            "vim: filetype=compilation:path+=/private/tmp/compile-mode-audit-integration",
+            "Compilation started at Sat Nov  7 04:22:34",
+            "",
+            "second",
+            "second",
+            "",
+            "Compilation finished at Sat Nov  7 04:22:34, duration 0.03 s",
+            ""
+          ],
+          "launched": [
+            {
+              "id": 100,
+              "cmd": "second"
+            }
+          ],
+          "stopped": [],
+          "finished": [
+            "second"
+          ]
+        },
+        "passed": true
+      },
+      {
+        "case": "spawn_failure",
+        "result": {
+          "job": "nil",
+          "code": -1,
+          "text": [
+            "vim: filetype=compilation:path+=/private/tmp/compile-mode-audit-integration",
+            "Compilation started at Sat Nov  7 04:22:34",
+            "",
+            "fake",
+            "",
+            "",
+            "Compilation failed: Failed to start job: -1 at Sat Nov  7 04:22:34, duration 0.00 s",
+            ""
+          ],
+          "finished": true
+        },
+        "passed": true
+      },
+      {
+        "case": "streams",
+        "result": {
+          "errors": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "highlighted": true,
+              "priority": 1,
+              "full": {
+                "start": 1,
+                "end_": 16
+              },
+              "full_text": "err.c:1:2: error: failure",
+              "level": 2,
+              "linenum": 6,
+              "row": {
+                "range": {
+                  "start": 7,
+                  "end_": 7
+                },
+                "value": 1
+              },
+              "group": "gnu",
+              "col": {
+                "range": {
+                  "start": 9,
+                  "end_": 9
+                },
+                "value": 2
+              },
+              "filename": {
+                "range": {
+                  "start": 1,
+                  "end_": 5
+                },
+                "value": "err.c"
+              }
+            }
+          ],
+          "text": [
+            "out-prefixsuffix",
+            "err.c:1:2: error: failure",
+            ""
+          ]
+        },
+        "passed": true
+      },
+      {
+        "case": "file_navigation",
+        "result": {
+          "second_file": "/tmp/project-b/main.c",
+          "expected": 2,
+          "cursor": 2,
+          "first_file": "/tmp/project-a/main.c"
+        },
+        "passed": true
+      },
+      {
+        "case": "interrupt_limit",
+        "result": {
+          "metadata": {
+            "5": "file.c:3:1: error: c"
+          },
+          "text": [
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "file.c:3:1: error: c",
+            "",
+            "Compilation interrupted at Sat Nov  7 04:22:34"
+          ]
+        },
+        "passed": true
+      }
+    ],
+    "stylua": "passed",
+    "luals_warning": "passed",
+    "diff_check": "passed",
+    "test_setup": "Existing tests.vim plus local Baleia runtime path; swapfile=false and shadafile=NONE for filesystem sandbox."
+  },
+  "availability_50000_errors": {
+    "before": [
+      {
+        "case": "backlog",
+        "errors": 50000,
+        "ticks": 2,
+        "ms": 1046.376125,
+        "max_gap_ms": 1042.059208,
+        "n": 50000
+      },
+      {
+        "ms": 908.523125,
+        "max_gap_ms": 904.303792,
+        "errors": 50000,
+        "case": "backlog",
+        "n": 50000,
+        "ticks": 2
+      },
+      {
+        "n": 50000,
+        "case": "backlog",
+        "errors": 50000,
+        "ticks": 2,
+        "ms": 918.07675,
+        "max_gap_ms": 913.8765
+      },
+      {
+        "n": 50000,
+        "case": "real",
+        "errors": 50000,
+        "ticks": 30,
+        "ms": 982.561708,
+        "max_gap_ms": 60.786542
+      },
+      {
+        "case": "real",
+        "n": 50000,
+        "ms": 1027.835292,
+        "ticks": 29,
+        "errors": 50000,
+        "max_gap_ms": 85.8485
+      },
+      {
+        "n": 50000,
+        "case": "real",
+        "ticks": 29,
+        "errors": 50000,
+        "ms": 1008.984916,
+        "max_gap_ms": 80.188167
+      }
+    ],
+    "after": [
+      {
+        "ms": 1299.717417,
+        "n": 50000,
+        "case": "backlog",
+        "errors": 50000,
+        "ticks": 205,
+        "max_gap_ms": 15.105292
+      },
+      {
+        "ms": 1272.975083,
+        "max_gap_ms": 18.109334,
+        "n": 50000,
+        "case": "backlog",
+        "errors": 50000,
+        "ticks": 202
+      },
+      {
+        "n": 50000,
+        "errors": 50000,
+        "ms": 955.882167,
+        "max_gap_ms": 9.98625,
+        "case": "backlog",
+        "ticks": 157
+      },
+      {
+        "n": 50000,
+        "errors": 50000,
+        "ticks": 165,
+        "ms": 989.140834,
+        "max_gap_ms": 9.228458,
+        "case": "real"
+      },
+      {
+        "n": 50000,
+        "ms": 949.102417,
+        "max_gap_ms": 10.007708,
+        "errors": 50000,
+        "ticks": 161,
+        "case": "real"
+      },
+      {
+        "ms": 976.511875,
+        "max_gap_ms": 9.677959,
+        "n": 50000,
+        "case": "real",
+        "errors": 50000,
+        "ticks": 166
+      }
+    ],
+    "method": "Three fresh headless Neovim processes per case. backlog enqueues 50,000 errors in one jobstart callback mock. real runs scripts/producer.lua errors 50000. A 5 ms libuv timer measures the maximum gap, including the final unserviced interval. No warmup; fixture construction precedes timing."
+  },
+  "pipeline_10000_lines": {
+    "method": "Existing scripts/run_checks.py benchmark with --samples 3 --sizes 10000 and cases end_to_end/plain/10000,end_to_end/errors/10000,end_to_end/ansi/10000. One discarded warmup per case; baseline and final run serially.",
+    "before": {
+      "metadata": {
+        "recorded_at": "2026-11-06T20:24:40.444122+00:00",
+        "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+        "machine": "arm64",
+        "nvim": [
+          "NVIM v0.12.5",
+          "Build type: Release",
+          "LuaJIT 2.1.1788856981"
+        ],
+        "git_head": "f7d20fa968e23e8a3787d613cdcff263c2252bd7",
+        "git_dirty": true,
+        "source_sha256": "20ad92b584039d0e8b4a88f97cfbb8dccdb6c7bfd0c615726ef877652a1698c7",
+        "suite": "benchmark",
+        "samples": 3,
+        "sizes": [
+          10000
+        ],
+        "dependencies": {
+          "PLENARY_PATH": {
+            "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+            "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+          },
+          "BALEIA_PATH": {
+            "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+            "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+          }
+        }
+      },
+      "results": [
+        {
+          "extmarks_after_each_run": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "units": 10000,
+          "event_loop_max_gap_ms": [
+            15.27025,
+            13.912792,
+            13.584708,
+            13.652458
+          ],
+          "name": "end_to_end/plain/10000",
+          "includes_warmup_in_auxiliary_samples": true,
+          "passed": true,
+          "input_size": 10000,
+          "samples_ms": [
+            75.577792,
+            74.901625,
+            74.345917
+          ],
+          "p95_ms": 75.577792,
+          "retained_lua_kib": [
+            12.2265625,
+            20.2587890625,
+            16.4814453125
+          ],
+          "normalization_batches": [
+            81,
+            82,
+            81,
+            81
+          ],
+          "reuses_compilation_buffer": true,
+          "median_ms": 74.901625,
+          "synchronous_stages": [
+            {
+              "ansi.buf_set_lines": {
+                "calls": 81,
+                "total_ms": 7.532289,
+                "max_call_ms": 0.183917
+              },
+              "parser.render": {
+                "calls": 82,
+                "total_ms": 0.1782119999999998,
+                "max_call_ms": 0.05225
+              },
+              "output.normalize": {
+                "calls": 81,
+                "total_ms": 2.894706,
+                "max_call_ms": 0.110333
+              },
+              "parser.scan": {
+                "calls": 82,
+                "total_ms": 41.719666,
+                "max_call_ms": 1.098
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "calls": 82,
+                "total_ms": 7.100958000000001,
+                "max_call_ms": 0.1675
+              },
+              "parser.render": {
+                "calls": 83,
+                "total_ms": 0.109785,
+                "max_call_ms": 0.034041
+              },
+              "output.normalize": {
+                "calls": 82,
+                "total_ms": 2.680294,
+                "max_call_ms": 0.046791
+              },
+              "parser.scan": {
+                "calls": 83,
+                "total_ms": 39.07616599999999,
+                "max_call_ms": 0.949542
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "calls": 81,
+                "total_ms": 7.045546,
+                "max_call_ms": 0.135916
+              },
+              "parser.render": {
+                "calls": 82,
+                "total_ms": 0.04191500000000002,
+                "max_call_ms": 0.00275
+              },
+              "output.normalize": {
+                "calls": 81,
+                "total_ms": 2.672878,
+                "max_call_ms": 0.058709
+              },
+              "parser.scan": {
+                "calls": 82,
+                "total_ms": 38.47166799999999,
+                "max_call_ms": 0.97125
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "calls": 81,
+                "total_ms": 6.941087,
+                "max_call_ms": 0.149084
+              },
+              "parser.render": {
+                "calls": 82,
+                "total_ms": 0.04120900000000002,
+                "max_call_ms": 0.001708
+              },
+              "output.normalize": {
+                "calls": 81,
+                "total_ms": 2.631587,
+                "max_call_ms": 0.046125
+              },
+              "parser.scan": {
+                "calls": 82,
+                "total_ms": 38.504789,
+                "max_call_ms": 0.999167
+              }
+            }
+          ]
+        },
+        {
+          "passed": true,
+          "samples_ms": [
+            215.3275,
+            228.89175,
+            342.46825
+          ],
+          "median_ms": 228.89175,
+          "synchronous_stages": [
+            {
+              "ansi.buf_set_lines": {
+                "total_ms": 8.043171000000001,
+                "max_call_ms": 0.177,
+                "calls": 81
+              },
+              "parser.scan": {
+                "total_ms": 116.015134,
+                "max_call_ms": 3.054834,
+                "calls": 82
+              },
+              "output.normalize": {
+                "total_ms": 3.117455,
+                "max_call_ms": 0.081542,
+                "calls": 81
+              },
+              "parser.render": {
+                "total_ms": 39.21478800000001,
+                "max_call_ms": 0.952583,
+                "calls": 82
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "total_ms": 8.621249000000002,
+                "max_call_ms": 0.476292,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 116.585423,
+                "max_call_ms": 3.875792,
+                "calls": 83
+              },
+              "output.normalize": {
+                "total_ms": 3.239676,
+                "max_call_ms": 0.089,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 42.362663,
+                "max_call_ms": 1.571958,
+                "calls": 83
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "total_ms": 8.298872,
+                "max_call_ms": 0.370041,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 127.6637089999999,
+                "max_call_ms": 5.216542,
+                "calls": 83
+              },
+              "output.normalize": {
+                "total_ms": 3.287919000000001,
+                "max_call_ms": 0.091,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 44.52033400000002,
+                "max_call_ms": 2.007458,
+                "calls": 83
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "total_ms": 9.053829999999998,
+                "max_call_ms": 0.587209,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 240.182831,
+                "max_call_ms": 6.643166,
+                "calls": 83
+              },
+              "output.normalize": {
+                "total_ms": 3.443585000000002,
+                "max_call_ms": 0.130834,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 44.668246,
+                "max_call_ms": 1.858375,
+                "calls": 83
+              }
+            }
+          ],
+          "extmarks_after_each_run": [
+            40000,
+            40000,
+            40000,
+            40000
+          ],
+          "name": "end_to_end/errors/10000",
+          "event_loop_max_gap_ms": [
+            41.068834,
+            44.800709,
+            52.652167,
+            83.470166
+          ],
+          "normalization_batches": [
+            81,
+            82,
+            82,
+            82
+          ],
+          "p95_ms": 342.46825,
+          "retained_lua_kib": [
+            28.2900390625,
+            14.6181640625,
+            16.5205078125
+          ],
+          "includes_warmup_in_auxiliary_samples": true,
+          "reuses_compilation_buffer": true,
+          "input_size": 10000,
+          "units": 10000
+        },
+        {
+          "retained_lua_kib": [
+            21.96484375,
+            20.13671875,
+            7.5
+          ],
+          "median_ms": 84.38725,
+          "synchronous_stages": [
+            {
+              "ansi.buf_set_lines": {
+                "max_call_ms": 0.960666,
+                "calls": 82,
+                "total_ms": 14.759788
+              },
+              "parser.render": {
+                "max_call_ms": 0.028792,
+                "calls": 83,
+                "total_ms": 0.1727079999999998
+              },
+              "output.normalize": {
+                "max_call_ms": 0.097417,
+                "calls": 82,
+                "total_ms": 2.503333
+              },
+              "parser.scan": {
+                "max_call_ms": 1.016833,
+                "calls": 83,
+                "total_ms": 32.33375400000001
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "max_call_ms": 0.396083,
+                "calls": 81,
+                "total_ms": 13.820415
+              },
+              "parser.render": {
+                "max_call_ms": 0.004208,
+                "calls": 82,
+                "total_ms": 0.05433200000000003
+              },
+              "output.normalize": {
+                "max_call_ms": 0.046958,
+                "calls": 81,
+                "total_ms": 2.288672000000001
+              },
+              "parser.scan": {
+                "max_call_ms": 1.031209,
+                "calls": 82,
+                "total_ms": 30.842749
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "max_call_ms": 0.402292,
+                "calls": 81,
+                "total_ms": 13.730834
+              },
+              "parser.render": {
+                "max_call_ms": 0.002625,
+                "calls": 82,
+                "total_ms": 0.04417000000000003
+              },
+              "output.normalize": {
+                "max_call_ms": 0.049458,
+                "calls": 81,
+                "total_ms": 2.318413000000001
+              },
+              "parser.scan": {
+                "max_call_ms": 1.039916,
+                "calls": 82,
+                "total_ms": 30.80983300000001
+              }
+            },
+            {
+              "ansi.buf_set_lines": {
+                "max_call_ms": 0.395042,
+                "calls": 81,
+                "total_ms": 13.668954
+              },
+              "parser.render": {
+                "max_call_ms": 0.00175,
+                "calls": 82,
+                "total_ms": 0.04192400000000003
+              },
+              "output.normalize": {
+                "max_call_ms": 0.047708,
+                "calls": 81,
+                "total_ms": 2.305418000000001
+              },
+              "parser.scan": {
+                "max_call_ms": 1.1425,
+                "calls": 82,
+                "total_ms": 30.30887700000001
+              }
+            }
+          ],
+          "extmarks_after_each_run": [
+            10000,
+            10000,
+            10000,
+            10000
+          ],
+          "units": 10000,
+          "event_loop_max_gap_ms": [
+            21.691542,
+            17.200709,
+            16.990167,
+            17.026833
+          ],
+          "normalization_batches": [
+            82,
+            81,
+            81,
+            81
+          ],
+          "includes_warmup_in_auxiliary_samples": true,
+          "passed": true,
+          "name": "end_to_end/ansi/10000",
+          "reuses_compilation_buffer": true,
+          "input_size": 10000,
+          "samples_ms": [
+            84.693,
+            84.38725,
+            84.125792
+          ],
+          "p95_ms": 84.693
+        }
+      ]
+    },
+    "after": {
+      "metadata": {
+        "recorded_at": "2026-11-06T20:24:42.335594+00:00",
+        "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+        "machine": "arm64",
+        "nvim": [
+          "NVIM v0.12.5",
+          "Build type: Release",
+          "LuaJIT 2.1.1788856981"
+        ],
+        "git_head": "32f89bd3d8486d34ba567fa5e4fb813af01f180b",
+        "git_dirty": true,
+        "source_sha256": "db1065750d9b23d8293b5da810533f34ed0cbaacf48454eb0a92d705fa67bc5b",
+        "suite": "benchmark",
+        "samples": 3,
+        "sizes": [
+          10000
+        ],
+        "dependencies": {
+          "PLENARY_PATH": {
+            "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+            "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+          },
+          "BALEIA_PATH": {
+            "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+            "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+          }
+        }
+      },
+      "results": [
+        {
+          "units": 10000,
+          "event_loop_max_gap_ms": [
+            5.655417,
+            5.682292,
+            5.6535,
+            5.922833
+          ],
+          "normalization_batches": [
+            81,
+            82,
+            82,
+            81
+          ],
+          "includes_warmup_in_auxiliary_samples": true,
+          "passed": true,
+          "input_size": 10000,
+          "samples_ms": [
+            74.9735,
+            75.11125,
+            74.509125
+          ],
+          "p95_ms": 75.11125,
+          "retained_lua_kib": [
+            23.4921875,
+            35.1201171875,
+            19.314453125
+          ],
+          "name": "end_to_end/plain/10000",
+          "reuses_compilation_buffer": true,
+          "median_ms": 74.9735,
+          "synchronous_stages": [
+            {
+              "parser.render": {
+                "total_ms": 0.3867889999999968,
+                "max_call_ms": 0.028583,
+                "calls": 704
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 4.971999000000001,
+                "max_call_ms": 0.11675,
+                "calls": 81
+              },
+              "parser.scan": {
+                "total_ms": 41.29369799999997,
+                "max_call_ms": 0.358167,
+                "calls": 704
+              },
+              "output.normalize": {
+                "total_ms": 2.913456,
+                "max_call_ms": 0.096875,
+                "calls": 81
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 0.2054619999999997,
+                "max_call_ms": 0.002541,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 4.774789999999999,
+                "max_call_ms": 0.134625,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 39.34588999999999,
+                "max_call_ms": 0.196958,
+                "calls": 705
+              },
+              "output.normalize": {
+                "total_ms": 2.725293000000001,
+                "max_call_ms": 0.037875,
+                "calls": 82
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 0.2047049999999996,
+                "max_call_ms": 0.002167,
+                "calls": 704
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 4.524336,
+                "max_call_ms": 0.098291,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 39.36630099999999,
+                "max_call_ms": 0.188959,
+                "calls": 704
+              },
+              "output.normalize": {
+                "total_ms": 2.758921,
+                "max_call_ms": 0.065917,
+                "calls": 82
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 0.2012149999999997,
+                "max_call_ms": 0.001792,
+                "calls": 703
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 4.509211000000001,
+                "max_call_ms": 0.090834,
+                "calls": 81
+              },
+              "parser.scan": {
+                "total_ms": 39.51028099999996,
+                "max_call_ms": 0.195083,
+                "calls": 703
+              },
+              "output.normalize": {
+                "total_ms": 2.785912999999999,
+                "max_call_ms": 0.05725,
+                "calls": 81
+              }
+            }
+          ],
+          "extmarks_after_each_run": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "normalization_batches": [
+            82,
+            82,
+            83,
+            83
+          ],
+          "includes_warmup_in_auxiliary_samples": true,
+          "input_size": 10000,
+          "passed": true,
+          "samples_ms": [
+            209.838916,
+            214.299834,
+            215.402834
+          ],
+          "p95_ms": 215.402834,
+          "retained_lua_kib": [
+            29.203125,
+            39.4169921875,
+            26.978515625
+          ],
+          "synchronous_stages": [
+            {
+              "parser.render": {
+                "total_ms": 34.40049599999992,
+                "max_call_ms": 0.218041,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 5.637003000000002,
+                "max_call_ms": 0.152292,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 117.8512880000001,
+                "max_call_ms": 0.673834,
+                "calls": 705
+              },
+              "output.normalize": {
+                "total_ms": 3.9255,
+                "max_call_ms": 0.321625,
+                "calls": 82
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 36.75753399999999,
+                "max_call_ms": 0.295834,
+                "calls": 704
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 5.292121999999998,
+                "max_call_ms": 0.140834,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 118.5455760000001,
+                "max_call_ms": 0.677916,
+                "calls": 704
+              },
+              "output.normalize": {
+                "total_ms": 3.581789999999998,
+                "max_call_ms": 0.077459,
+                "calls": 82
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 37.56672199999998,
+                "max_call_ms": 0.32225,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 5.465914999999999,
+                "max_call_ms": 0.151333,
+                "calls": 83
+              },
+              "parser.scan": {
+                "total_ms": 120.72796,
+                "max_call_ms": 0.770375,
+                "calls": 705
+              },
+              "output.normalize": {
+                "total_ms": 3.693625000000001,
+                "max_call_ms": 0.079417,
+                "calls": 83
+              }
+            },
+            {
+              "parser.render": {
+                "total_ms": 37.71351199999996,
+                "max_call_ms": 0.253792,
+                "calls": 706
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 5.471418999999999,
+                "max_call_ms": 0.154625,
+                "calls": 83
+              },
+              "parser.scan": {
+                "total_ms": 122.0277590000001,
+                "max_call_ms": 0.917625,
+                "calls": 706
+              },
+              "output.normalize": {
+                "total_ms": 3.571170000000001,
+                "max_call_ms": 0.072792,
+                "calls": 83
+              }
+            }
+          ],
+          "extmarks_after_each_run": [
+            40000,
+            40000,
+            40000,
+            40000
+          ],
+          "median_ms": 214.299834,
+          "event_loop_max_gap_ms": [
+            7.417625,
+            15.5975,
+            16.549541,
+            16.484541
+          ],
+          "reuses_compilation_buffer": true,
+          "units": 10000,
+          "name": "end_to_end/errors/10000"
+        },
+        {
+          "units": 10000,
+          "median_ms": 90.217,
+          "reuses_compilation_buffer": true,
+          "synchronous_stages": [
+            {
+              "output.normalize": {
+                "total_ms": 2.637247999999998,
+                "max_call_ms": 0.096292,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 0.3246559999999982,
+                "max_call_ms": 0.028,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 16.34145699999999,
+                "max_call_ms": 1.282459,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 33.43102499999999,
+                "max_call_ms": 0.535333,
+                "calls": 705
+              }
+            },
+            {
+              "output.normalize": {
+                "total_ms": 2.483161,
+                "max_call_ms": 0.067333,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 0.2124949999999995,
+                "max_call_ms": 0.001375,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 14.80062499999999,
+                "max_call_ms": 0.466417,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 33.20671400000001,
+                "max_call_ms": 0.215417,
+                "calls": 705
+              }
+            },
+            {
+              "output.normalize": {
+                "total_ms": 2.444627,
+                "max_call_ms": 0.059625,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 0.2136079999999995,
+                "max_call_ms": 0.002167,
+                "calls": 705
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 14.254204,
+                "max_call_ms": 0.494958,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 32.23200100000002,
+                "max_call_ms": 0.213792,
+                "calls": 705
+              }
+            },
+            {
+              "output.normalize": {
+                "total_ms": 2.472874,
+                "max_call_ms": 0.048458,
+                "calls": 82
+              },
+              "parser.render": {
+                "total_ms": 0.2089739999999992,
+                "max_call_ms": 0.001375,
+                "calls": 706
+              },
+              "ansi.buf_set_lines": {
+                "total_ms": 14.610163,
+                "max_call_ms": 0.484167,
+                "calls": 82
+              },
+              "parser.scan": {
+                "total_ms": 31.64598599999999,
+                "max_call_ms": 0.2005,
+                "calls": 706
+              }
+            }
+          ],
+          "extmarks_after_each_run": [
+            10000,
+            10000,
+            10000,
+            10000
+          ],
+          "p95_ms": 91.634708,
+          "retained_lua_kib": [
+            49.79296875,
+            52.3935546875,
+            34.314453125
+          ],
+          "normalization_batches": [
+            82,
+            82,
+            82,
+            82
+          ],
+          "includes_warmup_in_auxiliary_samples": true,
+          "event_loop_max_gap_ms": [
+            5.804208,
+            5.873958,
+            5.924833,
+            5.90825
+          ],
+          "input_size": 10000,
+          "passed": true,
+          "name": "end_to_end/ansi/10000",
+          "samples_ms": [
+            91.634708,
+            90.217,
+            89.271292
+          ]
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Heartbeat gaps are not GUI frame latency or hard time bounds.",
+    "One regex, ANSI operation or oversized line can exceed the soft time/byte budgets.",
+    "Queue overflow adds temporary-file I/O and can increase total time for a large preexisting backlog.",
+    "Unfinished growing lines retain their existing quadratic replay/rewrite cost.",
+    "Queue memory accounting excludes Neovim callback allocation, the current batch and final buffer output; disk overflow is not size-capped.",
+    "Verified on local macOS arm64 and installed Neovim/Baleia; other platform/version CI matrices were not executed here."
+  ],
+  "runtime_source_sha256": {
+    "lua/compile-mode/ansi.lua": "6d35f0d180c4d5abb6be318c2b6cf3ff381e3b642195663d472900296e6c1168",
+    "lua/compile-mode/ansi_fast.lua": "328094c2dfac2959822a671d7c2fe9fe13f3d4db7e20d0f12b5b090c909bf4f5",
+    "lua/compile-mode/ansi_render.lua": "3a2d6640f3453a9725152b1c9b31a4e45e4b7f1676a63ad359ff1233791df1ce",
+    "lua/compile-mode/buffer.lua": "988be5a35793ff2a46d74cce0f1c29b5485c09ac36ca780ae607b1e12db0adfb",
+    "lua/compile-mode/config/check.lua": "266ec5b900982e64a36849454854777fa23d32793f01bbaf41eac158057cb2b4",
+    "lua/compile-mode/config/internal.lua": "906007f7db696ccae9a7dc547ae94798c674a58869cc2cb90f0f32ee089aeb6a",
+    "lua/compile-mode/config/meta.lua": "e89f3068ea79ec672640d68c49b0c90682d6cd9fb1cedddebb7667c87b66736d",
+    "lua/compile-mode/constants.lua": "953850663528ee715d5955152b768e0715a1afc538733195775bdbfd20816cac",
+    "lua/compile-mode/dir.lua": "62922aa4ae4cad89ca9c14c1c6d1375d00e9509a370adba5d8f31c1d4e74ed2c",
+    "lua/compile-mode/errors/fast.lua": "86985da7d357c3d5523f227974e9c8c534d81c02cb858af1a8793e9dfad73938",
+    "lua/compile-mode/errors/init.lua": "15e622d04f37f1101a5741707a36bc970f2d443a45f84874ff1ac49b0085f2dd",
+    "lua/compile-mode/errors/matchers.lua": "e75dedd6fc220fc579adbfadefd5559b65a93492abdc1b278cd9824f8d385781",
+    "lua/compile-mode/errors/meta.lua": "d39badbc5e3cd6b0cbc1956f26ba84b7fe97ae3cffb27b7861258c37fc34af76",
+    "lua/compile-mode/errors/prefilters.lua": "59561e7d4c6eef711c5f796dedf45e594aba7e0e9232d1ab7bca397d56c545e1",
+    "lua/compile-mode/extensions/lualine.lua": "e9f2a59c02b37647eddd4e6f37fbed1f9363f0b799520e930d5c5354f33185c4",
+    "lua/compile-mode/extensions/telescope.lua": "56ddc57adc3e8330fa409b999ae07b1e962f58265c7e96988e46e1210093ea7b",
+    "lua/compile-mode/health.lua": "f6a4b22a1e12a5d5ec4f0c41dda1a9931f14846dc8dd9f7fd9f23a5a3a1a9561",
+    "lua/compile-mode/init.lua": "13bc1f74ff9dca00d3279a1ac61dd6be4745d662a799f0aa4d8d15f751b384c7",
+    "lua/compile-mode/log.lua": "21aaff9bb49471c8d8e82722bd14f4af5472aeba232e7f08cd63b0ad2ad4c582",
+    "lua/compile-mode/navigation.lua": "a036f6e790d06e60dd312964f101b0824a3b47087bf55bbd0f560dd0a179af13",
+    "lua/compile-mode/output.lua": "39dbe33d1d7a3a0889bbd563f9a973d71c101a014a9322fd36e9222494068b23",
+    "lua/compile-mode/output_queue.lua": "c1783806a9395929ba7349f752909edb0da7cec0792feb80cabd0bfd6e0c5cd0",
+    "lua/compile-mode/parser.lua": "d908d09931cda780bfb5a90ff84037d25e71f1bf6decb3da3ef2d633e5020f35",
+    "lua/compile-mode/runner.lua": "4bf91d9e67cd4d6daf7c3eedbc9087ef4224d317fe90e73cd47ee44516fc5bca",
+    "lua/compile-mode/state.lua": "c40cb8c1e59687dad590cb4104ac226e6bb920e2167718f9c8e65ccde861505c",
+    "lua/compile-mode/statusline.lua": "6c6be8a4aa7437f8533183a21c822897725739477afc4fa0033951d1ef027f40",
+    "lua/compile-mode/utils.lua": "37deee4517838ed0d998d75378961b0062fff456fc4f1c74ad404cb28033b069",
+    "lua/compile-mode/window_highlights.lua": "97b96b586c024a252894cc6d8d8012f373f7c7d023f6c446993e7981d27ff658",
+    "lua/telescope/_extensions/compile-mode.lua": "1aa95403ef240235e35f8212ec872c5ad38290048c60256d3bd8a53ea2eb938d",
+    "plugin/command.lua": "0412cd39306655e704af64b469a286a32323ce4e8aa1f987b680d7d957a0935a",
+    "plugin/completion.vim": "bc6840d29b394b953a8491039784903542ea5245c2c202bd77080f9538754a30",
+    "plugin/highlights.vim": "a7398386d5106fcb969f24ccfb608aa68c29a82b9947b02b7137249c7e6aeb12",
+    "plugin/statusline.vim": "5d5d19c5875ab3492745a6b2a7e944e620c454f0888ee841cb0c217770953e9a",
+    "ftplugin/compilation.lua": "e358ec25d1e1fb102f3ae06636693f743a85e243dda7f5672549ba64a4967914"
+  }
+}

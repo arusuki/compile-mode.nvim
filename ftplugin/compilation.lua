@@ -43,7 +43,7 @@ end
 matchadd("CompileModeInfo", "^Compilation \\zsfinished\\ze.*")
 matchadd(
 	"CompileModeError",
-	"^Compilation \\zs\\(exited abnormally\\|interrupted\\|killed\\|terminated\\|segmentation fault\\)\\ze"
+	"^Compilation \\zs\\(exited abnormally\\|interrupted\\|killed\\|terminated\\|segmentation fault\\|failed\\)\\ze"
 )
 matchadd("CompileModeError", "^Compilation .* with code \\zs[0-9]\\+\\ze")
 matchadd("CompileModeOutputFile", " --\\?o\\(utfile\\|utput\\)\\?[= ]\\zs\\(\\S\\+\\)\\ze")
