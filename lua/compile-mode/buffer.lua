@@ -4,6 +4,18 @@ local M = {}
 
 local header_line_count = require("compile-mode.constants").header_line_count
 
+---Follow live output in windows displaying the compilation buffer.
+---@param bufnr integer
+function M.scroll(bufnr)
+	if not require("compile-mode.config.internal").auto_scroll then
+		return
+	end
+	local last = vim.api.nvim_buf_line_count(bufnr)
+	for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
+		vim.api.nvim_win_set_cursor(win, { last, 0 })
+	end
+end
+
 ---@param bufnr integer
 ---@param start integer
 ---@param end_ integer
@@ -37,11 +49,7 @@ function M.set_lines(bufnr, start, end_, data, trim)
 		utils.buf_set_opt(bufnr, "modified", false)
 	end)
 
-	if config.auto_scroll then
-		vim.api.nvim_buf_call(bufnr, function()
-			vim.cmd("normal G")
-		end)
-	end
+	M.scroll(bufnr)
 
 	return removed_lines
 end

@@ -60,6 +60,9 @@ local osc_handlers = {}
 ---@type table?
 local baleia_instance = nil
 local initialized = false
+-- Baleia uses the supplied name for both its namespace and highlight groups.
+-- Keep its marks separate from other consumers of Baleia in the same buffer.
+local baleia_namespaces = {}
 
 local M = {}
 
@@ -73,7 +76,10 @@ local function setup(config)
 	if mode == "render" then
 		local ok, baleia_mod = pcall(require, "baleia")
 		if ok then
-			baleia_instance = baleia_mod.setup(ansi_cfg.baleia_options or {})
+			local options = vim.tbl_extend("force", {}, ansi_cfg.baleia_options or {})
+			options.name = "compile-mode-" .. (options.name or "BaleiaColors")
+			baleia_namespaces[vim.api.nvim_create_namespace(options.name)] = true
+			baleia_instance = baleia_mod.setup(options)
 		else
 			log.warn("ansi_color.kind is 'render' but baleia.nvim could not be loaded. Falling back to 'filter'.")
 			mode = "filter"
@@ -112,6 +118,22 @@ local function setup(config)
 		}
 	end
 	osc_handlers = vim.tbl_extend("keep", osc_cfg.handlers or {}, defaults)
+end
+
+---Remove colors before replacing their text, including marks queued by Baleia.
+---The deferred clear must be queued before the next Baleia write schedules marks.
+---@param bufnr integer
+---@param start integer
+---@param end_ integer
+local function clear_colors(bufnr, start, end_)
+	for ns in pairs(baleia_namespaces) do
+		vim.api.nvim_buf_clear_namespace(bufnr, ns, start, end_)
+		vim.schedule(function()
+			if vim.api.nvim_buf_is_valid(bufnr) then
+				vim.api.nvim_buf_clear_namespace(bufnr, ns, start, end_)
+			end
+		end)
+	end
 end
 
 ---Strip all CSI sequences (SGR and non-SGR) from a line.
@@ -336,10 +358,25 @@ end
 ---@param start integer
 ---@param end_ integer
 ---@param lines string[]
-function M.buf_set_lines(bufnr, start, end_, lines)
+---@param replay_partial? boolean normalized lines already contain the raw unfinished tail
+function M.buf_set_lines(bufnr, start, end_, lines, replay_partial)
 	if not initialized then
 		setup(require("compile-mode.config.internal"))
 		initialized = true
+	end
+	if replay_partial then
+		-- The runner replays the entire raw unfinished line. Reusing our
+		-- escape fragment as well would prepend the same sequence twice.
+		partial_buffer = ""
+	end
+	local count = vim.api.nvim_buf_line_count(bufnr)
+	start = math.max(0, math.min(count, start < 0 and count + start + 1 or start))
+	end_ = math.max(0, math.min(count, end_ < 0 and count + end_ + 1 or end_))
+	if start < end_ then
+		clear_colors(bufnr, start, end_)
+		-- OSC marks are created synchronously, so a deferred clear would erase
+		-- the new links as well as the previous ones.
+		vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, start, end_)
 	end
 	local fn = (mode == "render" and render) or (mode == "filter" and filter) or passthrough
 	vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
@@ -351,9 +388,16 @@ function M.buf_set_lines(bufnr, start, end_, lines)
 	end)
 end
 
-function M.reset()
+---Reset escape state and remove our highlights from a reused compilation buffer.
+---@param bufnr? integer
+function M.reset(bufnr)
+	if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+		clear_colors(bufnr, 0, -1)
+		vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, 0, -1)
+	end
 	initialized = false
 	partial_buffer = ""
+	baleia_instance = nil
 end
 
 ---Flush any remaining partial buffer to the compilation buffer.
