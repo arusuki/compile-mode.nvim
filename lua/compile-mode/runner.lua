@@ -393,7 +393,7 @@ M.run = a.void(
 			current_session = session
 			vim.g.compilation_exit_code = nil
 			local function owned()
-				if current_session == session and session.bufnr and not vim.api.nvim_buf_is_valid(session.bufnr) then
+				if current_session == session and session.bufnr and not vim.api.nvim_buf_is_loaded(session.bufnr) then
 					current_session = nil
 				end
 				return current_session == session
@@ -425,7 +425,9 @@ M.run = a.void(
 				return
 			end
 
-			utils.clear_highlights(bufnr)
+			if not utils.clear_highlights(bufnr, owned) then
+				return
+			end
 			ansi.reset(bufnr)
 
 			if config.focus_compilation_buffer then

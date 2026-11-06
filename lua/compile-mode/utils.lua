@@ -84,9 +84,37 @@ function M.add_highlight(bufnr, hlname, linenum, range)
 	)
 end
 
+---With an ownership predicate, run from a Plenary coroutine and clear in slices.
 ---@param bufnr integer
-function M.clear_highlights(bufnr)
-	vim.api.nvim_buf_clear_namespace(bufnr, compile_mode_ns, 0, -1)
+---@param owned? fun(): boolean Check compilation ownership after every yield.
+---@return boolean completed
+function M.clear_highlights(bufnr, owned)
+	-- Preserve synchronous behavior for callers outside the compilation runner.
+	if not owned then
+		vim.api.nvim_buf_clear_namespace(bufnr, compile_mode_ns, 0, -1)
+		return true
+	end
+	local first, tick = 0, nil
+	while owned() do
+		local changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+		if tick and tick ~= changedtick then
+			-- An edit while suspended may have shifted uncleared marks into a
+			-- previously cleared range. Restart without touching foreign marks.
+			first = 0
+		end
+		tick = changedtick
+		local count = vim.api.nvim_buf_line_count(bufnr)
+		local last = math.min(first + 256, count)
+		vim.api.nvim_buf_clear_namespace(bufnr, compile_mode_ns, first, last == count and -1 or last)
+		if last == count then
+			return true
+		end
+		first = last
+		-- A timer boundary services input/timers, unlike a chain of scheduled
+		-- callbacks. The next iteration must recheck ownership before clearing.
+		M.delay(0)
+	end
+	return false
 end
 
 ---@param input string

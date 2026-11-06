@@ -1,5 +1,33 @@
 # Profile-guided optimization
 
+## Recompilation cleanup follow-up
+
+The 2026-11-07 scheduling audit located the largest repeat-command pause in
+clearing the previous run's diagnostic extmarks, before starting its subprocess.
+The runner now clears its namespace in 256-line slices separated by timer polls.
+Each slice checks session ownership; cancellation, replacement, deletion or unload
+stops the old cleanup. Text edits during a yield restart the range scan so shifted
+marks are not missed. Foreign namespaces and synchronous utility callers retain
+their existing behavior.
+
+Two serial runs in opposite implementation order, using the normal headless
+Neovim event loop, measured one warmup and five samples per case:
+
+| Previous errors | Maximum heartbeat gap before / after | Median total time before / after |
+| --- | ---: | ---: |
+| 10,000 | 16.4 / 7.3–10.1 ms | 124–125 / 126–130 ms |
+| 100,000 | 185–186 / 15.4–15.6 ms | 1,366–1,372 / 1,382–1,384 ms |
+
+These are observed 5 ms heartbeat gaps, not GUI latency guarantees. Clearing old
+buffer text remains synchronous. All output, recognized errors and final mark
+counts were verified. The full suite passes 314 tests, including eight new
+cleanup/lifecycle tests; LuaLS and changed-file formatting checks pass.
+[Raw comparison](measurements/highlight-cleanup-comparison.json) records runtime
+hashes and samples. Reproduce with `python3 scripts/run_cleanup_bench.py --baseline
+/path/to/isolated/pre-change-checkout` (baseline commit `7bd22eb`).
+
+## Original optimization measurements
+
 Measured on 2026-11-07, macOS arm64 / Neovim 0.12.5 / LuaJIT 2.1.1788856981.
 The reference is commit `a4aff49`; the optimized result is the working tree.
 This follows the historical [baseline report](performance.md). No user command,
