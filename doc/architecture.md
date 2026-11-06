@@ -16,14 +16,14 @@ remains `require("compile-mode")`.
 | Terminal sequences | `ansi.lua` | CSI/SGR filtering or Baleia rendering, OSC handlers, hyperlinks and incomplete escape sequences |
 | Buffer operations | `buffer.lua` | Header/footer writes, optional trimming, buffer options, scrolling and window closing |
 | Buffer interpretation | `parser.lua` | Scan output ranges, collect errors/directory changes/command-prefix highlights, then render highlights and refresh status |
-| Error recognition | `errors/init.lua`, `errors/matchers.lua` | Built-in matcher data, configured matcher ordering, capture ranges, severity, filename exclusions, error highlighting and quickfix/diagnostic conversion |
+| Error recognition | `errors/init.lua`, `errors/matchers.lua`, `errors/prefilters.lua` | Built-in matcher data, configured matcher ordering, capture ranges, severity, filename exclusions, error highlighting and quickfix/diagnostic conversion |
 | Directory context | `dir.lua` | Compilation working directory, per-line directory transitions and filename resolution |
 | Session metadata | `state.lua`, `constants.lua` | Current error, automatic-jump/follow flags, reset and line-number adjustment; shared severity/exit codes and header size |
 | Error navigation | `navigation.lua` | Next/previous/first/current errors, file-wise navigation, cursor following, `gf` and debug inspection |
 | Editor helpers | `utils.lua` | Async waits/input, regex capture positions, windows, source-file jumps, locus highlights, diagnostics and save prompts |
 | Status and integrations | `statusline.lua`, `extensions/`, `lua/telescope/_extensions/` | Error counts, running/exit status, lualine and Telescope integration |
 | Configuration and support | `config/`, `health.lua`, `log.lua` | Defaults, option validation/types, health checks and logging |
-| Compilation filetype | `ftplugin/compilation.lua`, `plugin/highlights.vim` | Buffer commands, keymaps, syntax highlights, cursor-follow events and parsing of existing log buffers |
+| Compilation filetype | `ftplugin/compilation.lua`, `window_highlights.lua`, `plugin/highlights.vim` | Buffer commands, keymaps, window-scoped matches, cursor-follow events and parsing of existing log buffers |
 
 Paths in the table are relative to `lua/compile-mode/` unless they begin with
 `plugin/`, `ftplugin/`, or `lua/`.
@@ -36,37 +36,51 @@ flowchart TD
     entry --> run[runner.run: reset state and prepare buffer]
     run --> job[runner.run_job: jobstart]
     job --> chunk[stdout / stderr callback]
-    chunk --> normalize[output.normalize]
+    chunk --> queue[per-job queue: merge tails and bound batches]
+    queue --> normalize[output.normalize]
     normalize --> limit[output.limit]
     limit --> ansi[ansi.buf_set_lines: escapes and buffer write]
     ansi --> wait[scheduled continuation]
     wait --> scan[parser.scan: errors and directory context]
     scan --> render[parser.render: highlights and status refresh]
     job --> exit[on_exit]
-    exit --> finish[ANSI flush, footer, exit status, CompilationFinished]
+    exit --> drained[wait for queued writes and parsing]
+    render --> drained
+    drained --> finish[ANSI flush, footer, exit status, CompilationFinished]
     scan --> metadata[shared error and directory tables]
     metadata --> navigation[error navigation / quickfix / diagnostics / statusline]
 ```
 
 `runner.run` checks save/interrupt preferences, expands the command if requested,
 opens or reuses the compilation buffer, writes the header, and starts the job.
-`run_job` owns the job-local partial line, callback-data count, exit flag, and
-line-limit flag. Stdout and stderr currently use the same callback and partial
-line. `Compile!` waits through `jobwait`; normal compilation runs asynchronously.
+`run_job` owns the job-local partial line, callback-data count, pending queue,
+consumer flag, exit status, and line-limit flag. Stdout and stderr currently use
+the same callback and partial line. `Compile!` waits through `jobwait`; normal
+compilation runs asynchronously.
 
-Each nonempty output callback replaces the buffer's unfinished last line.
-Normalization happens before ANSI handling. After writing, the callback yields
-through `utils.wait()` before interpreting the updated range. `parser.scan`
-updates metadata and may trigger the configured first-error jump;
-`parser.render` applies error and command-prefix highlights and redraws status.
-The compatibility hook `_parse_errors` invokes both stages.
+Callbacks enqueue raw data. One consumer combines adjacent partial tails, with
+linear concatenation of fragments, and takes at most 128 callback line entries
+or approximately 64 KiB per batch (plus a trailing empty line when splitting a
+callback). These are soft bounds: a single entry can exceed the byte limit.
+Normalization precedes ANSI processing; its raw unfinished line already contains
+any partial escape bytes, so the ANSI writer's `replay_partial` flag prevents
+prepending them twice. Each batch replaces the unfinished buffer line, yields for
+scheduled Baleia work, scans/renders the changed range, follows output if enabled,
+and yields again. Queue dequeue advances an index instead of shifting an array.
 
-After the job exits, `runner.run` checks that it still owns the current job,
-flushes pending ANSI text, appends the completion footer, updates status, and
-emits `CompilationFinished`. Explicit interruption emits
-`CompilationInterrupted`. These events and their payloads remain unchanged.
-The output callback and completion path have scheduled work: an exit event is
-not a general barrier for all UI updates.
+`parser.scan` replaces range metadata and clears only owned range highlights.
+Its returned highlight list carries the newly parsed errors and scan identity;
+`parser.render` visits that selection, ignores stale deferred results, and
+coalesces status redraws. `_parse_errors` invokes both stages synchronously.
+Rescanning a full edited log also removes metadata beyond its new end.
+
+Process exit records a status; completion waits until the consumer and queue are
+empty. `runner.run` then checks job ownership, flushes pending ANSI text, appends
+the footer, updates status, and emits `CompilationFinished`. Explicit interruption
+revokes ownership before yielding and emits `CompilationInterrupted`; obsolete
+queued output is discarded. Job deletion handlers are removed on completion.
+The event establishes completion of output parsing and queued Baleia writes,
+but is not a promise that the editor has drawn a frame.
 
 Existing buffers with the `compilation` filetype take a second path:
 `ftplugin/compilation.lua` calls `_parse_errors` over the full buffer, initially
@@ -89,11 +103,11 @@ the command-driven session.
 | `state.has_auto_jumped` | Reset for each run |
 | `state.in_next_error_mode` | User toggle; persists across recompilation |
 | Job callback locals | Fresh for each `run_job` invocation |
-| ANSI partial text, mode and renderer | Module-local state in `ansi.lua`; `flush` handles completion and `reset` clears initialization/partial text |
-| Error matcher caches | Module-local ordered matcher list/config plus compiled regexes on matcher tables |
+| ANSI partial text, mode and renderer | Module-local state in `ansi.lua`; `flush` handles completion and `reset(bufnr)` clears initialization, partial text, and owned ANSI marks on buffer reuse |
+| Error matcher caches | Ordered matcher list keyed by config table identity, compiled regexes on matcher tables, and mandatory-literal preconditions keyed by exact builtin regex text |
 
 `state.reset()` resets error metadata, directory transitions, the error cursor
-and automatic-jump flag at the existing point in the run lifecycle. It does not
+and automatic-jump flag after the previous job is interrupted. It does not
 reset command history, process globals, ANSI state or configuration caches.
 The legacy `errors.error_list` and `dir.dir_changes` locations are retained for
 existing consumers; always access the current table rather than holding a
@@ -110,7 +124,8 @@ Coordinate rules are particularly important for future changes:
 - Error capture ranges use one-based, inclusive byte positions. Extmarks use
   zero-based byte positions and exclusive ends.
 - A directory transition applies to later lines: lookup tests
-  `transition_line < error_line`.
+  `transition_line < error_line`. Quickfix and diagnostics resolve filenames using
+  `error.linenum`; their destination positions still use `error.row`.
 - Normalization returns both displayed lines and a raw unfinished tail. Hidden
   patterns and carriage returns must be reevaluated when the next chunk arrives.
 - `max_lines` limits output, excluding the header. The callback budget accounts
@@ -122,9 +137,9 @@ Coordinate rules are particularly important for future changes:
 ## Measurement boundaries
 
 Runnable issue probes, benchmarks, recorded results, and prioritized follow-ups
-are in the [performance report](performance.md).
-
-The refactor does not add timers to normal execution or claim a speedup.
+are in the [baseline report](performance.md) and the
+[optimization results](optimization.md). `scripts/profile.lua` records sampled
+LuaJIT call stacks; profiling instrumentation is absent from normal execution.
 Use the following functions to isolate costs before choosing an optimization.
 
 | Area | Entry points | Useful workload dimensions |
@@ -158,31 +173,22 @@ relevant user event and account for pending scheduled rendering separately.
 Headless measurements are useful for parsing and API costs; validate visible
 buffer responsiveness in a real editor as a separate workload.
 
-## Follow-up investigation points
+## Remaining investigation points
 
-These are observations from the current code, not measured bottlenecks or
-behavior changes made by this refactor:
-
-- `errors.highlight` visits the complete error table after each parsed chunk,
-  even though individual entries have an `highlighted` guard.
 - Status counts traverse all errors; navigation collects and sorts error keys
   per action; directory lookup scans all recorded transitions.
-- Regex matching may use both a compiled `match_str` call and `vim.fn.matchlist`
-  to reconstruct capture positions. Command-prefix matching compiles its pattern
-  on each call through `utils.matchlistpos`.
-- Parsing updates matching entries but does not remove stale entries/highlights
-  when a previously parsed line stops matching. Reparsed error lines receive
-  fresh error objects. Include edited logs and partial-line replacement in
-  correctness work before changing incremental parsing.
-- ANSI state and the session metadata are shared, and stdout/stderr share an
-  unfinished line. Stream isolation and lifecycle changes need dedicated tests.
-- The error parser retains its first resolved config and matcher order. Reloading
-  only `config.internal` does not invalidate those caches.
-- Quickfix/diagnostic conversion currently passes a source row to directory
-  resolution, which expects an output line. Test directory transitions with
-  deliberately different source/output rows before changing that behavior.
-- Job exit, pending callbacks, repeated buffer-deletion handlers and failed job
-  startup are lifecycle cases to examine before introducing batching or queues.
+- Matching lines still pay both compiled `match_str` and `vim.fn.matchlist`
+  capture extraction. Candidate prefilters only reject impossible matches and
+  preserve matcher priority and mixed-language support. Custom regexes with
+  unknown text run without a prefilter.
+- ANSI state and session metadata are shared; stdout/stderr share an unfinished
+  line. Independent stream reconstruction needs a separate compatibility design.
+- The batch byte budget cannot interrupt a single expensive Vim regex call or
+  an oversized line. A queue also does not impose an output retention limit;
+  `max_lines` remains the explicit finite-output guard.
+- Diagnostics cache resolved-file buffer numbers within one conversion. They
+  still resolve each error's directory; streams with many directory transitions
+  may benefit from an indexed lookup.
 
 ## Validation map
 
@@ -192,9 +198,9 @@ can be run as `make test/output` or `make test/parser`.
 
 | Behavior | Existing/focused suites in `spec/` |
 | --- | --- |
-| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command` |
-| Output and escapes | `output`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi` |
-| Parsing and navigation | `parser`, `error`, `threshold`, `auto_jump` |
+| Commands and lifecycle | `basic`, `default_command`, `completion`, `bang_expansion`, `interrupt`, `multi_step_command`, `runner`, `runner_review` |
+| Output and escapes | `output`, `carriage_return`, `nul_bytes`, `hidden_output`, `max_lines`, `ansi`, `ansi_lifecycle`, `ftplugin` |
+| Parsing and navigation | `parser`, `error`, `threshold`, `auto_jump`, `matcher_optimization`, `diagnostics` |
 | Directory and environment | `directory_change`, `compilation_directory`, `environment` |
 | Scrolling | `auto_scroll` |
 

@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T19:20:23.395217+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "a4aff495aa85c61deeffbfa4b276ec629ddca342",
+    "git_dirty": true,
+    "source_sha256": "e487bb18b8eb4c53ed183d5970941cb7b715425e3b858d3ac91eb4995bd34702",
+    "suite": "issues",
+    "samples": 7,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "name": "ansi_cargo",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "ansi_recompile_extmarks"
+    },
+    {
+      "passed": true,
+      "name": "ansi_underline"
+    },
+    {
+      "name": "directory_diagnostics",
+      "passed": true
+    },
+    {
+      "name": "directory_quickfix",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "highlight_scope"
+    },
+    {
+      "name": "matcher_priority",
+      "passed": true
+    },
+    {
+      "name": "max_lines",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "mixed_matcher_languages"
+    },
+    {
+      "passed": true,
+      "name": "nul_streams"
+    },
+    {
+      "name": "quickfix_threshold",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "reparse_extmarks"
+    },
+    {
+      "name": "reparse_stale_error",
+      "passed": true
+    },
+    {
+      "name": "scroll_filter",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "scroll_render"
+    },
+    {
+      "passed": true,
+      "name": "window_reuse"
+    }
+  ]
+}

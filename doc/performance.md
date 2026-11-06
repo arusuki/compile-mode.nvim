@@ -1,5 +1,8 @@
 # Issue-driven tests and performance baseline
 
+This historical baseline is retained for comparison. See the subsequent
+[optimization report](optimization.md) for implemented repairs and new measurements.
+
 Recorded on 2026-11-07 (Asia/Shanghai), after the module refactor. This work adds
 reproducers and measurements; it does not change runtime algorithms or repair the
 reported defects. The baseline is commit `c3d4df9` plus the uncommitted refactor.

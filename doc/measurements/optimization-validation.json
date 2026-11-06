@@ -1,0 +1,36 @@
+{
+  "recorded_at": "2026-11-06T19:26:12.765146+00:00",
+  "runtime_sha256": "58eb2213f1a3b18acf73721b2fedceb96451f4ed3411637dabf686e4072c292c",
+  "matches_final_comparison": true,
+  "plenary": {
+    "passed": 189,
+    "failed": 0,
+    "errors": 0,
+    "command": "nvim --headless --clean -u /private/tmp/compile-mode-dev/tests.vim -c \"PlenaryBustedDirectory spec/ {minimal_init = '/private/tmp/compile-mode-dev/tests.vim', sequential = true}\"",
+    "test_init": "set rtp+=/private/tmp/compile-mode-dev/baleia.nvim\nsource spec/configs/tests.vim\n",
+    "note": "Full suite rerun with permission to create Neovim swap files. Afterwards a test-only nil guard was added; all 7 ANSI lifecycle cases rerun successfully."
+  },
+  "issues": {
+    "passed": 16,
+    "failed": 0
+  },
+  "stage_benchmarks": {
+    "before_passed": 54,
+    "after_passed": 54
+  },
+  "final_comparison": {
+    "before_passed": 11,
+    "after_passed": 11,
+    "samples": 5
+  },
+  "stylua": {
+    "passed": true,
+    "command": "stylua --check lua/ spec/ plugin/ ftplugin/ scripts/"
+  },
+  "luals": {
+    "passed": true,
+    "diagnostics": 0,
+    "command": "lua-language-server --check . --configpath .luarc-ci.json"
+  },
+  "git_diff_check": true
+}
