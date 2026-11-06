@@ -258,13 +258,19 @@ for _, length in ipairs({ 32, 512, 4096 }) do
 	end)
 end
 
-for _, kind in ipairs({ "plain", "errors", "ansi" }) do
-	register("end_to_end/" .. kind, sizes[#sizes], function(n)
+local stream_kinds = { "plain", "errors", "ansi" }
+if vim.env.BENCH_LOG then
+	stream_kinds[#stream_kinds + 1] = "log"
+end
+for _, kind in ipairs(stream_kinds) do
+	local count = kind == "log" and #vim.fn.readfile(vim.env.BENCH_LOG) or sizes[#sizes]
+	register("end_to_end/" .. kind, count, function(n)
 		s.setup({ ansi_color = { kind = kind == "ansi" and "render" or "filter", baleia_options = {} } })
 		if kind == "ansi" then
 			assert(pcall(require, "baleia"), "baleia is required")
 		end
-		local command = s.command("scripts/producer.lua", kind, tostring(n))
+		local command = kind == "log" and ("cat " .. vim.fn.shellescape(vim.env.BENCH_LOG))
+			or s.command("scripts/producer.lua", kind, tostring(n))
 		local lags = {}
 		local callbacks = {}
 		local extmarks = {}
@@ -337,8 +343,11 @@ for _, kind in ipairs({ "plain", "errors", "ansi" }) do
 		result.extmarks_after_each_run = extmarks
 		result.reuses_compilation_buffer = true
 		result.event_loop_max_gap_ms = lags
-		result.output_callbacks = callbacks
+		result.normalization_batches = callbacks
 		result.includes_warmup_in_auxiliary_samples = true
+		if kind == "log" then
+			result.input_sha256 = vim.fn.sha256(table.concat(vim.fn.readfile(vim.env.BENCH_LOG), "\n") .. "\n")
+		end
 		return result
 	end)
 end
