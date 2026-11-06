@@ -12,7 +12,7 @@ local function visible_colors(bufnr, ns)
 		end
 	end
 	for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(bufnr, ns, 0, -1, { details = true })) do
-		local details = mark[4]
+		local details = assert(mark[4])
 		local attributes = vim.api.nvim_get_hl(0, { name = details.hl_group, link = false })
 		for row = mark[2], details.end_row do
 			local first = row == mark[2] and mark[3] or 0

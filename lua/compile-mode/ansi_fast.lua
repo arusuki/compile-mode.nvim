@@ -120,7 +120,10 @@ function M.create(options, renderer)
 			end
 			for _, span in ipairs(spans) do
 				-- A later queued write may already have replaced these rows.
-				pcall(vim.api.nvim_buf_add_highlight, bufnr, ns, span.name, span.row, 0, span.length)
+				pcall(vim.api.nvim_buf_set_extmark, bufnr, ns, span.row, 0, {
+					end_col = span.length,
+					hl_group = span.name,
+				})
 			end
 		end)
 		return true
