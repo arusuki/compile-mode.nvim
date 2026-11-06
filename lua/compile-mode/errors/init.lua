@@ -122,7 +122,7 @@ end
 local function map_to_qflist(error)
 	local lnum = error.row and error.row.value
 	return {
-		filename = cdir.resolve_filename(error.filename.value, lnum),
+		filename = cdir.resolve_filename(error.filename.value, error.linenum),
 		lnum = lnum,
 		end_lnum = error.end_row and error.end_row.value,
 		col = error.col and error.col.value,
@@ -176,16 +176,24 @@ end
 ---@param error_list table<integer, CompileModeError> table of compilation errors, usually `errors.error_list`
 ---@return vim.Diagnostic[]
 function M.todiagnostic(bufnr, error_list)
-	return vim.iter(vim.tbl_values(error_list))
-		:filter(function(error)
-			local resolved = cdir.resolve_filename(error.filename.value, error.row and error.row.value)
-			local error_buf = vim.fn.bufadd(resolved)
-			return error_buf == bufnr
-		end)
-		:map(function(error)
-			return map_to_diagnostic(bufnr, error)
-		end)
-		:totable()
+	local buffers = {}
+	local diagnostics = {}
+	for _, error in pairs(error_list) do
+		-- Filename-only messages are useful in quickfix, but have no source
+		-- position to attach a diagnostic to.
+		if error.row then
+			local resolved = cdir.resolve_filename(error.filename.value, error.linenum)
+			local error_buf = buffers[resolved]
+			if not error_buf then
+				error_buf = vim.fn.bufadd(resolved)
+				buffers[resolved] = error_buf
+			end
+			if error_buf == bufnr then
+				diagnostics[#diagnostics + 1] = map_to_diagnostic(bufnr, error)
+			end
+		end
+	end
+	return diagnostics
 end
 
 local _ordered = nil
