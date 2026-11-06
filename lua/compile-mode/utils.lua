@@ -314,10 +314,16 @@ M.jump_to_error = a.void(function(error, current_dir, smods)
 	jump_to_file(nested_filename, error, smods)
 end)
 
+local command_output_pattern = "^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:"
+local command_output_rx = vim.regex(command_output_pattern)
+
 function M.match_command_ouput(line, linenum)
 	local highlights = {}
+	if not line:find(":", 1, true) then
+		return highlights
+	end
 
-	local result = M.matchlistpos(line, "^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:")
+	local result = M.matchlistpos(line, command_output_pattern, command_output_rx)
 	if result then
 		local entire = result[1]
 		if entire then

@@ -1,5 +1,6 @@
 local utils = require("compile-mode.utils")
 local cdir = require("compile-mode.dir")
+local prefilters = require("compile-mode.errors.prefilters")
 
 local M = {}
 
@@ -69,7 +70,6 @@ local function parse_matcher(matcher, line, linenum)
 
 	matcher._rx = matcher._rx or vim.regex(matcher.regex)
 
-	local regex = matcher.regex
 	local result = utils.matchlistpos(line, matcher.regex, matcher._rx)
 	if not result then
 		return nil
@@ -188,26 +188,18 @@ function M.todiagnostic(bufnr, error_list)
 		:totable()
 end
 
-local _cached_config = nil
-local function get_config()
-	if _cached_config then
-		return _cached_config
-	end
-	_cached_config = require("compile-mode.config.internal")
-	return _cached_config
-end
-
 local _ordered = nil
-local function get_ordered()
-	if _ordered then
+local _ordered_table = nil
+local function get_ordered(config)
+	if _ordered and _ordered_table == config.error_regexp_table then
 		return _ordered
 	end
 
-	local config = get_config()
+	_ordered_table = config.error_regexp_table
 	_ordered = {}
 	for group, matcher in pairs(config.error_regexp_table) do
 		---@cast matcher CompileModeRegexpMatcher
-		table.insert(_ordered, { group = group, matcher = matcher })
+		table.insert(_ordered, { group = group, matcher = matcher, literal = prefilters[matcher.regex] })
 	end
 
 	table.sort(_ordered, function(a, b)
@@ -227,11 +219,16 @@ end
 ---@param linenum integer the line number of the parsed line
 ---@return CompileModeError|nil
 function M.parse(line, linenum)
-	local config = get_config()
+	local config = require("compile-mode.config.internal")
 
-	local ordered = get_ordered()
+	local ordered = get_ordered(config)
+	local present = {}
 	for _, item in ipairs(ordered) do
-		local result = parse_matcher(item.matcher, line, linenum)
+		local literal = item.literal
+		if literal and present[literal] == nil then
+			present[literal] = line:find(literal, 1, true) ~= nil
+		end
+		local result = (not literal or present[literal]) and parse_matcher(item.matcher, line, linenum)
 		if result then
 			result.group = item.group
 
