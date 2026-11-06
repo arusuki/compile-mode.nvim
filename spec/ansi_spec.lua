@@ -642,6 +642,63 @@ describe("OSC 8 hyperlink extmarks", function()
 		package.loaded["baleia"] = nil
 	end)
 
+	it("tracks mixed terminators and handler-generated color text in byte columns", function()
+		helpers.setup_tests({
+			ansi_color = { kind = "render" },
+			ansi_osc = {
+				kind = "render",
+				handlers = {
+					[99] = function()
+						return "\27[32m中\27[0m"
+					end,
+				},
+			},
+		})
+		require("compile-mode.config.internal").ansi_osc.handlers = {
+			[99] = function()
+				return "\27[32m中\27[0m"
+			end,
+		}
+		ansi = require("compile-mode.ansi")
+		local bufnr = vim.api.nvim_create_buf(false, true)
+		local pieces = {}
+		for i = 1, 1000 do
+			local term = i % 2 == 0 and "\7" or "\27\\"
+			pieces[#pieces + 1] = "\27]99;replacement" .. term
+			pieces[#pieces + 1] = "\27]8;;https://example.com/" .. i .. term .. "é" .. "\27]8;;" .. term
+		end
+		ansi.buf_set_lines(bufnr, 0, -1, { table.concat(pieces) })
+		helpers.wait_for_schedule()
+		local marks = vim.api.nvim_buf_get_extmarks(bufnr, ansi.ns_id, 0, -1, { details = true })
+		assert.equals(1000, #marks)
+		assert.equals(string.rep("中é", 1000), vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])
+		for i, mark in ipairs(marks) do
+			assert.equals((i - 1) * 5 + 3, mark[3])
+			assert.equals(i * 5, mark[4].end_col)
+			assert.equals("https://example.com/" .. i, mark[4].url)
+		end
+	end)
+
+	it("counts SGR sequences completed across custom handler text boundaries", function()
+		helpers.setup_tests({ ansi_color = { kind = "render" }, ansi_osc = { kind = "render" } })
+		require("compile-mode.config.internal").ansi_osc.handlers = {
+			[99] = function()
+				return "\27[3"
+			end,
+		}
+		ansi = require("compile-mode.ansi")
+		local bufnr = vim.api.nvim_create_buf(false, true)
+		ansi.buf_set_lines(bufnr, 0, -1, {
+			"\27]99;color\7" .. "1mred " .. "\27]8;;https://example.com\7" .. "link\27]8;;\7\27[0m",
+		})
+		helpers.wait_for_schedule()
+		assert.equals("red link", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])
+		local marks = vim.api.nvim_buf_get_extmarks(bufnr, ansi.ns_id, 0, -1, { details = true })
+		assert.equals(1, #marks)
+		assert.equals(4, marks[1][3])
+		assert.equals(8, marks[1][4].end_col)
+	end)
+
 	it("places extmark at correct column with SGR in filter mode", function()
 		local bufnr = vim.api.nvim_create_buf(false, true)
 

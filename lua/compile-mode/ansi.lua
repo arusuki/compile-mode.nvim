@@ -59,6 +59,7 @@ local osc_kind = "render"
 local osc_handlers = {}
 ---@type table?
 local baleia_instance = nil
+local fast_render = nil
 local initialized = false
 -- Baleia uses the supplied name for both its namespace and highlight groups.
 -- Keep its marks separate from other consumers of Baleia in the same buffer.
@@ -80,6 +81,7 @@ local function setup(config)
 			options.name = "compile-mode-" .. (options.name or "BaleiaColors")
 			baleia_namespaces[vim.api.nvim_create_namespace(options.name)] = true
 			baleia_instance = baleia_mod.setup(options)
+			fast_render = require("compile-mode.ansi_fast").create(options, baleia_instance)
 		else
 			log.warn("ansi_color.kind is 'render' but baleia.nvim could not be loaded. Falling back to 'filter'.")
 			mode = "filter"
@@ -161,10 +163,38 @@ end
 ---@field open { uri: string, row: integer, col: integer }?
 ---@field pending AnsiOscExtmark[]
 
-local function visible_len(pieces)
-	local text = table.concat(pieces)
-	local len = #text:gsub(CSI_SGR, "")
-	return len
+-- Count visible bytes incrementally, including SGR sequences assembled from
+-- handler replacements and later text. An unfinished sequence counts as text
+-- until its final `m` arrives, matching stripping the assembled prefix.
+local function visible_len(text, control)
+	local visible, pos = #text, 1
+	while pos <= #text do
+		if not control.phase then
+			local escape = text:find(ESC, pos, true)
+			if not escape then
+				break
+			end
+			control.phase, control.length = 1, 1
+			pos = escape + 1
+		else
+			local byte = text:byte(pos)
+			if control.phase == 1 and byte == 91 then
+				control.phase, control.length = 2, control.length + 1
+			elseif control.phase == 2 and byte >= 48 and byte <= 63 then
+				control.length = control.length + 1
+			elseif control.phase >= 2 and byte >= 32 and byte <= 47 then
+				control.phase, control.length = 3, control.length + 1
+			else
+				if control.phase >= 2 and byte == 109 then
+					visible = visible - control.length - 1
+				end
+				control.phase = byte == 27 and 1 or nil
+				control.length = 1
+			end
+			pos = pos + 1
+		end
+	end
+	return visible
 end
 
 ---Walk through line manually tracking positions, process OSC sequences.
@@ -176,7 +206,8 @@ end
 ---@return string
 local function process_osc(line, bufnr, row, link_state)
 	local pieces = {}
-	local pos = 1
+	local pos, column = 1, 0
+	local control = {}
 
 	while pos <= #line do
 		local osc_start = string.find(line, OSC_INTRO, pos)
@@ -186,24 +217,21 @@ local function process_osc(line, bufnr, row, link_state)
 
 		local before = line:sub(pos, osc_start - 1)
 		table.insert(pieces, before)
+		column = column + visible_len(before, control)
 
-		-- Find terminator: BEL (\x07) or ST (ESC \)
-		local bel = string.find(line, BEL, osc_start)
-		local st = string.find(line, ST, osc_start)
-		local body, body_end
-
-		if bel and (not st or bel < st) then
-			body = line:sub(osc_start + 2, bel - 1)
-			body_end = bel
-		elseif st then
-			body = line:sub(osc_start + 2, st - 1)
-			body_end = st + 1
-		else
-			-- Incomplete sequence, keep remaining text as-is
+		-- Scan each byte at most once. Searching independently for BEL and ST
+		-- repeatedly rescans the remainder when only one kind is present.
+		local terminator = line:find("[\7\27]", osc_start + 2)
+		while terminator and line:byte(terminator) == 27 and line:byte(terminator + 1) ~= 92 do
+			terminator = line:find("[\7\27]", terminator + 1)
+		end
+		if not terminator then
 			table.insert(pieces, line:sub(osc_start))
 			pos = #line + 1
 			break
 		end
+		local body = line:sub(osc_start + 2, terminator - 1)
+		local body_end = terminator + (line:byte(terminator) == 27 and 1 or 0)
 
 		local semicolon = string.find(body, ";")
 		if semicolon then
@@ -217,14 +245,14 @@ local function process_osc(line, bufnr, row, link_state)
 						link_state.open = {
 							uri = meta.link_open.uri,
 							row = row,
-							col = visible_len(pieces),
+							col = column,
 						}
 					elseif meta.link_close and link_state.open then
 						table.insert(link_state.pending, {
 							start_row = link_state.open.row,
 							start_col = link_state.open.col,
 							end_row = row,
-							end_col = visible_len(pieces),
+							end_col = column,
 							url = link_state.open.uri,
 						})
 						link_state.open = nil
@@ -232,6 +260,7 @@ local function process_osc(line, bufnr, row, link_state)
 				end
 				if text and text ~= "" then
 					table.insert(pieces, text)
+					column = column + visible_len(text, control)
 				end
 			end
 		end
@@ -319,7 +348,9 @@ local function render(bufnr, start, end_, lines)
 		lines[i] = line
 	end
 	---@cast baleia_instance table
-	baleia_instance.buf_set_lines(bufnr, start, end_, false, lines)
+	if not fast_render or not fast_render(bufnr, start, end_, lines) then
+		baleia_instance.buf_set_lines(bufnr, start, end_, false, lines)
+	end
 	apply_osc_extmarks(bufnr, link_state.pending)
 end
 
@@ -398,6 +429,7 @@ function M.reset(bufnr)
 	initialized = false
 	partial_buffer = ""
 	baleia_instance = nil
+	fast_render = nil
 end
 
 ---Flush any remaining partial buffer to the compilation buffer.

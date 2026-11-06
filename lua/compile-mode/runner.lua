@@ -225,7 +225,7 @@ M.run = a.void(
 
 		local error = errors.parse(command, header_line_count)
 		if error then
-			errors.error_list[header_line_count] = error
+			errors.set_error(header_line_count, error)
 		end
 
 		log.debug("opening compilation buffer...")

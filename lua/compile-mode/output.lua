@@ -3,7 +3,8 @@ local header_line_count = require("compile-mode.constants").header_line_count
 local M = {}
 
 ---Join the unfinished line, remove encoded NULs, filter hidden output, and handle CRs.
----The returned tail is captured before filtering so a later chunk can be reprocessed.
+---Without hidden patterns, keep only the visible tail and one pending carriage return.
+---Hidden patterns can match across CRs, so their raw tail must remain replayable.
 ---The input table is not modified. Callers skip empty/EOF callbacks before calling.
 ---@param data string[]
 ---@param partial_line string
@@ -16,6 +17,7 @@ function M.normalize(data, partial_line, hidden_output)
 		table.insert(new_lines, (data[i]:gsub("\n", "")))
 	end
 	partial_line = new_lines[#new_lines]
+	local compact_tail = #hidden_output == 0
 
 	for i, line in ipairs(new_lines) do
 		for _, re in ipairs(hidden_output) do
@@ -23,13 +25,18 @@ function M.normalize(data, partial_line, hidden_output)
 			new_lines[i] = line
 		end
 
-		while vim.endswith(line, "\r") do
-			line = line:sub(0, -2)
+		local last = #line
+		while last > 0 and line:byte(last) == 13 do
+			last = last - 1
 		end
-
-		local last_carriage_return = vim.fn.strridx(line, "\r")
-		if last_carriage_return >= 0 and last_carriage_return < line:len() - 1 then
-			line = line:sub(last_carriage_return + 2, -1)
+		local pending_cr = last < #line
+		line = line:sub(1, last)
+		local last_carriage_return = line:find("\r", 1, true) and line:match("^.*()\r")
+		if last_carriage_return then
+			line = line:sub(last_carriage_return + 1)
+		end
+		if compact_tail and i == #new_lines then
+			partial_line = line .. (pending_cr and "\r" or "")
 		end
 
 		new_lines[i] = line

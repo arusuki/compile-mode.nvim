@@ -39,6 +39,42 @@ describe("job output normalization", function()
 		lines = output.normalize({ "\r30%\r\r", "done\r" }, tail, {})
 		assert.are.same({ "30%", "done" }, lines)
 	end)
+	it("retains bounded carriage-return state without losing a pending overwrite", function()
+		local tail = ""
+		local lines
+		for _ = 1, 4000 do
+			lines, tail = output.normalize({ string.rep("x", 255) .. "\r" }, tail, {})
+			assert.equals(256, #tail)
+		end
+		assert.are.same({ string.rep("x", 255) }, lines)
+		lines, tail = output.normalize({ "\r\r" }, tail, {})
+		assert.are.same({ string.rep("x", 255) }, lines)
+		assert.equals(256, #tail)
+		lines = output.normalize({ "done", "" }, tail, {})
+		assert.are.same({ "done", "" }, lines)
+	end)
+
+	it("preserves hidden patterns that match across discarded carriage-return text", function()
+		local lines, tail = output.normalize({ "secret\r" }, "", { "secret\rpublic" })
+		assert.are.same({ "secret" }, lines)
+		assert.equals("secret\r", tail)
+		lines = output.normalize({ "public", "" }, tail, { "secret\rpublic" })
+		assert.are.same({ "", "" }, lines)
+	end)
+
+	it("preserves partial escape bytes after a carriage-return overwrite", function()
+		local lines, tail = output.normalize({ "discard\r\27[" }, "", {})
+		assert.are.same({ "\27[" }, lines)
+		lines = output.normalize({ "32mgreen\27[0m", "" }, tail, {})
+		assert.are.same({ "\27[32mgreen\27[0m", "" }, lines)
+	end)
+
+	it("keeps a long line without control characters unchanged", function()
+		local text = string.rep("x", 1024 * 1024)
+		local lines, tail = output.normalize({ text }, "", {})
+		assert.are.same({ text }, lines)
+		assert.equals(text, tail)
+	end)
 end)
 
 describe("job output line budget", function()
