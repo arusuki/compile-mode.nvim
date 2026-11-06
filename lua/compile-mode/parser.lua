@@ -6,6 +6,8 @@ local state = require("compile-mode.state")
 local M = {}
 local namespace = vim.api.nvim_create_namespace("compile-mode.nvim")
 local redraw_pending = false
+local last_job_id, last_exit_code
+local status_delta = {}
 local active_errors, active_buffer
 local previous_line_count = 0
 local scan_version = 0
@@ -17,14 +19,23 @@ local command_versions = {}
 ---@field _version? integer
 ---@field _buffer? integer
 ---@field _rendered? boolean
+---@field _status_changed? boolean
 
 local function index(line, count)
 	return math.max(0, math.min(count, line < 0 and count + line + 1 or line))
 end
 
+local function remove_error(line)
+	local previous = errors.error_list[line]
+	if previous then
+		status_delta[previous.level] = (status_delta[previous.level] or 0) - 1
+	end
+	errors.error_list[line] = nil
+end
+
 local function clear_metadata(first, last)
 	for line = first, last do
-		errors.error_list[line] = nil
+		remove_error(line)
 		cdir.dir_changes[line] = nil
 		command_versions[line] = nil
 	end
@@ -38,6 +49,7 @@ end
 ---@return CompileModeScanHighlights output_highlights
 function M.scan(bufnr, start_line, end_line)
 	local config = require("compile-mode.config.internal")
+	status_delta = {}
 	local line_count = vim.api.nvim_buf_line_count(bufnr)
 	start_line = index(start_line, line_count)
 	end_line = index(end_line, line_count)
@@ -56,7 +68,7 @@ function M.scan(bufnr, start_line, end_line)
 	if start_line == 0 and end_line == line_count then
 		for line in pairs(errors.error_list) do
 			if line > line_count then
-				errors.error_list[line] = nil
+				remove_error(line)
 			end
 		end
 		for line in pairs(cdir.dir_changes) do
@@ -78,55 +90,62 @@ function M.scan(bufnr, start_line, end_line)
 	for linenum, line in ipairs(lines) do
 		linenum = start_line + linenum
 
-		local error = errors.parse(line, linenum)
+		-- Keep oversized output intact, but bound synchronous matcher work.
+		if config.max_parse_line_length == 0 or #line <= config.max_parse_line_length then
+			local error = errors.parse(line, linenum)
 
-		if error then
-			errors.error_list[linenum] = error
-			output_highlights._parsed[linenum] = error
+			if error then
+				errors.error_list[linenum] = error
+				status_delta[error.level] = (status_delta[error.level] or 0) + 1
+				output_highlights._parsed[linenum] = error
 
-			if config.auto_jump_to_first_error and not state.has_auto_jumped then
-				state.has_auto_jumped = true
-				local dir = cdir.find_directory_for_line(linenum)
-				utils.jump_to_error(error, dir, {})
-				state.error_cursor = linenum
-			end
-		else
-			---@type CompileModeDirectoryMatcher
-			local matcher = vim.iter(config.directory_change_matchers):find(function(matcher)
-				local s0 = matcher._rx:match_str(line)
-				return s0
-			end)
+				if config.auto_jump_to_first_error and not state.has_auto_jumped then
+					state.has_auto_jumped = true
+					local dir = cdir.find_directory_for_line(linenum)
+					utils.jump_to_error(error, dir, {})
+					state.error_cursor = linenum
+				end
+			else
+				---@type CompileModeDirectoryMatcher
+				local matcher = vim.iter(config.directory_change_matchers):find(function(matcher)
+					local s0 = matcher._rx:match_str(line)
+					return s0
+				end)
 
-			if matcher then
-				local matches = vim.fn.matchlist(line, matcher.regex)
+				if matcher then
+					local matches = vim.fn.matchlist(line, matcher.regex)
 
-				local leaving = matcher.leaving and matches[matcher.leaving + 1] ~= ""
-				local dir = matches[matcher.filename + 1]
+					local leaving = matcher.leaving and matches[matcher.leaving + 1] ~= ""
+					local dir = matches[matcher.filename + 1]
 
-				if utils.is_absolute(dir) then
-					cdir.dir_changes[linenum] = vim.fn.fnamemodify(dir, ":p:h" .. (leaving and ":h" or ""))
-				else
-					local latest_dir = cdir.find_directory_for_line(linenum)
-					if leaving then
-						cdir.dir_changes[linenum] = vim.fn.fnamemodify(latest_dir, ":h")
+					if utils.is_absolute(dir) then
+						cdir.dir_changes[linenum] = vim.fn.fnamemodify(dir, ":p:h" .. (leaving and ":h" or ""))
 					else
-						cdir.dir_changes[linenum] = vim.fn.resolve(latest_dir .. "/" .. dir)
+						local latest_dir = cdir.find_directory_for_line(linenum)
+						if leaving then
+							cdir.dir_changes[linenum] = vim.fn.fnamemodify(latest_dir, ":h")
+						else
+							cdir.dir_changes[linenum] = vim.fn.resolve(latest_dir .. "/" .. dir)
+						end
 					end
 				end
-			end
 
-			if not (linenum == 1 and vim.startswith(line, "vim:")) then
-				local highlights = utils.match_command_ouput(line, linenum)
-				if #highlights > 0 then
-					command_versions[linenum] = scan_version
-				end
-				for _, value in ipairs(highlights) do
-					table.insert(output_highlights, value)
+				if not (linenum == 1 and vim.startswith(line, "vim:")) then
+					local highlights = utils.match_command_ouput(line, linenum)
+					if #highlights > 0 then
+						command_versions[linenum] = scan_version
+					end
+					for _, value in ipairs(highlights) do
+						table.insert(output_highlights, value)
+					end
 				end
 			end
 		end
 	end
 
+	output_highlights._status_changed = (status_delta[errors.level.ERROR] or 0) ~= 0
+		or (status_delta[errors.level.WARNING] or 0) ~= 0
+		or (status_delta[errors.level.INFO] or 0) ~= 0
 	return output_highlights
 end
 
@@ -154,7 +173,13 @@ function M.render(bufnr, output_highlights)
 		errors.highlight(bufnr)
 		utils.highlight_command_outputs(bufnr, output_highlights)
 	end
-	if not redraw_pending then
+	local job_id, exit_code = vim.g.compile_job_id, vim.g.compilation_exit_code
+	local status_changed = output_highlights._status_changed
+		or not output_highlights._errors -- legacy, manually assembled render lists
+		or job_id ~= last_job_id
+		or exit_code ~= last_exit_code
+	last_job_id, last_exit_code = job_id, exit_code
+	if status_changed and not redraw_pending then
 		redraw_pending = true
 		vim.schedule(function()
 			redraw_pending = false

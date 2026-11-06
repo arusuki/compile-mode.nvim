@@ -146,6 +146,10 @@ vim.g.compile_mode = {
     -- Maximum number of lines allowed in the compilation buffer.
     -- :h compile-mode.max_lines
     max_lines = nil,
+
+    -- Maximum bytes per parsed line (0 disables the limit). Full output stays visible.
+    -- :h compile-mode.max_parse_line_length
+    max_parse_line_length = 65536,
     -- List of regexes to hide from the output.
     -- :h compile-mode.hidden_output
     hidden_output = {},

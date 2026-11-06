@@ -38,6 +38,8 @@ local default_config = {
 	time_format = "%a %b %e %H:%M:%S",
 	---@type integer|nil
 	max_lines = nil,
+	---@type integer
+	max_parse_line_length = 65536,
 	---@type string[]
 	hidden_output = {},
 	---@type table<string, string>|nil

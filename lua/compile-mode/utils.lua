@@ -323,6 +323,26 @@ function M.match_command_ouput(line, linenum)
 		return highlights
 	end
 
+	-- ASCII command prefixes have unambiguous captures. Non-ASCII alphanumeric
+	-- characters retain Vim's character-class semantics via the general path.
+	if not line:find("[\128-\255]") then
+		local finish, number_start, number_end
+		local _, end_, name, number = line:find("^([%w_/.+%-]+)%[([0-9]+)%][ \t]*:")
+		if end_ then
+			finish = end_
+			number_start, number_end = #name + 2, #name + #number + 1
+		else
+			_, finish = line:find("^[%w_/.+%-]+[ \t]*:")
+		end
+		if finish then
+			highlights[1] = { "CompileModeCommandOutput", linenum, { start = 1, end_ = finish } }
+			if number_start then
+				highlights[2] = { "CompileModeMessageRow", linenum, { start = number_start, end_ = number_end } }
+			end
+		end
+		return highlights
+	end
+
 	local result = M.matchlistpos(line, command_output_pattern, command_output_rx)
 	if result then
 		local entire = result[1]

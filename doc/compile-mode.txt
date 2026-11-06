@@ -26,6 +26,7 @@ Table of Contents                             *compile-mode-table-of-contents*
   - buffer_name                                     |compile-mode.buffer_name|
   - time_format                                     |compile-mode.time_format|
   - max_lines                                       |compile-mode.max_lines|
+  - max_parse_line_length                |compile-mode.max_parse_line_length|
   - hidden_output                                 |compile-mode.hidden_output|
   - environment                                     |compile-mode.environment|
   - clear_environment                         |compile-mode.clear_environment|
@@ -363,6 +364,10 @@ Here is the full default configuration:
         -- Maximum number of lines allowed in the compilation buffer.
         -- :h compile-mode.max_lines
         max_lines = nil,
+
+        -- Maximum bytes per parsed line (0 disables the limit). Full output stays visible.
+        -- :h compile-mode.max_parse_line_length
+        max_parse_line_length = 65536,
         -- List of regexes to hide from the output.
         -- :h compile-mode.hidden_output
         hidden_output = {},
@@ -543,6 +548,17 @@ buffer_name                                         *compile-mode.buffer_name*
 time_format                                         *compile-mode.time_format*
     The way to format the time displayed at the top of the compilation buffer.
     Passed into |strftime()|. Defaults to: `"%a %b %e %H:%M:%S"`.
+
+max_parse_line_length                     *compile-mode.max_parse_line_length*
+    Maximum line length in bytes for error, directory-transition and command-
+    prefix parsing. Default: 65536 (64 KiB). Set to 0 to disable this limit.
+
+    Longer lines remain fully displayed and available for copying, but are not
+    parsed or given error/command highlights. This applies to built-in and
+    custom matchers. A line is skipped as a whole, rather than truncated, so an
+    incomplete prefix cannot be mistaken for an error or directory transition.
+    This bounds each synchronous regex call even when a job emits one enormous
+    line; the output batch size and max_lines do not bound individual line size.
 
 max_lines                                           *compile-mode.max_lines*
     The maximum number of command output lines allowed in the compilation

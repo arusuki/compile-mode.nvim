@@ -1,6 +1,7 @@
 local utils = require("compile-mode.utils")
 local cdir = require("compile-mode.dir")
 local prefilters = require("compile-mode.errors.prefilters")
+local fast = require("compile-mode.errors.fast")
 
 local M = {}
 
@@ -185,13 +186,14 @@ end
 ---@param linenum integer
 ---@return CompileModeError|nil
 local function parse_matcher(matcher, line, linenum)
-	if not matcher then
+	if not matcher or not fast.candidate(line, matcher.regex) then
 		return nil
 	end
 
 	matcher._rx = matcher._rx or vim.regex(matcher.regex)
 
-	local result = utils.matchlistpos(line, matcher.regex, matcher._rx)
+	local result = fast.captures(line, matcher.regex, matcher._rx)
+		or utils.matchlistpos(line, matcher.regex, matcher._rx)
 	if not result then
 		return nil
 	end
@@ -408,6 +410,10 @@ end
 ---@return CompileModeError|nil
 function M.parse(line, linenum)
 	local config = require("compile-mode.config.internal")
+
+	if config.max_parse_line_length > 0 and #line > config.max_parse_line_length then
+		return nil
+	end
 
 	local ordered = get_ordered(config)
 	local present = {}

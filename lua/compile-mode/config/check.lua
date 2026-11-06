@@ -223,6 +223,13 @@ function check.get_errors(cfg)
 			end,
 			"positive integer",
 		},
+		max_parse_line_length = {
+			cfg.max_parse_line_length,
+			function(value)
+				return type(value) == "number" and value >= 0 and value % 1 == 0
+			end,
+			"nonnegative integer (bytes; 0 disables the limit)",
+		},
 		hidden_output = validate_string_list(cfg.hidden_output, true),
 		environment = { cfg.environment, "table", true },
 		clear_environment = { cfg.clear_environment, "boolean" },
