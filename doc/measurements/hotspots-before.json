@@ -1,0 +1,307 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T19:48:01.667759+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "573ed4d766660c3b861b832ff2deb89f70d57b00",
+    "git_dirty": true,
+    "source_sha256": "284bf833248458619e9397b8d59fb4b7c539f27d7c6b6819aef84ba0c0121c4b",
+    "suite": "hotspots",
+    "samples": 5,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "samples_ms": [
+        33.522125,
+        33.548292,
+        33.393167,
+        33.304833,
+        33.429084
+      ],
+      "median_ms": 33.429084,
+      "p95_ms": 33.548292,
+      "retained_lua_kib": [
+        19.0703125,
+        17.29296875,
+        11.44140625,
+        10.08203125,
+        8.8984375
+      ],
+      "passed": true,
+      "name": "ansi/hyperlinks/1000",
+      "units": 1000
+    },
+    {
+      "samples_ms": [
+        129.624542,
+        129.165708,
+        129.129917,
+        128.917667,
+        130.054583
+      ],
+      "median_ms": 129.165708,
+      "p95_ms": 130.054583,
+      "retained_lua_kib": [
+        12.75,
+        13.47265625,
+        5.10546875,
+        5.4453125,
+        4.84375
+      ],
+      "passed": true,
+      "name": "ansi/hyperlinks/2000",
+      "units": 2000
+    },
+    {
+      "passed": true,
+      "units": 4000,
+      "samples_ms": [
+        508.580583,
+        508.460166,
+        508.415541,
+        508.226,
+        506.888375
+      ],
+      "median_ms": 508.415541,
+      "p95_ms": 508.580583,
+      "name": "ansi/hyperlinks/4000",
+      "retained_lua_kib": [
+        12.39453125,
+        10.27734375,
+        3.8046875,
+        3.51171875,
+        3.66796875
+      ]
+    },
+    {
+      "samples_ms": [
+        8.677334,
+        8.5005,
+        8.673708,
+        8.550292,
+        8.666375
+      ],
+      "median_ms": 8.666375,
+      "p95_ms": 8.677334,
+      "retained_lua_kib": [
+        2629.7421875,
+        2628.3046875,
+        2628.3203125,
+        2628.63671875,
+        2628.3359375
+      ],
+      "name": "metadata/diagnostics/0_transitions",
+      "passed": true,
+      "units": 1
+    },
+    {
+      "units": 1,
+      "samples_ms": [
+        1078.521959,
+        1083.60475,
+        1080.488375,
+        1084.273625,
+        1077.421041
+      ],
+      "median_ms": 1080.488375,
+      "name": "metadata/diagnostics/10000_transitions",
+      "retained_lua_kib": [
+        2628.328125,
+        2628.3046875,
+        2628.3203125,
+        2629.7578125,
+        2628.3359375
+      ],
+      "passed": true,
+      "p95_ms": 1084.273625
+    },
+    {
+      "name": "metadata/diagnostics_repeat/0_transitions",
+      "units": 3,
+      "passed": true,
+      "samples_ms": [
+        25.118667,
+        25.093208,
+        26.129708,
+        27.18175,
+        26.878791
+      ],
+      "median_ms": 26.129708,
+      "p95_ms": 27.18175,
+      "retained_lua_kib": [
+        2629.78125,
+        2628.3046875,
+        2631.55859375,
+        2628.3046875,
+        2629.7890625
+      ]
+    },
+    {
+      "samples_ms": [
+        3234.866541,
+        3299.123458,
+        3225.229833,
+        3197.762375,
+        3189.991084
+      ],
+      "median_ms": 3225.229833,
+      "p95_ms": 3299.123458,
+      "name": "metadata/diagnostics_repeat/10000_transitions",
+      "passed": true,
+      "retained_lua_kib": [
+        2628.66015625,
+        2628.3046875,
+        2634.09375,
+        2628.63671875,
+        2628.66796875
+      ],
+      "units": 3
+    },
+    {
+      "passed": true,
+      "units": 1,
+      "median_ms": 9.398583,
+      "samples_ms": [
+        9.398583,
+        9.229084,
+        9.155959,
+        9.575416,
+        9.687
+      ],
+      "name": "metadata/quickfix/0_transitions",
+      "p95_ms": 9.687,
+      "retained_lua_kib": [
+        2630.30078125,
+        2629.27734375,
+        2628.9609375,
+        2628.71484375,
+        2628.3359375
+      ]
+    },
+    {
+      "retained_lua_kib": [
+        2629.91015625,
+        2629.27734375,
+        2628.3203125,
+        2631.1328125,
+        2628.3359375
+      ],
+      "passed": true,
+      "median_ms": 1064.511959,
+      "units": 1,
+      "samples_ms": [
+        1066.917417,
+        1064.511959,
+        1064.127667,
+        1063.944166,
+        1064.580042
+      ],
+      "name": "metadata/quickfix/10000_transitions",
+      "p95_ms": 1066.917417
+    },
+    {
+      "units": 1000,
+      "passed": true,
+      "samples_ms": [
+        79.949542,
+        78.911708,
+        81.134791,
+        78.996667,
+        78.591
+      ],
+      "name": "output/carriage_returns/1000",
+      "p95_ms": 81.134791,
+      "retained_lua_kib": [
+        77.02734375,
+        0.6953125,
+        32.609375,
+        32.59375,
+        32.625
+      ],
+      "median_ms": 78.996667
+    },
+    {
+      "retained_lua_kib": [
+        193.2109375,
+        128.6953125,
+        128.609375,
+        128.9921875,
+        128.625
+      ],
+      "passed": true,
+      "units": 2000,
+      "p95_ms": 343.695834,
+      "samples_ms": [
+        343.695834,
+        335.53275,
+        332.67775,
+        329.508792,
+        329.986583
+      ],
+      "median_ms": 332.67775,
+      "name": "output/carriage_returns/2000"
+    },
+    {
+      "passed": true,
+      "units": 4000,
+      "retained_lua_kib": [
+        128.71875,
+        128.80859375,
+        129.0078125,
+        384.59375,
+        256.625
+      ],
+      "samples_ms": [
+        1382.798459,
+        1384.381708,
+        1390.998375,
+        1377.354708,
+        1374.371625
+      ],
+      "median_ms": 1382.798459,
+      "p95_ms": 1390.998375,
+      "name": "output/carriage_returns/4000"
+    },
+    {
+      "median_ms": 141.4535,
+      "p95_ms": 141.599666,
+      "retained_lua_kib": [
+        1028.03515625,
+        1027.140625,
+        1025.73828125,
+        1027.40234375,
+        1026.08984375
+      ],
+      "name": "parser/one_mib_colon",
+      "passed": true,
+      "units": 1048576,
+      "samples_ms": [
+        141.446125,
+        141.4535,
+        141.465375,
+        141.305541,
+        141.599666
+      ],
+      "process_output": "Switching to backtracking RE engine for pattern: \\%(^cucumber\\%( -p [^[:space:]]\\+\\)\\?\\|#\\)\\%( \\)\\([^(].*\\):\\([1-9][0-9]*\\)Switching to backtracking RE engine for pattern: ^\\%([[:alpha:]][-[:alnum:].]\\+: \\?\\|[ \t]\\%(in \\| from\\)\\)\\?\\(\\%([0-9]*[^0-9\\n]\\)\\%([^\\n :]\\| [^-/\\n]\\|:[^ \\n]\\)\\{-}\\)\\%(: \\?\\)\\([0-9]\\+\\)\\%(-\\([0-9]\\+\\)\\%(\\.\\([0-9]\\+\\)\\)\\?\\|[.:]\\([0-9]\\+\\)\\%(-\\%(\\([0-9]\\+\\)\\.\\)\\([0-9]\\+\\)\\)\\?\\)\\?:\\%( *\\(\\%(FutureWarning\\|RuntimeWarning\\|W\\%(arning\\)\\|warning\\)\\)\\| *\\([Ii]nfo\\%(\\>\\|formationa\\?l\\?\\)\\|I:\\|\\[ skipping .\\+ ]\\|instantiated from\\|required from\\|[Nn]ote\\)\\| *\\%([Ee]rror\\)\\|\\%([0-9]\\?\\)\\%([^0-9\\n]\\|$\\)\\|[0-9][0-9][0-9]\\)\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^[-[:alnum:]_/ ]\\+: \\%(\\%([sS]evere\\|[eE]rror\\|[wW]arnin\\(g\\)\\|[iI]nf\\(o\\)\\)[0-9 ]*: \\)\\?\\([^,\" \n\t]\\+\\)\\%(, line\\|:\\) \\([0-9]\\+\\):Switching to backtracking RE engine for pattern: \\%(Entering\\|Leavin\\(g\\)\\) directory [`']\\zs\\(.\\+\\)\\ze'$Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:\nE363: Pattern uses more memory than 'maxmempattern'Switching to backtracking RE engine for pattern: ^\\([[:alnum:]_/.+-]\\+\\)\\%(\\[\\([0-9]\\+\\)\\]\\)\\?[ \t]*:"
+    }
+  ]
+}
