@@ -557,8 +557,8 @@ max_parse_line_length                     *compile-mode.max_parse_line_length*
     parsed or given error/command highlights. This applies to built-in and
     custom matchers. A line is skipped as a whole, rather than truncated, so an
     incomplete prefix cannot be mistaken for an error or directory transition.
-    This bounds each synchronous regex call even when a job emits one enormous
-    line; the output batch size and max_lines do not bound individual line size.
+    This bounds the input size of each synchronous regex call when a job emits
+    one enormous line; the output batch size and max_lines do not bound individual line size.
 
 max_lines                                           *compile-mode.max_lines*
     The maximum number of command output lines allowed in the compilation

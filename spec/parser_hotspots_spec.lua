@@ -67,6 +67,28 @@ describe("bounded parser work", function()
 		assert.is_true(#result > 0)
 	end)
 
+	it("refreshes current counts when an earlier scan was never rendered", function()
+		vim.g.compile_job_id, vim.g.compilation_exit_code = nil, nil
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "plain output" })
+		parser.parse(buf, 0, -1)
+		drain()
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "main.c:2: error: failure" })
+		parser.scan(buf, 0, -1)
+		local latest = parser.scan(buf, 0, -1)
+		local redraws = 0
+		local redrawstatus = vim.cmd.redrawstatus
+		vim.cmd.redrawstatus = function()
+			redraws = redraws + 1
+		end
+		local ok, err = pcall(function()
+			parser.render(buf, latest)
+			drain()
+			assert.are.equal(1, redraws)
+		end)
+		vim.cmd.redrawstatus = redrawstatus
+		assert.is_true(ok, err)
+	end)
+
 	it("refreshes status only when counts or job status change", function()
 		vim.g.compile_job_id, vim.g.compilation_exit_code = nil, nil
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "plain output" })

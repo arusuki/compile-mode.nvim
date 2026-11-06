@@ -143,6 +143,7 @@ function M.find_directory_for_line(linenum)
 	local original_line, original_directory = preceding(change_lines, linenum)
 	local inserted_line, inserted_directory = preceding(inserted_lines, linenum)
 	if original_line > inserted_line then
+		---@cast original_directory string
 		return original_directory
 	elseif inserted_directory then
 		return inserted_directory
