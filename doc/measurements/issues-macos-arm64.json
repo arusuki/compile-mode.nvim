@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T17:40:14.386369+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "c3d4df990c1c2a3add925379eed482df437d065d",
+    "git_dirty": true,
+    "source_sha256": "11a1a66bc7746300b1d891d6b1ce1ad4716f4fef9028761437f3693e79fc2af0",
+    "suite": "issues",
+    "samples": 7,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "name": "ansi_cargo",
+      "passed": true
+    },
+    {
+      "passed": false,
+      "error": "./scripts/support.lua:19: ANSI extmarks after identical recompilation: expected 202, got 404\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:205: in function <scripts/issues.lua:197>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "name": "ansi_recompile_extmarks"
+    },
+    {
+      "passed": true,
+      "name": "ansi_underline"
+    },
+    {
+      "name": "directory_diagnostics",
+      "error": "./scripts/support.lua:19: diagnostics in the resolved source buffer: expected 1, got 0\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:32: in function <scripts/issues.lua:24>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "passed": false
+    },
+    {
+      "passed": false,
+      "name": "directory_quickfix",
+      "error": "./scripts/support.lua:19: quickfix path for source row 1/output row 6: expected \"/Users/taolintian/dev/compile-mode.nvim/build/main.c\", got \"/Users/taolintian/dev/compile-mode.nvim/main.c\"\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:21: in function <scripts/issues.lua:5>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk"
+    },
+    {
+      "passed": false,
+      "name": "highlight_scope",
+      "error": "./scripts/support.lua:19: compilation-only window matches in a source buffer: expected 0, got 2\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:169: in function <scripts/issues.lua:154>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk"
+    },
+    {
+      "passed": true,
+      "name": "matcher_priority"
+    },
+    {
+      "passed": true,
+      "name": "max_lines"
+    },
+    {
+      "passed": true,
+      "name": "mixed_matcher_languages"
+    },
+    {
+      "name": "nul_streams",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "quickfix_threshold"
+    },
+    {
+      "error": "./scripts/support.lua:19: extmarks after unchanged range rescans: expected 4, got 84\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:184: in function <scripts/issues.lua:173>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "passed": false,
+      "name": "reparse_extmarks"
+    },
+    {
+      "passed": false,
+      "error": "./scripts/support.lua:19: obsolete error after line replacement: expected nil, got {\n  col = {\n    range = {\n      end_ = 11,\n      start = 11\n    },\n    value = 3\n  },\n  filename = {\n    range = {\n      end_ = 6,\n      start = 1\n    },\n    value = \"main.c\"\n  },\n  full = {\n    end_ = 18,\n    start = 1\n  },\n  full_text = \"main.c:12:3: error: failure\",\n  group = \"gnu\",\n  highlighted = true,\n  level = 2,\n  linenum = 1,\n  priority = 1,\n  row = {\n    range = {\n      end_ = 9,\n      start = 8\n    },\n    value = 12\n  }\n}\nstack traceback:\n\t[C]: in function 'assert'\n\t./scripts/support.lua:19: in function 'equal'\n\tscripts/issues.lua:194: in function <scripts/issues.lua:187>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "name": "reparse_stale_error"
+    },
+    {
+      "error": "./scripts/support.lua:75: ./scripts/support.lua:19: live output cursor: expected 106, got 5\nstack traceback:\n\t[C]: in function 'error'\n\t./scripts/support.lua:75: in function 'compile'\n\tscripts/issues.lua:41: in function <scripts/issues.lua:36>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "name": "scroll_filter",
+      "passed": false
+    },
+    {
+      "name": "scroll_render",
+      "error": "./scripts/support.lua:75: ./scripts/support.lua:19: live output cursor: expected 106, got 5\nstack traceback:\n\t[C]: in function 'error'\n\t./scripts/support.lua:75: in function 'compile'\n\tscripts/issues.lua:41: in function <scripts/issues.lua:36>\n\t[C]: in function 'xpcall'\n\tscripts/issues.lua:228: in main chunk",
+      "passed": false
+    },
+    {
+      "name": "window_reuse",
+      "passed": true
+    }
+  ]
+}

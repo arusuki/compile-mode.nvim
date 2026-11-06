@@ -59,6 +59,11 @@ Obviously, please don't break any existing tests. If your PR changes the behavio
 
 You can run tests locally with `make test` (or `make test-debug`, which shows debug logs).
 
+For issue reproductions and module benchmarks, see the
+[measurement report and instructions](doc/performance.md). `make issues` reports
+unresolved behavior as failing assertions; `make bench` measures the core pipeline
+in isolated Neovim processes. These are separate from the standard regression suite.
+
 ### Formatting
 
 The files are formatted using [stylua](https://github.com/JohnnyMorganz/StyLua). If you have it installed, you can format the files using `make fmt`.

@@ -121,6 +121,9 @@ Coordinate rules are particularly important for future changes:
 
 ## Measurement boundaries
 
+Runnable issue probes, benchmarks, recorded results, and prioritized follow-ups
+are in the [performance report](performance.md).
+
 The refactor does not add timers to normal execution or claim a speedup.
 Use the following functions to isolate costs before choosing an optimization.
 

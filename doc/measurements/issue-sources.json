@@ -1,0 +1,98 @@
+{
+  "retrieved_on": "2026-11-07",
+  "searched_issues": 58,
+  "repository": "ej-shafran/compile-mode.nvim",
+  "selected": [
+    {
+      "number": 62,
+      "title": "Improve error parsing speed",
+      "state": "closed",
+      "updated_at": "2026-01-01T00:47:38Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/pull/62"
+    },
+    {
+      "number": 56,
+      "title": "[BUG] Neovim freezes when running command that prints a lot of stuff.",
+      "state": "closed",
+      "updated_at": "2026-08-16T06:40:42Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/56"
+    },
+    {
+      "number": 119,
+      "title": "[BUG] Performance issues",
+      "state": "open",
+      "updated_at": "2026-04-18T22:25:02Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/119"
+    },
+    {
+      "number": 160,
+      "title": "[BUG] auto_scroll not working correctly",
+      "state": "open",
+      "updated_at": "2026-10-19T09:41:28Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/160"
+    },
+    {
+      "number": 159,
+      "title": "[BUG] Changed directory not taken into account in `send_to_qflist`",
+      "state": "closed",
+      "updated_at": "2026-10-08T19:43:54Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/159"
+    },
+    {
+      "number": 142,
+      "title": "[BUG] Queries in `error_regexp_table` don't get used.",
+      "state": "closed",
+      "updated_at": "2026-06-26T17:01:39Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/142"
+    },
+    {
+      "number": 149,
+      "title": "[BUG] NUL bytes in stdout/stderr get converted into newlines and break callback handling",
+      "state": "closed",
+      "updated_at": "2026-08-16T06:49:58Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/149"
+    },
+    {
+      "number": 135,
+      "title": "[BUG] `cargo run --color always` prints weird characters",
+      "state": "closed",
+      "updated_at": "2026-09-23T07:01:31Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/135"
+    },
+    {
+      "number": 153,
+      "title": "[BUG] ANSI underlines does not work anymore",
+      "state": "closed",
+      "updated_at": "2026-09-23T06:34:21Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/153"
+    },
+    {
+      "number": 156,
+      "title": "[FEAT] set threshold for `send_to_qflist`",
+      "state": "closed",
+      "updated_at": "2026-09-23T08:50:49Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/156"
+    },
+    {
+      "number": 136,
+      "title": "[BUG] Compilation directory message highlight appears in non-compilation buffers",
+      "state": "open",
+      "updated_at": "2026-04-12T06:45:36Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/136"
+    },
+    {
+      "number": 139,
+      "title": "[BUG] Reuse existing window when jumping to error",
+      "state": "closed",
+      "updated_at": "2026-08-16T06:38:54Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/139"
+    },
+    {
+      "number": 163,
+      "title": "[FEAT] CompileGotoError could jump to the nearest error before",
+      "state": "open",
+      "updated_at": "2026-10-27T12:42:43Z",
+      "url": "https://github.com/ej-shafran/compile-mode.nvim/issues/163"
+    }
+  ]
+}
