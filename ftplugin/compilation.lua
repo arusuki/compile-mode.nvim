@@ -1,10 +1,13 @@
 local compile_mode = require("compile-mode")
 local config = require("compile-mode.config.internal")
-local log = require("compile-mode.log")
-
 local bufnr = vim.api.nvim_get_current_buf()
-
-local matchadd = vim.fn.matchadd
+local group = vim.api.nvim_create_augroup("compile-mode.nvim", { clear = false })
+-- Setting the filetype again on Recompile must replace these handlers.
+vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
+local matches = {}
+local function matchadd(hl, pattern)
+	matches[#matches + 1] = { hl, pattern }
+end
 
 ---@param cmd string
 ---@param expr string|function
@@ -27,7 +30,7 @@ local function autocmd(event, opts)
 	vim.api.nvim_create_autocmd(
 		event,
 		vim.tbl_extend("force", {
-			group = vim.api.nvim_create_augroup("compile-mode.nvim", { clear = false }),
+			group = group,
 		}, opts)
 	)
 end
@@ -60,6 +63,11 @@ matchadd(
 for _, matcher in ipairs(config.directory_change_matchers) do
 	matchadd("CompileModeDirectoryMessage", matcher.regex)
 end
+require("compile-mode.window_highlights").attach(bufnr, matches)
+local undo =
+	"lua require('compile-mode.window_highlights').detach(0); vim.api.nvim_clear_autocmds({ group = 'compile-mode.nvim', buffer = 0 })"
+local previous_undo = vim.b[bufnr].undo_ftplugin
+vim.b[bufnr].undo_ftplugin = previous_undo and (previous_undo .. " | " .. undo) or undo
 
 command("CompileGotoError", compile_mode.goto_error)
 command("CompileDebugError", compile_mode.debug_error)
