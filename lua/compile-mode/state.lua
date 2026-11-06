@@ -11,6 +11,7 @@ local M = {
 }
 
 function M.reset()
+	require("compile-mode.source_locations").reset()
 	M.error_cursor = 0
 	M.has_auto_jumped = false
 	errors.error_list = {}
@@ -45,6 +46,8 @@ function M.trim_lines(removed_lines)
 		if new_line then
 			error.linenum = new_line
 			new_error_list[new_line] = error
+		else
+			require("compile-mode.source_locations").release(error)
 		end
 	end
 	errors.error_list = new_error_list

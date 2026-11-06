@@ -211,6 +211,7 @@ function M.activate(bufnr)
 	vim.g.compilation_buffer = bufnr
 	local log_state = logs[bufnr]
 	if not owns(bufnr) then
+		require("compile-mode.source_locations").reset()
 		errors.error_list = {}
 		cdir.dir_changes = {}
 		state.error_cursor = 0

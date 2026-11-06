@@ -945,6 +945,13 @@ statusline({colors})                               *compile-mode.statusline()*
     first error (the default until |:NextError| has not yet been used) this
     command has no effect and reports on this fact.
 
+    Once an error is visited, its source location follows edits and undo in
+    that loaded source buffer. This also applies to the other error-jump
+    commands. Locations are anchored on first visit, not at compilation time.
+    Recompiling, replacing the parsed error, or unloading its source buffer
+    discards the anchor. Quickfix and diagnostic exports retain the original
+    compiler coordinates.
+
     The following commands work when prefixed to `:CurrentError`:
 
     - |:vert|

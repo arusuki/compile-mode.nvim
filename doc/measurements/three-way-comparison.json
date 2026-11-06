@@ -1,0 +1,1701 @@
+{
+  "measured_at": "2026-11-06T20:51:32.205115+00:00",
+  "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+  "reverse_editor_order": false,
+  "emacs_executable": "/opt/homebrew/opt/emacs-plus@30/bin/emacs",
+  "baseline_emacs_executable": null,
+  "native_preparation": {
+    "native_comp_speed": 2,
+    "libraries": [
+      {
+        "name": "button",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/button.el",
+        "source_sha256": "4ac7410ec6d442b2c6a35e403039bc0a8cc38bcfaad27aa8ddcce3cb15704aae",
+        "native_sha256": "58576467aa8f0bb36697c3cceb73072ec3a77f43ff0fea5f817d366766d1acd8"
+      },
+      {
+        "name": "font-lock",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/font-lock.el",
+        "source_sha256": "f5aaf04411e91ffcc44b8ec4b4e6d8ff8aaf1fc25ee9eccd120398a23a388518",
+        "native_sha256": "b17982269af3fcbcf0d6766329a5b6bc57c473991b0314126e4f21d2d69a33e5"
+      },
+      {
+        "name": "jit-lock",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/jit-lock.el",
+        "source_sha256": "0b493c5c72bed1d3f66c509091e27f59b4d008681f944876f899c6d0bcf96438",
+        "native_sha256": "f0f7645f7237bf97353c2a411ac492ffc8dcdba8ae27a51145880392c8b83d83"
+      },
+      {
+        "name": "ansi-color",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/ansi-color.el",
+        "source_sha256": "c2cc24d0b8ec68cfcab799750f0da0bbecfa5ae2beac5a0d4dd108181fdb0d27",
+        "native_sha256": "57f14c7a9dffd2850df54a4a46020f82bb1399ae1092952d116c1f57172b857f"
+      },
+      {
+        "name": "comint",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/comint.el",
+        "source_sha256": "62241325133770b0521be8bc559d7b266b68434707560359798932542779aa1b",
+        "native_sha256": "6278290f2ba0ec65ae66867c7fd6f8bada6216fe1c23523fc64413e248cc27d7"
+      },
+      {
+        "name": "compile",
+        "source": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.el",
+        "source_sha256": "64244e04922693697b96bea73d6b9e9f3aeefd9e6231c8e1b0c4af7f2382c544",
+        "native_sha256": "fe3f35965376119539c29c46fa498e7595b853d5d41966765f33cb9ec0313592"
+      }
+    ]
+  },
+  "upstream_head": "c3d4df990c1c2a3add925379eed482df437d065d",
+  "head": "31c0ca0ee456c29a2e5a48999e70c49bbd2dd7e9",
+  "source_sha256": {
+    "lua/compile-mode/ansi.lua": "6d35f0d180c4d5abb6be318c2b6cf3ff381e3b642195663d472900296e6c1168",
+    "lua/compile-mode/ansi_fast.lua": "328094c2dfac2959822a671d7c2fe9fe13f3d4db7e20d0f12b5b090c909bf4f5",
+    "lua/compile-mode/ansi_render.lua": "3a2d6640f3453a9725152b1c9b31a4e45e4b7f1676a63ad359ff1233791df1ce",
+    "lua/compile-mode/buffer.lua": "988be5a35793ff2a46d74cce0f1c29b5485c09ac36ca780ae607b1e12db0adfb",
+    "lua/compile-mode/config/check.lua": "266ec5b900982e64a36849454854777fa23d32793f01bbaf41eac158057cb2b4",
+    "lua/compile-mode/config/internal.lua": "906007f7db696ccae9a7dc547ae94798c674a58869cc2cb90f0f32ee089aeb6a",
+    "lua/compile-mode/config/meta.lua": "e89f3068ea79ec672640d68c49b0c90682d6cd9fb1cedddebb7667c87b66736d",
+    "lua/compile-mode/constants.lua": "953850663528ee715d5955152b768e0715a1afc538733195775bdbfd20816cac",
+    "lua/compile-mode/dir.lua": "62922aa4ae4cad89ca9c14c1c6d1375d00e9509a370adba5d8f31c1d4e74ed2c",
+    "lua/compile-mode/errors/fast.lua": "86985da7d357c3d5523f227974e9c8c534d81c02cb858af1a8793e9dfad73938",
+    "lua/compile-mode/errors/init.lua": "15e622d04f37f1101a5741707a36bc970f2d443a45f84874ff1ac49b0085f2dd",
+    "lua/compile-mode/errors/matchers.lua": "e75dedd6fc220fc579adbfadefd5559b65a93492abdc1b278cd9824f8d385781",
+    "lua/compile-mode/errors/meta.lua": "d39badbc5e3cd6b0cbc1956f26ba84b7fe97ae3cffb27b7861258c37fc34af76",
+    "lua/compile-mode/errors/prefilters.lua": "59561e7d4c6eef711c5f796dedf45e594aba7e0e9232d1ab7bca397d56c545e1",
+    "lua/compile-mode/extensions/lualine.lua": "e9f2a59c02b37647eddd4e6f37fbed1f9363f0b799520e930d5c5354f33185c4",
+    "lua/compile-mode/extensions/telescope.lua": "56ddc57adc3e8330fa409b999ae07b1e962f58265c7e96988e46e1210093ea7b",
+    "lua/compile-mode/health.lua": "f6a4b22a1e12a5d5ec4f0c41dda1a9931f14846dc8dd9f7fd9f23a5a3a1a9561",
+    "lua/compile-mode/init.lua": "13bc1f74ff9dca00d3279a1ac61dd6be4745d662a799f0aa4d8d15f751b384c7",
+    "lua/compile-mode/log.lua": "21aaff9bb49471c8d8e82722bd14f4af5472aeba232e7f08cd63b0ad2ad4c582",
+    "lua/compile-mode/navigation.lua": "a036f6e790d06e60dd312964f101b0824a3b47087bf55bbd0f560dd0a179af13",
+    "lua/compile-mode/output.lua": "014ec8e98215519fe25cdb31bac125c33d4a19ae3bb93f7b46c3f5bb0aaac28a",
+    "lua/compile-mode/output_queue.lua": "c1783806a9395929ba7349f752909edb0da7cec0792feb80cabd0bfd6e0c5cd0",
+    "lua/compile-mode/parser.lua": "d908d09931cda780bfb5a90ff84037d25e71f1bf6decb3da3ef2d633e5020f35",
+    "lua/compile-mode/runner.lua": "fa836aaf3c1814cecd1b328a0eff44fa298849753aef3294acb2c3b1e9928d24",
+    "lua/compile-mode/state.lua": "c40cb8c1e59687dad590cb4104ac226e6bb920e2167718f9c8e65ccde861505c",
+    "lua/compile-mode/statusline.lua": "6c6be8a4aa7437f8533183a21c822897725739477afc4fa0033951d1ef027f40",
+    "lua/compile-mode/utils.lua": "37deee4517838ed0d998d75378961b0062fff456fc4f1c74ad404cb28033b069",
+    "lua/compile-mode/window_highlights.lua": "97b96b586c024a252894cc6d8d8012f373f7c7d023f6c446993e7981d27ff658",
+    "lua/telescope/_extensions/compile-mode.lua": "1aa95403ef240235e35f8212ec872c5ad38290048c60256d3bd8a53ea2eb938d",
+    "plugin/command.lua": "0412cd39306655e704af64b469a286a32323ce4e8aa1f987b680d7d957a0935a",
+    "plugin/completion.vim": "bc6840d29b394b953a8491039784903542ea5245c2c202bd77080f9538754a30",
+    "plugin/highlights.vim": "a7398386d5106fcb969f24ccfb608aa68c29a82b9947b02b7137249c7e6aeb12",
+    "plugin/statusline.vim": "5d5d19c5875ab3492745a6b2a7e944e620c454f0888ee841cb0c217770953e9a",
+    "scripts/benchmark.lua": "59586b5acc8a1851eae97b7785931cf8e709d91929860a303897a74b2a0e1bd6",
+    "scripts/emacs/benchmark.el": "2cb860ec916375c96514cd03f0c9d4d2d200d3b91e67a9d9f52bbbeaef11f3dd",
+    "scripts/emacs/benchmark.lua": "bac33cd969e5c08f2532acaf1871ffc84a68c859d6321bfe651dc63a0581a613",
+    "scripts/emacs/prepare-native.el": "237fe642b7b8d95dbce3d1767e21cc822d88b936310c08ac6f92a9b0f7e6c224",
+    "scripts/hotspots.lua": "38c3f4e87b949dd644484471138726477c77801c371eca14cc6d9fa5c9f51331",
+    "scripts/issues.lua": "1cdce689473c05432f8aff56c5957a1b5631af1896840c4cfa289a63577fa6de",
+    "scripts/long_lines.lua": "2d0f5cffb633bea81ee94bc23d2c94ef8f5166d9185521a24bb3486f30ecb28c",
+    "scripts/minimal_init.lua": "72619ae7a37b2074bc838bb1285c1d4eefb3c9045909f528551bd192009dbb49",
+    "scripts/native/benchmark.lua": "60794e25c674330b3ee3d93374a0d8c893d8dad836802895540dbfe993846738",
+    "scripts/native/kernel.lua": "51ce34d3da06118890ca721b93f003797a22dfdae092b0d2d29e0a9833bfef98",
+    "scripts/producer.lua": "56c8e5dcfa8a44296615343be3aab09444ba4a737214b93de283b9bc5d2c22f7",
+    "scripts/profile.lua": "4408e42f0502baafa643e7105c7c8fbf8b6d691dbd339f89939c47642524028b",
+    "scripts/run_checks.py": "764c3cc34356fa9d50f704e529a51a6e23e7bd0855b55650bcd75d5addeae354",
+    "scripts/run_emacs_bench.py": "62b6bfe6d113faeba65f4a595f7af95c9560546a97e5f935e459b49c5d4edee1",
+    "scripts/run_native_bench.py": "42c9a34fd94352c77ff6f64152c11a495e2af2d809fb101e1e47468bb66ad4cc",
+    "scripts/support.lua": "d8a1cce7df6b39acc2f6951241b3948c2e8edff35f846a7dcd0c9cd8c6a2e13a"
+  },
+  "corpora": {
+    "plain": {
+      "lines": 10000,
+      "bytes": 248894,
+      "sha256": "7776b1cfe623aa4163a798bb3cb555ab743d40a073c8be98b391e0adcbc307b0",
+      "max_line_bytes": 25
+    },
+    "errors": {
+      "lines": 10000,
+      "bytes": 298894,
+      "sha256": "0b6788a42ce071eb55f7c5abdf0eb084fe54647455eb8b566327eee5f7b8c09d",
+      "max_line_bytes": 30
+    },
+    "log": {
+      "lines": 2900,
+      "bytes": 221435,
+      "sha256": "479559a5d10d098d0e29eae7a56d045b85a56c898818ce70922313a1d24439d1",
+      "max_line_bytes": 619
+    }
+  },
+  "results": [
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 101.53698921203613,
+          "gap_ms": 101.54104232788086,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 102.1420955657959,
+          "gap_ms": 102.14710235595703,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 100.15082359313965,
+          "gap_ms": 100.15487670898438,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 99.04599189758301,
+          "gap_ms": 99.04909133911133,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 97.60689735412598,
+          "gap_ms": 97.60785102844238,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 99.36785697937012,
+          "gap_ms": 99.37095642089844,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 101.57012939453125,
+          "gap_ms": 101.57418251037598,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "emacs-byte",
+      "median_ms": 100.15082359313965,
+      "worst_gap_ms": null
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 98.11592102050781,
+          "gap_ms": 98.11782836914062,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 98.54698181152344,
+          "gap_ms": 98.54984283447266,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 100.67296028137207,
+          "gap_ms": 100.67605972290039,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 102.13708877563477,
+          "gap_ms": 102.13994979858398,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 101.80091857910156,
+          "gap_ms": 101.80401802062988,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 102.28300094604492,
+          "gap_ms": 102.28705406188965,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 101.38797760009766,
+          "gap_ms": 101.39203071594238,
+          "recognized": 0,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "emacs-native",
+      "median_ms": 101.38797760009766,
+      "worst_gap_ms": null
+    },
+    {
+      "mode": "parse",
+      "editor": {
+        "minor": 12,
+        "patch": 5,
+        "api_compatible": 0,
+        "api_level": 14,
+        "api_prerelease": false,
+        "build": null,
+        "major": 0
+      },
+      "samples": [
+        {
+          "gap_ms": 35.304709,
+          "recognized": 0,
+          "ms": 35.304042
+        },
+        {
+          "gap_ms": 35.364125,
+          "recognized": 0,
+          "ms": 35.363083
+        },
+        {
+          "gap_ms": 35.524666,
+          "recognized": 0,
+          "ms": 35.52425
+        },
+        {
+          "gap_ms": 35.564166,
+          "recognized": 0,
+          "ms": 35.56375
+        },
+        {
+          "gap_ms": 34.982625,
+          "recognized": 0,
+          "ms": 34.982542
+        },
+        {
+          "gap_ms": 36.225625,
+          "recognized": 0,
+          "ms": 36.225167
+        },
+        {
+          "gap_ms": 35.642583,
+          "recognized": 0,
+          "ms": 35.642208
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "nvim",
+      "median_ms": 35.52425,
+      "worst_gap_ms": null
+    },
+    {
+      "mode": "parse",
+      "editor": {
+        "minor": 12,
+        "patch": 5,
+        "api_prerelease": false,
+        "api_compatible": 0,
+        "api_level": 14,
+        "build": null,
+        "major": 0
+      },
+      "samples": [
+        {
+          "ms": 337.702042,
+          "gap_ms": 337.70325,
+          "recognized": 0
+        },
+        {
+          "ms": 340.250958,
+          "gap_ms": 340.251792,
+          "recognized": 0
+        },
+        {
+          "ms": 324.34075,
+          "gap_ms": 324.3415,
+          "recognized": 0
+        },
+        {
+          "ms": 333.069917,
+          "gap_ms": 333.070625,
+          "recognized": 0
+        },
+        {
+          "ms": 338.474916,
+          "gap_ms": 338.475459,
+          "recognized": 0
+        },
+        {
+          "ms": 323.767625,
+          "gap_ms": 323.76825,
+          "recognized": 0
+        },
+        {
+          "ms": 319.108209,
+          "gap_ms": 319.108791,
+          "recognized": 0
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "nvim-upstream",
+      "median_ms": 333.069917,
+      "worst_gap_ms": null,
+      "recognized_line_sets_equal": true
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 171.37503623962402,
+          "gap_ms": 10.033845901489258,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.078999999999995
+        },
+        {
+          "ms": 171.29087448120117,
+          "gap_ms": 10.037899017333984,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.080999999999998
+        },
+        {
+          "ms": 170.86505889892578,
+          "gap_ms": 9.971857070922852,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.029000000000009
+        },
+        {
+          "ms": 171.44298553466797,
+          "gap_ms": 10.606050491333008,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.016999999999996
+        },
+        {
+          "ms": 172.5327968597412,
+          "gap_ms": 11.245965957641602,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.033999999999999
+        },
+        {
+          "ms": 171.70310020446777,
+          "gap_ms": 10.618925094604492,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.040000000000006
+        },
+        {
+          "ms": 170.29500007629395,
+          "gap_ms": 9.953022003173828,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.013999999999994
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "emacs-byte",
+      "median_ms": 171.37503623962402,
+      "worst_gap_ms": 11.245965957641602
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 167.97995567321777,
+          "gap_ms": 13.854026794433594,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.864999999999998
+        },
+        {
+          "ms": 191.5881633758545,
+          "gap_ms": 13.685941696166992,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 9.488999999999997
+        },
+        {
+          "ms": 201.92313194274902,
+          "gap_ms": 12.407064437866211,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 9.147999999999989
+        },
+        {
+          "ms": 178.07507514953613,
+          "gap_ms": 11.06405258178711,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.468000000000004
+        },
+        {
+          "ms": 176.2831211090088,
+          "gap_ms": 9.801864624023438,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.488999999999997
+        },
+        {
+          "ms": 171.77391052246094,
+          "gap_ms": 12.848138809204102,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.421999999999999
+        },
+        {
+          "ms": 167.3290729522705,
+          "gap_ms": 13.902902603149414,
+          "recognized": 0,
+          "gc_count": 1,
+          "gc_ms": 8.348999999999995
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "emacs-native",
+      "median_ms": 176.2831211090088,
+      "worst_gap_ms": 13.902902603149414
+    },
+    {
+      "editor": {
+        "minor": 12,
+        "build": null,
+        "patch": 5,
+        "api_level": 14,
+        "major": 0,
+        "api_compatible": 0,
+        "api_prerelease": false
+      },
+      "samples": [
+        {
+          "gap_ms": 5.736625,
+          "recognized": 0,
+          "ms": 96.715083
+        },
+        {
+          "gap_ms": 6.676,
+          "recognized": 0,
+          "ms": 95.499042
+        },
+        {
+          "gap_ms": 6.302625,
+          "recognized": 0,
+          "ms": 92.730959
+        },
+        {
+          "gap_ms": 5.916792,
+          "recognized": 0,
+          "ms": 91.347083
+        },
+        {
+          "gap_ms": 6.214542,
+          "recognized": 0,
+          "ms": 91.980959
+        },
+        {
+          "gap_ms": 6.127417,
+          "recognized": 0,
+          "ms": 89.496875
+        },
+        {
+          "gap_ms": 5.772583,
+          "recognized": 0,
+          "ms": 66.363667
+        }
+      ],
+      "mode": "stream",
+      "kind": "plain",
+      "editor_name": "nvim",
+      "median_ms": 91.980959,
+      "worst_gap_ms": 6.676
+    },
+    {
+      "editor": {
+        "patch": 5,
+        "api_level": 14,
+        "api_prerelease": false,
+        "api_compatible": 0,
+        "minor": 12,
+        "build": null,
+        "major": 0
+      },
+      "mode": "stream",
+      "samples": [
+        {
+          "gap_ms": 389.328459,
+          "recognized": 0,
+          "ms": 729.137667
+        },
+        {
+          "gap_ms": 368.599167,
+          "recognized": 0,
+          "ms": 575.896792
+        },
+        {
+          "gap_ms": 301.108083,
+          "recognized": 0,
+          "ms": 602.527666
+        },
+        {
+          "gap_ms": 298.905375,
+          "recognized": 0,
+          "ms": 603.148959
+        },
+        {
+          "gap_ms": 344.623375,
+          "recognized": 0,
+          "ms": 544.198667
+        },
+        {
+          "gap_ms": 270.790584,
+          "recognized": 0,
+          "ms": 517.614541
+        },
+        {
+          "gap_ms": 343.922708,
+          "recognized": 0,
+          "ms": 516.479083
+        }
+      ],
+      "kind": "plain",
+      "editor_name": "nvim-upstream",
+      "median_ms": 575.896792,
+      "worst_gap_ms": 389.328459,
+      "recognized_line_sets_equal": true
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 190.61708450317383,
+          "gap_ms": 190.61803817749023,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 18.615000000000006
+        },
+        {
+          "ms": 192.48104095458984,
+          "gap_ms": 192.48414039611816,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 18.717
+        },
+        {
+          "ms": 192.18206405639648,
+          "gap_ms": 192.1849250793457,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.009999999999998
+        },
+        {
+          "ms": 192.16203689575195,
+          "gap_ms": 192.16609001159668,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 18.765000000000004
+        },
+        {
+          "ms": 195.70016860961914,
+          "gap_ms": 195.70302963256836,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 20.072000000000006
+        },
+        {
+          "ms": 201.369047164917,
+          "gap_ms": 201.3719081878662,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 20.912999999999986
+        },
+        {
+          "ms": 194.72789764404297,
+          "gap_ms": 194.7309970855713,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.14000000000002
+        }
+      ],
+      "kind": "errors",
+      "editor_name": "emacs-byte",
+      "median_ms": 192.48104095458984,
+      "worst_gap_ms": null
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 170.7301139831543,
+          "gap_ms": 170.7320213317871,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.372000000000007
+        },
+        {
+          "ms": 174.80897903442383,
+          "gap_ms": 174.81303215026855,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 20.410999999999998
+        },
+        {
+          "ms": 173.4919548034668,
+          "gap_ms": 173.49481582641602,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.87000000000001
+        },
+        {
+          "ms": 173.6588478088379,
+          "gap_ms": 173.6609935760498,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.822000000000006
+        },
+        {
+          "ms": 171.52094841003418,
+          "gap_ms": 171.5390682220459,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 20.10999999999999
+        },
+        {
+          "ms": 173.26903343200684,
+          "gap_ms": 173.27094078063965,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.838999999999995
+        },
+        {
+          "ms": 173.71702194213867,
+          "gap_ms": 173.7210750579834,
+          "recognized": 10000,
+          "gc_count": 2,
+          "gc_ms": 19.97199999999999
+        }
+      ],
+      "kind": "errors",
+      "editor_name": "emacs-native",
+      "median_ms": 173.4919548034668,
+      "worst_gap_ms": null
+    },
+    {
+      "mode": "parse",
+      "editor": {
+        "patch": 5,
+        "api_level": 14,
+        "api_prerelease": false,
+        "api_compatible": 0,
+        "build": null,
+        "major": 0,
+        "minor": 12
+      },
+      "samples": [
+        {
+          "ms": 143.268208,
+          "gap_ms": 143.268833,
+          "recognized": 10000
+        },
+        {
+          "ms": 272.076125,
+          "gap_ms": 272.076958,
+          "recognized": 10000
+        },
+        {
+          "ms": 205.112,
+          "gap_ms": 205.112875,
+          "recognized": 10000
+        },
+        {
+          "ms": 284.928958,
+          "gap_ms": 284.929625,
+          "recognized": 10000
+        },
+        {
+          "ms": 283.490875,
+          "gap_ms": 283.4915,
+          "recognized": 10000
+        },
+        {
+          "ms": 251.68275,
+          "gap_ms": 251.684083,
+          "recognized": 10000
+        },
+        {
+          "ms": 197.525667,
+          "gap_ms": 197.526041,
+          "recognized": 10000
+        }
+      ],
+      "kind": "errors",
+      "editor_name": "nvim",
+      "median_ms": 251.68275,
+      "worst_gap_ms": null
+    },
+    {
+      "mode": "parse",
+      "samples": [
+        {
+          "ms": 367.031208,
+          "gap_ms": 367.031875,
+          "recognized": 10000
+        },
+        {
+          "ms": 738.256875,
+          "gap_ms": 738.257917,
+          "recognized": 10000
+        },
+        {
+          "ms": 624.182833,
+          "gap_ms": 624.183958,
+          "recognized": 10000
+        },
+        {
+          "ms": 730.823959,
+          "gap_ms": 730.825,
+          "recognized": 10000
+        },
+        {
+          "ms": 908.25875,
+          "gap_ms": 908.259709,
+          "recognized": 10000
+        },
+        {
+          "ms": 975.504542,
+          "gap_ms": 975.505583,
+          "recognized": 10000
+        },
+        {
+          "ms": 1023.957666,
+          "gap_ms": 1023.958375,
+          "recognized": 10000
+        }
+      ],
+      "editor": {
+        "api_level": 14,
+        "build": null,
+        "major": 0,
+        "minor": 12,
+        "patch": 5,
+        "api_prerelease": false,
+        "api_compatible": 0
+      },
+      "kind": "errors",
+      "editor_name": "nvim-upstream",
+      "median_ms": 738.256875,
+      "worst_gap_ms": null,
+      "recognized_line_sets_equal": true
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 260.6329917907715,
+          "gap_ms": 6.9370269775390625,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 262.5570297241211,
+          "gap_ms": 8.285999298095703,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 262.70198822021484,
+          "gap_ms": 8.688211441040039,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 260.343074798584,
+          "gap_ms": 8.414983749389648,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 257.0300102233887,
+          "gap_ms": 7.967948913574219,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 282.80019760131836,
+          "gap_ms": 9.904861450195312,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 342.98110008239746,
+          "gap_ms": 26.614904403686523,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "errors",
+      "editor_name": "emacs-byte",
+      "median_ms": 262.5570297241211,
+      "worst_gap_ms": 26.614904403686523
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 230.1959991455078,
+          "gap_ms": 6.698846817016602,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 236.5729808807373,
+          "gap_ms": 8.40616226196289,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 234.66801643371582,
+          "gap_ms": 8.701086044311523,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 234.6179485321045,
+          "gap_ms": 8.549928665161133,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 232.88202285766602,
+          "gap_ms": 7.936000823974609,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 261.49511337280273,
+          "gap_ms": 8.033990859985352,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 239.5319938659668,
+          "gap_ms": 8.3160400390625,
+          "recognized": 10000,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "errors",
+      "editor_name": "emacs-native",
+      "median_ms": 234.66801643371582,
+      "worst_gap_ms": 8.701086044311523
+    },
+    {
+      "samples": [
+        {
+          "ms": 236.431458,
+          "gap_ms": 15.573416,
+          "recognized": 10000
+        },
+        {
+          "ms": 208.977458,
+          "gap_ms": 16.617625,
+          "recognized": 10000
+        },
+        {
+          "ms": 283.3665,
+          "gap_ms": 16.252792,
+          "recognized": 10000
+        },
+        {
+          "ms": 281.491417,
+          "gap_ms": 16.065541,
+          "recognized": 10000
+        },
+        {
+          "ms": 281.786042,
+          "gap_ms": 15.997083,
+          "recognized": 10000
+        },
+        {
+          "ms": 262.326875,
+          "gap_ms": 15.994625,
+          "recognized": 10000
+        },
+        {
+          "ms": 236.405834,
+          "gap_ms": 16.260041,
+          "recognized": 10000
+        }
+      ],
+      "editor": {
+        "minor": 12,
+        "patch": 5,
+        "major": 0,
+        "api_prerelease": false,
+        "api_compatible": 0,
+        "api_level": 14,
+        "build": null
+      },
+      "mode": "stream",
+      "kind": "errors",
+      "editor_name": "nvim",
+      "median_ms": 262.326875,
+      "worst_gap_ms": 16.617625
+    },
+    {
+      "editor": {
+        "major": 0,
+        "minor": 12,
+        "patch": 5,
+        "api_compatible": 0,
+        "build": null,
+        "api_level": 14,
+        "api_prerelease": false
+      },
+      "samples": [
+        {
+          "recognized": 10000,
+          "ms": 395.497125,
+          "gap_ms": 204.089958
+        },
+        {
+          "recognized": 10000,
+          "ms": 443.760625,
+          "gap_ms": 238.037583
+        },
+        {
+          "recognized": 10000,
+          "ms": 452.996542,
+          "gap_ms": 239.940291
+        },
+        {
+          "recognized": 10000,
+          "ms": 395.997917,
+          "gap_ms": 241.241709
+        },
+        {
+          "recognized": 10000,
+          "ms": 392.246583,
+          "gap_ms": 201.098875
+        },
+        {
+          "recognized": 10000,
+          "ms": 435.119667,
+          "gap_ms": 213.359167
+        },
+        {
+          "recognized": 10000,
+          "ms": 444.336291,
+          "gap_ms": 222.723417
+        }
+      ],
+      "mode": "stream",
+      "kind": "errors",
+      "editor_name": "nvim-upstream",
+      "median_ms": 435.119667,
+      "worst_gap_ms": 241.241709,
+      "recognized_line_sets_equal": true
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 97.46694564819336,
+          "gap_ms": 97.46909141540527,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.150999999999998
+        },
+        {
+          "ms": 107.18488693237305,
+          "gap_ms": 107.18798637390137,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.209000000000001
+        },
+        {
+          "ms": 156.6300392150879,
+          "gap_ms": 156.63409233093262,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 9.039000000000005
+        },
+        {
+          "ms": 101.32217407226562,
+          "gap_ms": 101.32503509521484,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 9.097999999999995
+        },
+        {
+          "ms": 98.86908531188965,
+          "gap_ms": 98.87194633483887,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.831999999999992
+        },
+        {
+          "ms": 98.11902046203613,
+          "gap_ms": 98.12283515930176,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.34399999999999
+        },
+        {
+          "ms": 102.6010513305664,
+          "gap_ms": 102.60510444641113,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.423999999999987
+        }
+      ],
+      "kind": "log",
+      "editor_name": "emacs-byte",
+      "median_ms": 101.32217407226562,
+      "worst_gap_ms": null
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "parse",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 94.32816505432129,
+          "gap_ms": 94.33221817016602,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 9.215000000000002
+        },
+        {
+          "ms": 96.160888671875,
+          "gap_ms": 96.16589546203613,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 9.765999999999996
+        },
+        {
+          "ms": 91.9179916381836,
+          "gap_ms": 91.92299842834473,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.838
+        },
+        {
+          "ms": 90.90590476989746,
+          "gap_ms": 90.90900421142578,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.638999999999994
+        },
+        {
+          "ms": 90.36397933959961,
+          "gap_ms": 90.36612510681152,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.405999999999997
+        },
+        {
+          "ms": 90.52300453186035,
+          "gap_ms": 90.52586555480957,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 8.34399999999999
+        },
+        {
+          "ms": 93.42312812805176,
+          "gap_ms": 93.42718124389648,
+          "recognized": 2900,
+          "gc_count": 1,
+          "gc_ms": 9.775000000000006
+        }
+      ],
+      "kind": "log",
+      "editor_name": "emacs-native",
+      "median_ms": 91.9179916381836,
+      "worst_gap_ms": null
+    },
+    {
+      "editor": {
+        "api_compatible": 0,
+        "patch": 5,
+        "build": null,
+        "major": 0,
+        "minor": 12,
+        "api_level": 14,
+        "api_prerelease": false
+      },
+      "samples": [
+        {
+          "gap_ms": 62.257708,
+          "recognized": 2900,
+          "ms": 62.256917
+        },
+        {
+          "gap_ms": 64.126417,
+          "recognized": 2900,
+          "ms": 64.125709
+        },
+        {
+          "gap_ms": 64.064833,
+          "recognized": 2900,
+          "ms": 64.063541
+        },
+        {
+          "gap_ms": 63.067625,
+          "recognized": 2900,
+          "ms": 63.066791
+        },
+        {
+          "gap_ms": 62.150542,
+          "recognized": 2900,
+          "ms": 62.149917
+        },
+        {
+          "gap_ms": 60.97675,
+          "recognized": 2900,
+          "ms": 60.976209
+        },
+        {
+          "gap_ms": 60.157542,
+          "recognized": 2900,
+          "ms": 60.156792
+        }
+      ],
+      "mode": "parse",
+      "kind": "log",
+      "editor_name": "nvim",
+      "median_ms": 62.256917,
+      "worst_gap_ms": null
+    },
+    {
+      "mode": "parse",
+      "samples": [
+        {
+          "ms": 193.815625,
+          "gap_ms": 193.816166,
+          "recognized": 2900
+        },
+        {
+          "ms": 193.975042,
+          "gap_ms": 193.975583,
+          "recognized": 2900
+        },
+        {
+          "ms": 195.071667,
+          "gap_ms": 195.072167,
+          "recognized": 2900
+        },
+        {
+          "ms": 147.119,
+          "gap_ms": 147.119792,
+          "recognized": 2900
+        },
+        {
+          "ms": 194.536417,
+          "gap_ms": 194.537042,
+          "recognized": 2900
+        },
+        {
+          "ms": 145.298958,
+          "gap_ms": 145.299792,
+          "recognized": 2900
+        },
+        {
+          "ms": 194.747875,
+          "gap_ms": 194.7485,
+          "recognized": 2900
+        }
+      ],
+      "editor": {
+        "api_level": 14,
+        "build": null,
+        "major": 0,
+        "minor": 12,
+        "patch": 5,
+        "api_compatible": 0,
+        "api_prerelease": false
+      },
+      "kind": "log",
+      "editor_name": "nvim-upstream",
+      "median_ms": 193.975042,
+      "worst_gap_ms": null,
+      "recognized_line_sets_equal": true
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "byte",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": null,
+        "compilation--ensure-parse": null,
+        "compilation-filter": null,
+        "comint-carriage-motion": null,
+        "font-lock-fontify-region": null,
+        "jit-lock-fontify-now": null,
+        "ansi-color-apply-on-region": null,
+        "button-at": null
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 142.09389686584473,
+          "gap_ms": 5.40614128112793,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 142.89402961730957,
+          "gap_ms": 5.44285774230957,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 141.9680118560791,
+          "gap_ms": 5.513906478881836,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 141.24107360839844,
+          "gap_ms": 5.851984024047852,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 143.27192306518555,
+          "gap_ms": 5.480051040649414,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 140.4709815979004,
+          "gap_ms": 5.645036697387695,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 140.77186584472656,
+          "gap_ms": 5.488872528076172,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "log",
+      "editor_name": "emacs-byte",
+      "median_ms": 141.9680118560791,
+      "worst_gap_ms": 5.851984024047852
+    },
+    {
+      "editor": "30.2",
+      "code_kind": "native",
+      "build_options": "--disable-dependency-tracking --disable-silent-rules --enable-locallisppath=/opt/homebrew/share/emacs/site-lisp --infodir=/opt/homebrew/Cellar/emacs-plus@30/30.2/share/info/emacs --prefix=/opt/homebrew/Cellar/emacs-plus@30/30.2 --with-native-compilation=aot --with-xml2 --with-gnutls --without-compress-install 'CFLAGS=-DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/homebrew/opt/sqlite/include -I/opt/homebrew/opt/gcc/include -I/opt/homebrew/opt/libgccjit/include' --without-dbus --without-imagemagick --with-modules --with-rsvg --with-webp --with-ns --disable-ns-self-contained 'LDFLAGS=-L/opt/homebrew/opt/sqlite/lib -L/opt/homebrew/lib/gcc/16 -Wl,-rpath,/opt/homebrew/lib/gcc/16'",
+      "function_native_status": {
+        "compilation-parse-errors": true,
+        "compilation--ensure-parse": true,
+        "compilation-filter": true,
+        "comint-carriage-motion": true,
+        "font-lock-fontify-region": true,
+        "jit-lock-fontify-now": true,
+        "ansi-color-apply-on-region": true,
+        "button-at": true
+      },
+      "mode": "stream",
+      "gc_cons_threshold": 800000,
+      "native_comp_available": true,
+      "compile_library": "/opt/homebrew/Cellar/emacs-plus@30/30.2/share/emacs/30.2/lisp/progmodes/compile.elc",
+      "process_connection_type": true,
+      "read_process_output_max": 65536,
+      "max_output_line_length": 400,
+      "rules": 64,
+      "samples": [
+        {
+          "ms": 138.8239860534668,
+          "gap_ms": 5.543947219848633,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 133.31198692321777,
+          "gap_ms": 5.759000778198242,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 135.3158950805664,
+          "gap_ms": 5.568027496337891,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 130.3400993347168,
+          "gap_ms": 5.7220458984375,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 135.29706001281738,
+          "gap_ms": 5.8879852294921875,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 130.29003143310547,
+          "gap_ms": 5.48100471496582,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        },
+        {
+          "ms": 130.3110122680664,
+          "gap_ms": 5.562067031860352,
+          "recognized": 2900,
+          "gc_count": 0,
+          "gc_ms": 0.0
+        }
+      ],
+      "kind": "log",
+      "editor_name": "emacs-native",
+      "median_ms": 133.31198692321777,
+      "worst_gap_ms": 5.8879852294921875
+    },
+    {
+      "mode": "stream",
+      "samples": [
+        {
+          "gap_ms": 8.920584,
+          "recognized": 2900,
+          "ms": 105.34575
+        },
+        {
+          "gap_ms": 8.156834,
+          "recognized": 2900,
+          "ms": 92.381833
+        },
+        {
+          "gap_ms": 9.251209,
+          "recognized": 2900,
+          "ms": 91.441667
+        },
+        {
+          "gap_ms": 9.2345,
+          "recognized": 2900,
+          "ms": 90.793666
+        },
+        {
+          "gap_ms": 7.752041,
+          "recognized": 2900,
+          "ms": 90.961875
+        },
+        {
+          "gap_ms": 9.342625,
+          "recognized": 2900,
+          "ms": 115.986791
+        },
+        {
+          "gap_ms": 7.518084,
+          "recognized": 2900,
+          "ms": 91.631208
+        }
+      ],
+      "editor": {
+        "build": null,
+        "minor": 12,
+        "major": 0,
+        "api_prerelease": false,
+        "patch": 5,
+        "api_compatible": 0,
+        "api_level": 14
+      },
+      "kind": "log",
+      "editor_name": "nvim",
+      "median_ms": 91.631208,
+      "worst_gap_ms": 9.342625
+    },
+    {
+      "samples": [
+        {
+          "ms": 154.1475,
+          "gap_ms": 89.612417,
+          "recognized": 2900
+        },
+        {
+          "ms": 151.594083,
+          "gap_ms": 87.388208,
+          "recognized": 2900
+        },
+        {
+          "ms": 154.7535,
+          "gap_ms": 73.53775,
+          "recognized": 2900
+        },
+        {
+          "ms": 153.451375,
+          "gap_ms": 87.5715,
+          "recognized": 2900
+        },
+        {
+          "ms": 155.401584,
+          "gap_ms": 90.553083,
+          "recognized": 2900
+        },
+        {
+          "ms": 153.013334,
+          "gap_ms": 88.07325,
+          "recognized": 2900
+        },
+        {
+          "ms": 168.726833,
+          "gap_ms": 94.411208,
+          "recognized": 2900
+        }
+      ],
+      "editor": {
+        "patch": 5,
+        "minor": 12,
+        "build": null,
+        "api_level": 14,
+        "major": 0,
+        "api_prerelease": false,
+        "api_compatible": 0
+      },
+      "mode": "stream",
+      "kind": "log",
+      "editor_name": "nvim-upstream",
+      "median_ms": 154.1475,
+      "worst_gap_ms": 94.411208,
+      "recognized_line_sets_equal": true
+    }
+  ]
+}

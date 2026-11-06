@@ -1,0 +1,48 @@
+{
+  "tests": {
+    "passed": 306,
+    "failed": 0,
+    "errors": 0
+  },
+  "typecheck": "LuaLS: no problems found (explicit Neovim and Plenary library paths)",
+  "format": "stylua checks passed for runtime and changed Lua tests/harnesses",
+  "runtime_sha256": {
+    "lua/compile-mode/window_highlights.lua": "97b96b586c024a252894cc6d8d8012f373f7c7d023f6c446993e7981d27ff658",
+    "lua/compile-mode/init.lua": "13bc1f74ff9dca00d3279a1ac61dd6be4745d662a799f0aa4d8d15f751b384c7",
+    "lua/compile-mode/statusline.lua": "6c6be8a4aa7437f8533183a21c822897725739477afc4fa0033951d1ef027f40",
+    "lua/compile-mode/parser.lua": "77bd43bedbb414c7ffe5ac2c5c915e939a8093d60f737c51635537a22399949e",
+    "lua/compile-mode/health.lua": "f6a4b22a1e12a5d5ec4f0c41dda1a9931f14846dc8dd9f7fd9f23a5a3a1a9561",
+    "lua/compile-mode/ansi.lua": "6d35f0d180c4d5abb6be318c2b6cf3ff381e3b642195663d472900296e6c1168",
+    "lua/compile-mode/ansi_fast.lua": "328094c2dfac2959822a671d7c2fe9fe13f3d4db7e20d0f12b5b090c909bf4f5",
+    "lua/compile-mode/dir.lua": "62922aa4ae4cad89ca9c14c1c6d1375d00e9509a370adba5d8f31c1d4e74ed2c",
+    "lua/compile-mode/ansi_render.lua": "3a2d6640f3453a9725152b1c9b31a4e45e4b7f1676a63ad359ff1233791df1ce",
+    "lua/compile-mode/constants.lua": "953850663528ee715d5955152b768e0715a1afc538733195775bdbfd20816cac",
+    "lua/compile-mode/state.lua": "02c4765a51a0810baf4d363e2c96dd2a87a51217451b47e2e6e0e9af7e5afe7f",
+    "lua/compile-mode/output_queue.lua": "c1783806a9395929ba7349f752909edb0da7cec0792feb80cabd0bfd6e0c5cd0",
+    "lua/compile-mode/output.lua": "014ec8e98215519fe25cdb31bac125c33d4a19ae3bb93f7b46c3f5bb0aaac28a",
+    "lua/compile-mode/buffer.lua": "988be5a35793ff2a46d74cce0f1c29b5485c09ac36ca780ae607b1e12db0adfb",
+    "lua/compile-mode/log.lua": "21aaff9bb49471c8d8e82722bd14f4af5472aeba232e7f08cd63b0ad2ad4c582",
+    "lua/compile-mode/utils.lua": "43a7186954c6dba31b1f3cd788e87befc5f7c4b5341bbbe8c47571f532e9d54d",
+    "lua/compile-mode/source_locations.lua": "d30fa14d9e9aa377d6c8ce15e8df41c6e37ea93c012e75cc8c4a0b9b4123f181",
+    "lua/compile-mode/navigation.lua": "a036f6e790d06e60dd312964f101b0824a3b47087bf55bbd0f560dd0a179af13",
+    "lua/compile-mode/runner.lua": "fa836aaf3c1814cecd1b328a0eff44fa298849753aef3294acb2c3b1e9928d24",
+    "lua/telescope/_extensions/compile-mode.lua": "1aa95403ef240235e35f8212ec872c5ad38290048c60256d3bd8a53ea2eb938d",
+    "lua/compile-mode/config/check.lua": "266ec5b900982e64a36849454854777fa23d32793f01bbaf41eac158057cb2b4",
+    "lua/compile-mode/config/meta.lua": "e89f3068ea79ec672640d68c49b0c90682d6cd9fb1cedddebb7667c87b66736d",
+    "lua/compile-mode/config/internal.lua": "906007f7db696ccae9a7dc547ae94798c674a58869cc2cb90f0f32ee089aeb6a",
+    "lua/compile-mode/extensions/telescope.lua": "56ddc57adc3e8330fa409b999ae07b1e962f58265c7e96988e46e1210093ea7b",
+    "lua/compile-mode/extensions/lualine.lua": "e9f2a59c02b37647eddd4e6f37fbed1f9363f0b799520e930d5c5354f33185c4",
+    "lua/compile-mode/errors/init.lua": "880b04257a909c042ab591091cf7bc29b63052ee97009fd97b157b8cc8925992",
+    "lua/compile-mode/errors/candidates.lua": "181c8f9e572d8beb36f1c061d1d45a27e36da1bfee4fd5bd3a87b0082390fec4",
+    "lua/compile-mode/errors/meta.lua": "d39badbc5e3cd6b0cbc1956f26ba84b7fe97ae3cffb27b7861258c37fc34af76",
+    "lua/compile-mode/errors/prefilters.lua": "8d1eb471d6196d14ace894b835c63cd959f3b22262cf660529181c2be54ab00e",
+    "lua/compile-mode/errors/fast.lua": "776cfcbd08f696d2a621a3463f14bac786fcfe6566e84bdc26e82eb5f1297f06",
+    "lua/compile-mode/errors/matchers.lua": "e75dedd6fc220fc579adbfadefd5559b65a93492abdc1b278cd9824f8d385781"
+  },
+  "baseline_head": "31c0ca0ee456c29a2e5a48999e70c49bbd2dd7e9",
+  "comparison_files": [
+    "three-improvements-comparison.json",
+    "three-improvements-comparison-recheck.json"
+  ],
+  "regression_log": ".measurements/three-improvements-regression.log"
+}

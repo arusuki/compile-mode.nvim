@@ -29,6 +29,10 @@ local function locus_range(bufnr, error)
 		error.end_row and error.end_row.value - 1 or start[1],
 		error.end_col and error.end_col.value - 1 or nil
 	)
+	start, finish = require("compile-mode.source_locations").resolve(bufnr, error, start, finish)
+	-- Deletions may leave an anchor at EOF or inside a surviving UTF-8 byte
+	-- sequence. Clamp the displayed locus without moving its undoable anchors.
+	start, finish = position(start[1], start[2]), position(finish[1], finish[2])
 	if finish[1] < start[1] or (finish[1] == start[1] and finish[2] < start[2]) then
 		finish = { start[1], start[2] }
 	end

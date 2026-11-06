@@ -1,6 +1,7 @@
 local utils = require("compile-mode.utils")
 local cdir = require("compile-mode.dir")
 local prefilters = require("compile-mode.errors.prefilters")
+local candidates = require("compile-mode.errors.candidates")
 local fast = require("compile-mode.errors.fast")
 
 local M = {}
@@ -40,6 +41,7 @@ local function ensure_index()
 	if indexed_errors == M.error_list then
 		return
 	end
+	require("compile-mode.source_locations").retain(M.error_list)
 	indexed_errors = M.error_list
 	ordered_lines = {}
 	counts = { error = 0, warning = 0, info = 0 }
@@ -65,6 +67,9 @@ function M.set_error(line, error)
 	local previous = M.error_list[line]
 	if previous == error then
 		return
+	end
+	if previous then
+		require("compile-mode.source_locations").release(previous)
 	end
 	count_error(previous, -1)
 	count_error(error, 1)
@@ -101,6 +106,7 @@ function M.clear_range(first, last)
 	end
 	for i = start, finish - 1 do
 		local line = lines[i]
+		require("compile-mode.source_locations").release(M.error_list[line])
 		count_error(M.error_list[line], -1)
 		M.error_list[line] = nil
 	end
@@ -186,7 +192,7 @@ end
 ---@param linenum integer
 ---@return CompileModeError|nil
 local function parse_matcher(matcher, line, linenum)
-	if not matcher or not fast.candidate(line, matcher.regex) then
+	if not matcher or not candidates.matches(line, matcher.regex) or not fast.candidate(line, matcher.regex) then
 		return nil
 	end
 

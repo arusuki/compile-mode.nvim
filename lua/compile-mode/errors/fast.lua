@@ -1,6 +1,7 @@
 -- Capture extraction for a deliberately narrow, common GNU diagnostic shape.
--- The native regex still decides whether/where it matches; unknown regex text,
--- filenames, source ranges and informational forms use the general extractor.
+-- Exact canonical error/warning prefixes have known capture boundaries. Other
+-- accepted shapes still use the native regex; unknown regex text, filenames,
+-- source ranges and informational forms use the general extractor.
 local gnu_regex = require("compile-mode.errors.matchers").gnu.regex
 local M = {}
 
@@ -56,12 +57,26 @@ function M.captures(line, regex, rx)
 		or suffix:match("^RuntimeWarning")
 		or suffix:match("^Warning")
 		or suffix:match("^warning")
-	local start, finish = rx:match_str(line)
-	if not start then
-		return {}
-	end
-	if start ~= 0 or (col and finish < after) then
-		return nil
+	-- This exact grammar is a subset of the fixed GNU regex: an ASCII
+	-- filename without spaces/colons, decimal row/column, and a literal
+	-- diagnostic prefix. The earlier suffix check excludes another source
+	-- position that could let the optional tool prefix consume the filename.
+	-- Its captures and match end are known, so neither a native regex search
+	-- nor a matchlist()/capture-string reconstruction is needed.
+	local canonical = suffix:match("^[Ee]rror:")
+		or (warning and suffix:sub(#warning + 1, #warning + 1) == ":" and warning .. ":")
+	local finish
+	if canonical and not filename:find("[\128-\255]") then
+		finish = word_start + #canonical - 2
+	else
+		local start
+		start, finish = rx:match_str(line)
+		if not start then
+			return {}
+		end
+		if start ~= 0 or (col and finish < after) then
+			return nil
+		end
 	end
 	local result = {
 		{ start = 1, end_ = finish },
