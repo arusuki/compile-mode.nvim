@@ -1,0 +1,70 @@
+local assert = require("luassert")
+local output = require("compile-mode.output")
+
+describe("job output normalization", function()
+	it("joins unfinished lines across callbacks without changing callback data", function()
+		local data = { "lo", "wor" }
+		local lines, tail = output.normalize({ "hel" }, "", {})
+		assert.are.same({ "hel" }, lines)
+
+		lines, tail = output.normalize(data, tail, {})
+		assert.are.same({ "hello", "wor" }, lines)
+		assert.are.same({ "lo", "wor" }, data)
+
+		lines, tail = output.normalize({ "ld", "" }, tail, {})
+		assert.are.same({ "world", "" }, lines)
+		assert.are.equal("", tail)
+	end)
+
+	it("reapplies hidden-output patterns after completing an unfinished line", function()
+		local lines, tail = output.normalize({ "se" }, "", { "^secret$" })
+		assert.are.same({ "se" }, lines)
+		lines, tail = output.normalize({ "cret" }, tail, { "^secret$" })
+		assert.are.same({ "" }, lines)
+		assert.are.equal("secret", tail)
+
+		lines = output.normalize({ " message", "" }, tail, { "^secret$" })
+		assert.are.same({ "secret message", "" }, lines)
+	end)
+
+	it("removes NULs encoded as newlines by job callbacks", function()
+		local lines, tail = output.normalize({ "he\nllo", "wo\nrld" }, "", {})
+		assert.are.same({ "hello", "world" }, lines)
+		assert.are.equal("world", tail)
+	end)
+
+	it("keeps the last carriage-return update across callbacks", function()
+		local lines, tail = output.normalize({ "10%\r20%\r" }, "", {})
+		assert.are.same({ "20%" }, lines)
+		lines = output.normalize({ "\r30%\r\r", "done\r" }, tail, {})
+		assert.are.same({ "30%", "done" }, lines)
+	end)
+end)
+
+describe("job output line budget", function()
+	it("allows replacement of the unfinished line at the exact limit", function()
+		local lines, exceeded = output.limit({ "completed" }, 6, 2)
+		assert.are.same({ "completed" }, lines)
+		assert.is_false(exceeded)
+	end)
+
+	it("truncates overflow without counting the four header lines as output", function()
+		local data = { "first", "second", "overflow" }
+		local lines, exceeded = output.limit(data, 5, 2)
+		assert.are.same({ "first", "second" }, lines)
+		assert.is_true(exceeded)
+		assert.are.same({ "first", "second", "overflow" }, data)
+	end)
+
+	it("rejects further output when no replacement space remains", function()
+		local lines, exceeded = output.limit({ "overflow" }, 7, 2)
+		assert.are.same({}, lines)
+		assert.is_true(exceeded)
+	end)
+
+	it("keeps all lines when no limit is configured", function()
+		local lines, exceeded = output.limit({ "first", "second" }, 100, nil)
+		assert.are.same({ "first", "second" }, lines)
+		assert.is_false(exceeded)
+	end)
+end)

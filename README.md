@@ -197,3 +197,5 @@ If you're looking for custom regexes for a specific programming language/tool, t
 Contributions are welcome in the form of GitHub issues and pull requests.
 
 For contributing details see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+For implementation details, see the [architecture and performance guide](doc/architecture.md).

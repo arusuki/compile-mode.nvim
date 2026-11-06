@@ -8,6 +8,11 @@ Thank you for wanting to contribute to `compile-mode.nvim`! Generally, I want to
 
 ## Making changes
 
+Start with the [architecture and performance guide](doc/architecture.md) for module
+ownership, the output pipeline, state lifetimes, and measurement boundaries.
+Keep the existing `require("compile-mode")` API and ftplugin hooks compatible when
+changing internal modules.
+
 ### Issues
 
 Please:
