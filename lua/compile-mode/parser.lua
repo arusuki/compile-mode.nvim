@@ -1,23 +1,80 @@
-local a = require("plenary.async")
 local errors = require("compile-mode.errors")
 local utils = require("compile-mode.utils")
 local cdir = require("compile-mode.dir")
 local state = require("compile-mode.state")
 
 local M = {}
+local namespace = vim.api.nvim_create_namespace("compile-mode.nvim")
+local redraw_pending = false
+local active_errors, active_buffer
+local previous_line_count = 0
+local scan_version = 0
+local command_versions = {}
+
+---@class CompileModeScanHighlights: table
+---@field _errors? table<integer, CompileModeError>
+---@field _parsed? table<integer, CompileModeError>
+---@field _version? integer
+---@field _buffer? integer
+---@field _rendered? boolean
+
+local function index(line, count)
+	return math.max(0, math.min(count, line < 0 and count + line + 1 or line))
+end
+
+local function clear_metadata(first, last)
+	for line = first, last do
+		errors.error_list[line] = nil
+		cdir.dir_changes[line] = nil
+		command_versions[line] = nil
+	end
+end
 
 ---Scan a buffer range and update error/directory metadata.
 ---Buffer ranges are zero-based and end-exclusive; stored line numbers are one-based.
 ---@param bufnr integer
 ---@param start_line integer
 ---@param end_line integer
----@return table[] output_highlights
+---@return CompileModeScanHighlights output_highlights
 function M.scan(bufnr, start_line, end_line)
 	local config = require("compile-mode.config.internal")
-
-	local output_highlights = {}
-
+	local line_count = vim.api.nvim_buf_line_count(bufnr)
+	start_line = index(start_line, line_count)
+	end_line = index(end_line, line_count)
 	local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line, false)
+
+	if active_errors ~= errors.error_list or active_buffer ~= bufnr then
+		active_errors = errors.error_list
+		active_buffer = bufnr
+		previous_line_count = 0
+		command_versions = {}
+	end
+	-- A shortened log can leave metadata past its new last line. Appending to a
+	-- log takes no full-table pass; only deleted and reparsed rows are invalidated.
+	clear_metadata(line_count + 1, previous_line_count)
+	previous_line_count = line_count
+	if start_line == 0 and end_line == line_count then
+		for line in pairs(errors.error_list) do
+			if line > line_count then
+				errors.error_list[line] = nil
+			end
+		end
+		for line in pairs(cdir.dir_changes) do
+			if line > line_count then
+				cdir.dir_changes[line] = nil
+			end
+		end
+	end
+	clear_metadata(start_line + 1, end_line)
+	vim.api.nvim_buf_clear_namespace(bufnr, namespace, start_line, end_line)
+	scan_version = scan_version + 1
+	local output_highlights = {
+		_errors = errors.error_list,
+		_parsed = {},
+		_version = scan_version,
+		_buffer = bufnr,
+	}
+
 	for linenum, line in ipairs(lines) do
 		linenum = start_line + linenum
 
@@ -25,6 +82,7 @@ function M.scan(bufnr, start_line, end_line)
 
 		if error then
 			errors.error_list[linenum] = error
+			output_highlights._parsed[linenum] = error
 
 			if config.auto_jump_to_first_error and not state.has_auto_jumped then
 				state.has_auto_jumped = true
@@ -59,6 +117,9 @@ function M.scan(bufnr, start_line, end_line)
 
 			if not (linenum == 1 and vim.startswith(line, "vim:")) then
 				local highlights = utils.match_command_ouput(line, linenum)
+				if #highlights > 0 then
+					command_versions[linenum] = scan_version
+				end
 				for _, value in ipairs(highlights) do
 					table.insert(output_highlights, value)
 				end
@@ -71,17 +132,43 @@ end
 
 ---Apply highlights and refresh status after a scan.
 ---@param bufnr integer
----@param output_highlights table[]
+---@param output_highlights CompileModeScanHighlights
 function M.render(bufnr, output_highlights)
-	errors.highlight(bufnr)
-	utils.highlight_command_outputs(bufnr, output_highlights)
-	vim.cmd.redrawstatus()
+	if output_highlights._errors then
+		if
+			output_highlights._rendered
+			or output_highlights._errors ~= errors.error_list
+			or output_highlights._buffer ~= active_buffer
+		then
+			return
+		end
+		output_highlights._rendered = true
+		errors.highlight(bufnr, output_highlights._parsed)
+		for _, highlight in ipairs(output_highlights) do
+			if command_versions[highlight[2]] == output_highlights._version then
+				utils.add_highlight(bufnr, unpack(highlight))
+			end
+		end
+	else
+		-- Keep callers supplying a manually assembled highlight list working.
+		errors.highlight(bufnr)
+		utils.highlight_command_outputs(bufnr, output_highlights)
+	end
+	if not redraw_pending then
+		redraw_pending = true
+		vim.schedule(function()
+			redraw_pending = false
+			vim.cmd.redrawstatus()
+		end)
+	end
 end
 
----@type fun(bufnr: integer, start_line: integer, end_line: integer)
-M.parse = a.void(function(bufnr, start_line, end_line)
+---@param bufnr integer
+---@param start_line integer
+---@param end_line integer
+function M.parse(bufnr, start_line, end_line)
 	local output_highlights = M.scan(bufnr, start_line, end_line)
 	M.render(bufnr, output_highlights)
-end)
+end
 
 return M

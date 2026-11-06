@@ -62,7 +62,7 @@ function M.add_highlight(bufnr, hlname, linenum, range)
 		compile_mode_ns,
 		linenum - 1,
 		range.start - 1,
-		{ end_col = range.end_, hl_group = hlname }
+		{ end_col = range.end_, hl_group = hlname, invalidate = true, undo_restore = false }
 	)
 end
 

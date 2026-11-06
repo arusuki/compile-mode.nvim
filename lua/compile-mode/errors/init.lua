@@ -302,11 +302,15 @@ local function highlight_error(bufnr, error, linenum)
 	end
 end
 
----Highlight all errors in the compilation buffer.
+---Highlight the selected errors, or all errors when no selection is supplied.
+---A deferred scan result must not restore highlights for a replaced error.
 ---@param bufnr integer
-function M.highlight(bufnr)
-	for linenum, error in pairs(M.error_list) do
-		highlight_error(bufnr, error, linenum)
+---@param selected? table<integer, CompileModeError>
+function M.highlight(bufnr, selected)
+	for linenum, error in pairs(selected or M.error_list) do
+		if M.error_list[linenum] == error then
+			highlight_error(bufnr, error, linenum)
+		end
 	end
 end
 
