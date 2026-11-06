@@ -556,10 +556,14 @@ describe("OSC 8 hyperlink extmarks", function()
 		assert.are.same({ "before", "midstart", "endafter" }, lines)
 
 		local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-		assert.equals(1, #extmarks)
+		assert.equals(2, #extmarks)
 
-		local m = extmarks[1]
-		assert.equals("https://multi.com", m[4].url)
+		for _, mark in ipairs(extmarks) do
+			assert.equals("https://multi.com", mark[4].url)
+			assert.equals(mark[2], mark[4].end_row)
+		end
+		assert.are.same({ 1, 3, 8 }, { extmarks[1][2], extmarks[1][3], extmarks[1][4].end_col })
+		assert.are.same({ 2, 0, 3 }, { extmarks[2][2], extmarks[2][3], extmarks[2][4].end_col })
 
 		vim.api.nvim_buf_delete(bufnr, { force = true })
 	end)

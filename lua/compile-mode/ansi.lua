@@ -53,13 +53,17 @@ local OSC_ST_TERM = OSC_INTRO .. OSC_TEXT_ST .. ST
 -- Partial OSC pattern (incomplete sequence at end of input)
 local PARTIAL_OSC = OSC_INTRO .. OSC_TEXT .. "$"
 
-local partial_buffer = ""
+local contexts = {}
+local generation = 0
 local mode = "filter"
 local osc_kind = "render"
 local osc_handlers = {}
 ---@type table?
 local baleia_instance = nil
 local fast_render = nil
+---@type table?
+local stream_render = nil
+local strip_sgr_codes = true
 local initialized = false
 -- Baleia uses the supplied name for both its namespace and highlight groups.
 -- Keep its marks separate from other consumers of Baleia in the same buffer.
@@ -69,6 +73,13 @@ local M = {}
 
 M.ns_id = vim.api.nvim_create_namespace("compile-mode-ansi-osc")
 vim.api.nvim_set_hl(0, "CompileModeUrl", { underline = true, sp = "#569cd6" })
+
+vim.api.nvim_create_autocmd("BufWipeout", {
+	group = vim.api.nvim_create_augroup("compile-mode-ansi-state", { clear = true }),
+	callback = function(ev)
+		contexts[ev.buf] = nil
+	end,
+})
 
 ---@param config CompileModeConfig
 local function setup(config)
@@ -82,6 +93,8 @@ local function setup(config)
 			baleia_namespaces[vim.api.nvim_create_namespace(options.name)] = true
 			baleia_instance = baleia_mod.setup(options)
 			fast_render = require("compile-mode.ansi_fast").create(options, baleia_instance)
+			stream_render = require("compile-mode.ansi_render").create(options, baleia_instance)
+			strip_sgr_codes = options.strip_ansi_codes ~= false
 		else
 			log.warn("ansi_color.kind is 'render' but baleia.nvim could not be loaded. Falling back to 'filter'.")
 			mode = "filter"
@@ -185,7 +198,7 @@ local function visible_len(text, control)
 			elseif control.phase >= 2 and byte >= 32 and byte <= 47 then
 				control.phase, control.length = 3, control.length + 1
 			else
-				if control.phase >= 2 and byte == 109 then
+				if control.phase >= 2 and byte == 109 and (mode ~= "render" or strip_sgr_codes) then
 					visible = visible - control.length - 1
 				end
 				control.phase = byte == 27 and 1 or nil
@@ -204,7 +217,7 @@ end
 ---@param row integer 0-indexed absolute row in buffer
 ---@param link_state AnsiOscLinkState
 ---@return string
-local function process_osc(line, bufnr, row, link_state)
+local function process_osc(line, bufnr, row, link_state, events, previous, reusable)
 	local pieces = {}
 	local pos, column = 1, 0
 	local control = {}
@@ -239,7 +252,16 @@ local function process_osc(line, bufnr, row, link_state)
 			local data = body:sub(semicolon + 1)
 			local handler = cmd and osc_handlers[cmd]
 			if handler then
-				local text, meta = handler({ bufnr = bufnr, data = data })
+				local cached = previous and previous[osc_start]
+				local text, meta
+				if cached and body_end <= reusable and cached.source == line:sub(osc_start, body_end) then
+					text, meta = cached.text, cached.meta
+				else
+					text, meta = handler({ bufnr = bufnr, data = data })
+				end
+				if events then
+					events[osc_start] = { source = line:sub(osc_start, body_end), text = text, meta = meta }
+				end
 				if meta then
 					if meta.link_open then
 						link_state.open = {
@@ -268,7 +290,20 @@ local function process_osc(line, bufnr, row, link_state)
 		pos = body_end + 1
 	end
 
-	table.insert(pieces, line:sub(pos))
+	local rest = line:sub(pos)
+	table.insert(pieces, rest)
+	column = column + visible_len(rest, control)
+	-- Finish the visible part of an open link on this row, carrying only its
+	-- URI into the next row. Marks never span another stream's inserted rows.
+	if link_state.open and column > link_state.open.col then
+		table.insert(link_state.pending, {
+			start_row = row,
+			start_col = link_state.open.col,
+			end_row = row,
+			end_col = column,
+			url = link_state.open.uri,
+		})
+	end
 	return table.concat(pieces)
 end
 
@@ -280,7 +315,7 @@ local function check_partial(line)
 	if not csi then
 		csi = string.find(line, LONE_ESC)
 	end
-	local osc = string.find(line, PARTIAL_OSC)
+	local osc = string.find(line, PARTIAL_OSC) or string.find(line, OSC_INTRO .. OSC_TEXT .. ESC .. "$")
 	if csi and osc then
 		return math.min(csi, osc)
 	elseif csi then
@@ -289,20 +324,6 @@ local function check_partial(line)
 		return osc
 	end
 	return nil
-end
-
----Prepend pending partial and check for new partial at end.
----@param lines string[]
-local function handle_partial(lines)
-	lines[1] = partial_buffer .. lines[1]
-	partial_buffer = ""
-
-	local last = lines[#lines]
-	local partial_start = check_partial(last)
-	if partial_start then
-		partial_buffer = last:sub(partial_start)
-		lines[#lines] = last:sub(1, partial_start - 1)
-	end
 end
 
 ---@alias AnsiOscExtmark { start_row: integer, start_col: integer, end_row: integer, end_col: integer, url: string }
@@ -324,65 +345,27 @@ local function apply_osc_extmarks(bufnr, pending)
 	end
 end
 
----Strip non-SGR CSI and OSC, let baleia handle SGR (strip + color extmarks).
----@param bufnr integer
----@param start integer
----@param end_ integer
----@param lines string[]
-local function render(bufnr, start, end_, lines)
-	handle_partial(lines)
-	local link_state = { open = nil, pending = {} }
-	-- Baleia's buf_set_lines uses start as absolute row for extmarks.
-	-- Negative indices (like -2) are invalid for nvim_buf_set_extmark.
-	if start < 0 then
-		start = vim.api.nvim_buf_line_count(bufnr) + start + 1
+---The optional stream table is owned by the caller and can be used for stdout
+---and stderr separately. All retained metadata belongs to its unfinished row.
+local function context(bufnr, supplied)
+	local ctx = supplied or contexts[bufnr] or {}
+	if not supplied then
+		contexts[bufnr] = ctx
 	end
-	if end_ < 0 then
-		end_ = vim.api.nvim_buf_line_count(bufnr) + end_ + 1
+	if ctx._generation ~= generation or ctx._buffer ~= bufnr then
+		ctx._generation, ctx._buffer = generation, bufnr
+		ctx._partial, ctx._tail, ctx._after = "", nil, {}
 	end
-	for i, line in ipairs(lines) do
-		line = strip_non_sgr_csi(line)
-		if osc_kind ~= "passthrough" then
-			line = process_osc(line, bufnr, start + i - 1, link_state)
-		end
-		lines[i] = line
-	end
-	---@cast baleia_instance table
-	if not fast_render or not fast_render(bufnr, start, end_, lines) then
-		baleia_instance.buf_set_lines(bufnr, start, end_, false, lines)
-	end
-	apply_osc_extmarks(bufnr, link_state.pending)
+	return ctx
 end
 
----Strip all CSI and OSC sequences, write plain text.
----@param bufnr integer
----@param start integer
----@param end_ integer
----@param lines string[]
-local function filter(bufnr, start, end_, lines)
-	handle_partial(lines)
-	local link_state = { open = nil, pending = {} }
-	local abs_start = start
-	if abs_start < 0 then
-		abs_start = vim.api.nvim_buf_line_count(bufnr) + abs_start + 1
+local function common_prefix(left, right)
+	local limit = math.min(#left, #right)
+	local i = 1
+	while i <= limit and left:byte(i) == right:byte(i) do
+		i = i + 1
 	end
-	for i, line in ipairs(lines) do
-		line = strip_csi(line)
-		if osc_kind ~= "passthrough" then
-			line = process_osc(line, bufnr, abs_start + i - 1, link_state)
-		end
-		lines[i] = line
-	end
-	vim.api.nvim_buf_set_lines(bufnr, start, end_, false, lines)
-	apply_osc_extmarks(bufnr, link_state.pending)
-end
-
----@param bufnr integer
----@param start integer
----@param end_ integer
----@param lines string[]
-local function passthrough(bufnr, start, end_, lines)
-	vim.api.nvim_buf_set_lines(bufnr, start, end_, false, lines)
+	return i - 1
 end
 
 ---@param bufnr integer
@@ -390,28 +373,113 @@ end
 ---@param end_ integer
 ---@param lines string[]
 ---@param replay_partial? boolean normalized lines already contain the raw unfinished tail
-function M.buf_set_lines(bufnr, start, end_, lines, replay_partial)
+---@param supplied? table independent stream state; recreated for every job
+function M.buf_set_lines(bufnr, start, end_, lines, replay_partial, supplied)
 	if not initialized then
 		setup(require("compile-mode.config.internal"))
 		initialized = true
 	end
-	if replay_partial then
-		-- The runner replays the entire raw unfinished line. Reusing our
-		-- escape fragment as well would prepend the same sequence twice.
-		partial_buffer = ""
-	end
+	local ctx = context(bufnr, supplied)
 	local count = vim.api.nvim_buf_line_count(bufnr)
 	start = math.max(0, math.min(count, start < 0 and count + start + 1 or start))
 	end_ = math.max(0, math.min(count, end_ < 0 and count + end_ + 1 or end_))
 	if start < end_ then
 		clear_colors(bufnr, start, end_)
-		-- OSC marks are created synchronously, so a deferred clear would erase
-		-- the new links as well as the previous ones.
 		vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, start, end_)
 	end
-	local fn = (mode == "render" and render) or (mode == "filter" and filter) or passthrough
 	vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-	fn(bufnr, start, end_, lines)
+	if mode == "passthrough" or #lines == 0 then
+		vim.api.nvim_buf_set_lines(bufnr, start, end_, false, lines)
+	else
+		local tail = ctx._tail
+		local replay = replay_partial and tail and tail.row == start
+		local before = replay and tail.before or (tail and start > tail.row and ctx._after or {})
+		if replay and ctx.replay_reset then
+			before = ctx._after
+		end
+		local reusable = replay and (ctx.replay_prefix or common_prefix(tail.raw, lines[1])) or 0
+		if ctx.replay_reset then
+			reusable = 0
+		end
+		local previous = replay and tail.events or nil
+		local raw_lines = vim.list_slice(lines)
+		if not replay_partial then
+			raw_lines[1] = ctx._partial .. raw_lines[1]
+		end
+		local previous_partial = ctx._partial
+		ctx._partial = ""
+		local cleaned, rows, definitions, pending = {}, {}, {}, {}
+		local style, link = before.style, before.link
+		for i, raw in ipairs(raw_lines) do
+			local row = start + i - 1
+			local strip = mode == "filter" and strip_csi or strip_non_sgr_csi
+			local discarded = ctx.discarded_prefixes and ctx.discarded_prefixes[i]
+				or (i == 1 and ctx.discarded_prefix or nil)
+			if discarded and discarded ~= "" then
+				if i == 1 then
+					discarded = previous_partial .. discarded
+				end
+				local discarded_links = { open = link and { uri = link, row = row, col = 0 }, pending = {} }
+				discarded = strip(discarded)
+				if osc_kind ~= "passthrough" then
+					discarded = process_osc(discarded, bufnr, row, discarded_links)
+				end
+				link = discarded_links.open and discarded_links.open.uri or nil
+				if mode == "render" and stream_render then
+					local ignored
+					ignored, style = stream_render.line(discarded, style)
+				end
+			end
+			local row_before = i == #raw_lines and { style = style, link = link }
+			local line = raw
+			if i == #raw_lines then
+				local partial = check_partial(line)
+				if partial then
+					ctx._partial = line:sub(partial)
+					line = line:sub(1, partial - 1)
+				end
+			end
+			line = strip(line)
+			local events
+			if osc_kind ~= "passthrough" and (link or line:find(ESC .. "]", 1, true)) then
+				events = {}
+				local links = { open = link and { uri = link, row = row, col = 0 }, pending = pending }
+				line = process_osc(
+					line,
+					bufnr,
+					row,
+					links,
+					events,
+					i == 1 and previous or nil,
+					i == 1 and #strip(raw:sub(1, reusable)) or 0
+				)
+				link = links.open and links.open.uri or nil
+			end
+			if mode == "render" and stream_render then
+				line, style, rows[i] = stream_render.line(line, style, definitions)
+			end
+			cleaned[i] = line
+			if i == #raw_lines then
+				ctx._tail = { row = row, raw = raw, before = row_before, events = events }
+			end
+		end
+		ctx._after = { style = style, link = link }
+		if mode == "render" and not stream_render then
+			if not fast_render or not fast_render(bufnr, start, end_, cleaned) then
+				assert(baleia_instance).buf_set_lines(bufnr, start, end_, false, cleaned)
+			end
+		else
+			if mode == "render" and stream_render then
+				stream_render.write(bufnr, start, end_, cleaned)
+				stream_render.apply(bufnr, start, rows, definitions)
+			else
+				vim.api.nvim_buf_set_lines(bufnr, start, end_, false, cleaned)
+			end
+		end
+		apply_osc_extmarks(bufnr, pending)
+	end
+	ctx.replay_prefix, ctx.replay_reset = nil, nil
+	ctx.discarded_prefix, ctx.discarded_prefixes = nil, nil
 	vim.schedule(function()
 		if vim.api.nvim_buf_is_valid(bufnr) then
 			vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
@@ -427,35 +495,30 @@ function M.reset(bufnr)
 		vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, 0, -1)
 	end
 	initialized = false
-	partial_buffer = ""
+	generation = generation + 1
+	contexts = {}
 	baleia_instance = nil
 	fast_render = nil
+	stream_render = nil
 end
 
 ---Flush any remaining partial buffer to the compilation buffer.
 ---Call this when the process exits, before writing the footer.
 ---@param bufnr integer
-function M.flush(bufnr)
-	if partial_buffer == "" then
+function M.flush(bufnr, supplied)
+	local ctx = context(bufnr, supplied)
+	if ctx._partial == "" then
 		return
 	end
-	local line = partial_buffer
-	partial_buffer = ""
-	local link_state = { open = nil, pending = {} }
-	if mode == "filter" then
-		line = strip_csi(line)
-	elseif mode == "render" then
-		line = strip_non_sgr_csi(line)
+	local line = ctx._partial
+	ctx._partial = ""
+	local row = ctx._tail and ctx._tail.row or vim.api.nvim_buf_line_count(bufnr) - 1
+	local last = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1]
+	if not last then
+		return
 	end
-	if osc_kind ~= "passthrough" then
-		local flush_row = math.max(0, vim.api.nvim_buf_line_count(bufnr) - 1)
-		line = process_osc(line, bufnr, flush_row, link_state)
-		apply_osc_extmarks(bufnr, link_state.pending)
-	end
-	-- Append to last line, not create a new one
-	local last = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
 	vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-	vim.api.nvim_buf_set_lines(bufnr, -2, -1, false, { last .. line })
+	vim.api.nvim_buf_set_text(bufnr, row, #last, row, #last, { line })
 	vim.schedule(function()
 		if vim.api.nvim_buf_is_valid(bufnr) then
 			vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
