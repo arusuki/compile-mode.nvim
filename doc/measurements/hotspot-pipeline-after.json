@@ -1,0 +1,711 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T19:53:34.628290+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "d3fcbd80f9c96fd80b0a4355d4b89c9a32a4dc8f",
+    "git_dirty": true,
+    "source_sha256": "20ad92b584039d0e8b4a88f97cfbb8dccdb6c7bfd0c615726ef877652a1698c7",
+    "suite": "benchmark",
+    "samples": 5,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "passed": true,
+      "p95_ms": 106.735042,
+      "median_ms": 106.382584,
+      "samples_ms": [
+        106.735042,
+        106.669625,
+        106.382584,
+        106.361834,
+        106.290125
+      ],
+      "input_size": 10000,
+      "units": 10000,
+      "name": "parse/errors/10000",
+      "retained_lua_kib": [
+        0.2578125,
+        0.234375,
+        0.25,
+        0.234375,
+        0.265625
+      ]
+    },
+    {
+      "p95_ms": 122.352375,
+      "retained_lua_kib": [
+        129.15625,
+        128.3359375,
+        128.3515625,
+        128.6015625,
+        128.3671875
+      ],
+      "input_size": 10000,
+      "median_ms": 119.176625,
+      "name": "scan/errors/10000",
+      "units": 10000,
+      "passed": true,
+      "samples_ms": [
+        113.644667,
+        116.152542,
+        119.176625,
+        120.647583,
+        122.352375
+      ]
+    },
+    {
+      "passed": true,
+      "median_ms": 6.434917,
+      "name": "ansi/filter/10000",
+      "input_size": 10000,
+      "units": 10000,
+      "p95_ms": 6.576084,
+      "retained_lua_kib": [
+        351.98828125,
+        351.96484375,
+        351.98046875,
+        352.69140625,
+        351.99609375
+      ],
+      "samples_ms": [
+        6.434917,
+        6.428083,
+        6.440459,
+        6.576084,
+        6.423541
+      ]
+    },
+    {
+      "input_size": 10000,
+      "median_ms": 17.282875,
+      "passed": true,
+      "p95_ms": 17.48325,
+      "units": 10000,
+      "name": "ansi/render/10000",
+      "retained_lua_kib": [
+        2386.80859375,
+        696.484375,
+        689.35546875,
+        690.46484375,
+        690.890625
+      ],
+      "samples_ms": [
+        17.368958,
+        17.282875,
+        17.090792,
+        17.48325,
+        16.868917
+      ]
+    },
+    {
+      "median_ms": 2.356542,
+      "units": 100,
+      "input_size": 10000,
+      "samples_ms": [
+        2.375458,
+        2.356542,
+        2.325959,
+        2.358,
+        2.305042
+      ],
+      "p95_ms": 2.375458,
+      "retained_lua_kib": [
+        -12158.12890625,
+        -12158.8203125,
+        -12158.8046875,
+        -12158.8203125,
+        -12158.7890625
+      ],
+      "name": "metadata/statusline/10000",
+      "passed": true
+    },
+    {
+      "retained_lua_kib": [
+        -12156.90234375,
+        -12159.0859375,
+        -12159.0703125,
+        -12159.0859375,
+        -12159.0546875
+      ],
+      "name": "metadata/navigation/10000",
+      "samples_ms": [
+        2.492875,
+        2.3235,
+        2.378458,
+        2.3725,
+        2.428916
+      ],
+      "input_size": 10000,
+      "median_ms": 2.378458,
+      "passed": true,
+      "units": 100,
+      "p95_ms": 2.492875
+    },
+    {
+      "samples_ms": [
+        84.35375,
+        83.639167,
+        83.385833,
+        83.615667,
+        83.670125
+      ],
+      "p95_ms": 84.35375,
+      "retained_lua_kib": [
+        26.15234375,
+        30.0322265625,
+        13.8603515625,
+        24.6767578125,
+        19.3134765625
+      ],
+      "passed": true,
+      "median_ms": 83.639167,
+      "synchronous_stages": [
+        {
+          "ansi.buf_set_lines": {
+            "calls": 81,
+            "total_ms": 14.624462,
+            "max_call_ms": 0.813417
+          },
+          "parser.render": {
+            "calls": 82,
+            "total_ms": 0.182043,
+            "max_call_ms": 0.028
+          },
+          "output.normalize": {
+            "calls": 81,
+            "total_ms": 2.464295999999999,
+            "max_call_ms": 0.105042
+          },
+          "parser.scan": {
+            "calls": 82,
+            "total_ms": 32.30433600000001,
+            "max_call_ms": 1.03225
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "calls": 81,
+            "total_ms": 13.858293,
+            "max_call_ms": 0.405166
+          },
+          "parser.render": {
+            "calls": 82,
+            "total_ms": 0.129715,
+            "max_call_ms": 0.029542
+          },
+          "output.normalize": {
+            "calls": 81,
+            "total_ms": 2.299456,
+            "max_call_ms": 0.058084
+          },
+          "parser.scan": {
+            "calls": 82,
+            "total_ms": 30.85912299999999,
+            "max_call_ms": 0.986541
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "calls": 80,
+            "total_ms": 13.713457,
+            "max_call_ms": 0.432083
+          },
+          "parser.render": {
+            "calls": 81,
+            "total_ms": 0.05626100000000004,
+            "max_call_ms": 0.005459
+          },
+          "output.normalize": {
+            "calls": 80,
+            "total_ms": 2.296837,
+            "max_call_ms": 0.050292
+          },
+          "parser.scan": {
+            "calls": 81,
+            "total_ms": 30.37925400000002,
+            "max_call_ms": 1.021708
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "calls": 81,
+            "total_ms": 14.008049,
+            "max_call_ms": 0.465542
+          },
+          "parser.render": {
+            "calls": 82,
+            "total_ms": 0.05854300000000004,
+            "max_call_ms": 0.00525
+          },
+          "output.normalize": {
+            "calls": 81,
+            "total_ms": 2.324794,
+            "max_call_ms": 0.049708
+          },
+          "parser.scan": {
+            "calls": 82,
+            "total_ms": 30.043877,
+            "max_call_ms": 0.857625
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "calls": 81,
+            "total_ms": 13.95525,
+            "max_call_ms": 0.396417
+          },
+          "parser.render": {
+            "calls": 82,
+            "total_ms": 0.06133100000000002,
+            "max_call_ms": 0.005542
+          },
+          "output.normalize": {
+            "calls": 81,
+            "total_ms": 2.282203000000001,
+            "max_call_ms": 0.045041
+          },
+          "parser.scan": {
+            "calls": 82,
+            "total_ms": 30.573624,
+            "max_call_ms": 1.080375
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "calls": 81,
+            "total_ms": 13.757998,
+            "max_call_ms": 0.413083
+          },
+          "parser.render": {
+            "calls": 82,
+            "total_ms": 0.06882800000000003,
+            "max_call_ms": 0.011125
+          },
+          "output.normalize": {
+            "calls": 81,
+            "total_ms": 2.286757,
+            "max_call_ms": 0.048625
+          },
+          "parser.scan": {
+            "calls": 82,
+            "total_ms": 30.805291,
+            "max_call_ms": 1.020542
+          }
+        }
+      ],
+      "extmarks_after_each_run": [
+        10000,
+        10000,
+        10000,
+        10000,
+        10000,
+        10000
+      ],
+      "units": 10000,
+      "name": "end_to_end/ansi/10000",
+      "normalization_batches": [
+        81,
+        81,
+        80,
+        81,
+        81,
+        81
+      ],
+      "includes_warmup_in_auxiliary_samples": true,
+      "input_size": 10000,
+      "event_loop_max_gap_ms": [
+        20.02175,
+        16.778,
+        17.220292,
+        16.434292,
+        16.775125,
+        17.036042
+      ],
+      "reuses_compilation_buffer": true
+    },
+    {
+      "name": "end_to_end/errors/10000",
+      "median_ms": 249.4295,
+      "synchronous_stages": [
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.341084,
+            "calls": 81,
+            "total_ms": 8.313792
+          },
+          "parser.render": {
+            "max_call_ms": 0.741333,
+            "calls": 82,
+            "total_ms": 34.305833
+          },
+          "output.normalize": {
+            "max_call_ms": 0.093125,
+            "calls": 81,
+            "total_ms": 3.185330000000001
+          },
+          "parser.scan": {
+            "max_call_ms": 3.161166,
+            "calls": 82,
+            "total_ms": 116.344332
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.333917,
+            "calls": 82,
+            "total_ms": 8.098125
+          },
+          "parser.render": {
+            "max_call_ms": 1.183458,
+            "calls": 83,
+            "total_ms": 37.54575000000001
+          },
+          "output.normalize": {
+            "max_call_ms": 0.099708,
+            "calls": 82,
+            "total_ms": 3.331000000000002
+          },
+          "parser.scan": {
+            "max_call_ms": 4.158167,
+            "calls": 83,
+            "total_ms": 116.114494
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.336667,
+            "calls": 82,
+            "total_ms": 8.284332000000001
+          },
+          "parser.render": {
+            "max_call_ms": 1.404584,
+            "calls": 83,
+            "total_ms": 38.599295
+          },
+          "output.normalize": {
+            "max_call_ms": 0.079625,
+            "calls": 82,
+            "total_ms": 3.361039
+          },
+          "parser.scan": {
+            "max_call_ms": 6.062375,
+            "calls": 83,
+            "total_ms": 154.254127
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.350125,
+            "calls": 82,
+            "total_ms": 8.279417000000002
+          },
+          "parser.render": {
+            "max_call_ms": 1.474334,
+            "calls": 83,
+            "total_ms": 38.497546
+          },
+          "output.normalize": {
+            "max_call_ms": 0.099125,
+            "calls": 82,
+            "total_ms": 3.394497
+          },
+          "parser.scan": {
+            "max_call_ms": 6.194166,
+            "calls": 83,
+            "total_ms": 153.2424179999999
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.31275,
+            "calls": 82,
+            "total_ms": 8.710834999999996
+          },
+          "parser.render": {
+            "max_call_ms": 1.385708,
+            "calls": 83,
+            "total_ms": 39.301921
+          },
+          "output.normalize": {
+            "max_call_ms": 0.095209,
+            "calls": 82,
+            "total_ms": 3.463502000000001
+          },
+          "parser.scan": {
+            "max_call_ms": 6.783417,
+            "calls": 83,
+            "total_ms": 198.991994
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.500666,
+            "calls": 82,
+            "total_ms": 8.803253999999999
+          },
+          "parser.render": {
+            "max_call_ms": 1.502834,
+            "calls": 83,
+            "total_ms": 38.703332
+          },
+          "output.normalize": {
+            "max_call_ms": 0.134917,
+            "calls": 82,
+            "total_ms": 3.411087
+          },
+          "parser.scan": {
+            "max_call_ms": 7.106583,
+            "calls": 83,
+            "total_ms": 218.039629
+          }
+        }
+      ],
+      "extmarks_after_each_run": [
+        40000,
+        40000,
+        40000,
+        40000,
+        40000,
+        40000
+      ],
+      "units": 10000,
+      "event_loop_max_gap_ms": [
+        39.988167,
+        45.130417,
+        58.660042,
+        58.016833,
+        77.815625,
+        77.983417
+      ],
+      "normalization_batches": [
+        81,
+        82,
+        82,
+        82,
+        82,
+        82
+      ],
+      "includes_warmup_in_auxiliary_samples": true,
+      "passed": true,
+      "input_size": 10000,
+      "reuses_compilation_buffer": true,
+      "retained_lua_kib": [
+        13.58984375,
+        12.95703125,
+        23.4658203125,
+        10.8681640625,
+        12.6337890625
+      ],
+      "samples_ms": [
+        208.514959,
+        249.4295,
+        248.094125,
+        295.710459,
+        313.8445
+      ],
+      "p95_ms": 313.8445
+    },
+    {
+      "retained_lua_kib": [
+        10.2578125,
+        20.4619140625,
+        10.8681640625,
+        14.7080078125,
+        13.7470703125
+      ],
+      "median_ms": 72.998541,
+      "synchronous_stages": [
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.154542,
+            "calls": 81,
+            "total_ms": 7.307828000000002
+          },
+          "parser.scan": {
+            "max_call_ms": 0.970792,
+            "calls": 82,
+            "total_ms": 40.39521
+          },
+          "parser.render": {
+            "max_call_ms": 0.030542,
+            "calls": 82,
+            "total_ms": 0.1516689999999999
+          },
+          "output.normalize": {
+            "max_call_ms": 0.06175,
+            "calls": 81,
+            "total_ms": 2.771127
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.178208,
+            "calls": 82,
+            "total_ms": 7.020705000000001
+          },
+          "parser.scan": {
+            "max_call_ms": 0.896167,
+            "calls": 83,
+            "total_ms": 38.01020400000002
+          },
+          "parser.render": {
+            "max_call_ms": 0.028458,
+            "calls": 83,
+            "total_ms": 0.114496
+          },
+          "output.normalize": {
+            "max_call_ms": 0.048708,
+            "calls": 82,
+            "total_ms": 2.644542
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.164042,
+            "calls": 81,
+            "total_ms": 6.867751999999999
+          },
+          "parser.scan": {
+            "max_call_ms": 0.894,
+            "calls": 82,
+            "total_ms": 37.216289
+          },
+          "parser.render": {
+            "max_call_ms": 0.034208,
+            "calls": 82,
+            "total_ms": 0.08103900000000003
+          },
+          "output.normalize": {
+            "max_call_ms": 0.050708,
+            "calls": 81,
+            "total_ms": 2.599415
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.156083,
+            "calls": 81,
+            "total_ms": 6.878750999999999
+          },
+          "parser.scan": {
+            "max_call_ms": 1.006417,
+            "calls": 82,
+            "total_ms": 37.415539
+          },
+          "parser.render": {
+            "max_call_ms": 0.003291,
+            "calls": 82,
+            "total_ms": 0.04237100000000002
+          },
+          "output.normalize": {
+            "max_call_ms": 0.050167,
+            "calls": 81,
+            "total_ms": 2.605203000000001
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.164417,
+            "calls": 81,
+            "total_ms": 6.953956
+          },
+          "parser.scan": {
+            "max_call_ms": 0.989416,
+            "calls": 82,
+            "total_ms": 37.79237599999999
+          },
+          "parser.render": {
+            "max_call_ms": 0.005792,
+            "calls": 82,
+            "total_ms": 0.04383500000000003
+          },
+          "output.normalize": {
+            "max_call_ms": 0.050167,
+            "calls": 81,
+            "total_ms": 2.644085
+          }
+        },
+        {
+          "ansi.buf_set_lines": {
+            "max_call_ms": 0.171125,
+            "calls": 82,
+            "total_ms": 6.829750999999998
+          },
+          "parser.scan": {
+            "max_call_ms": 0.994583,
+            "calls": 83,
+            "total_ms": 37.593792
+          },
+          "parser.render": {
+            "max_call_ms": 0.003333,
+            "calls": 83,
+            "total_ms": 0.04320000000000002
+          },
+          "output.normalize": {
+            "max_call_ms": 0.057041,
+            "calls": 82,
+            "total_ms": 2.645127000000001
+          }
+        }
+      ],
+      "extmarks_after_each_run": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "units": 10000,
+      "event_loop_max_gap_ms": [
+        17.337834,
+        14.365083,
+        13.743417,
+        13.421958,
+        13.279459,
+        13.099167
+      ],
+      "normalization_batches": [
+        81,
+        82,
+        81,
+        81,
+        81,
+        82
+      ],
+      "includes_warmup_in_auxiliary_samples": true,
+      "input_size": 10000,
+      "name": "end_to_end/plain/10000",
+      "passed": true,
+      "reuses_compilation_buffer": true,
+      "samples_ms": [
+        74.075334,
+        72.725875,
+        73.0605,
+        72.998541,
+        72.671375
+      ],
+      "p95_ms": 74.075334
+    }
+  ]
+}

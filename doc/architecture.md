@@ -62,16 +62,21 @@ Callbacks enqueue raw data. One consumer combines adjacent partial tails, with
 linear concatenation of fragments, and takes at most 128 callback line entries
 or approximately 64 KiB per batch (plus a trailing empty line when splitting a
 callback). These are soft bounds: a single entry can exceed the byte limit.
-Normalization precedes ANSI processing; its raw unfinished line already contains
-any partial escape bytes, so the ANSI writer's `replay_partial` flag prevents
-prepending them twice. Each batch replaces the unfinished buffer line, yields for
+Normalization precedes ANSI processing. Without hidden-output patterns, its tail
+retains only the last visible CR segment and one pending CR. Arbitrary hidden
+patterns can span CR boundaries, so that path retains the raw tail for replay.
+Both forms contain any partial escape bytes; the ANSI writer's `replay_partial`
+flag prevents prepending them twice. Each batch replaces the unfinished buffer line, yields for
 scheduled Baleia work, scans/renders the changed range, follows output if enabled,
 and yields again. Queue dequeue advances an index instead of shifting an array.
 
 `parser.scan` replaces range metadata and clears only owned range highlights.
 Its returned highlight list carries the newly parsed errors and scan identity;
 `parser.render` visits that selection, ignores stale deferred results, and
-coalesces status redraws. `_parse_errors` invokes both stages synchronously.
+coalesces status redraws only when severity counts or job status change.
+`max_parse_line_length` defaults to 65,536 bytes: longer lines remain visible but
+skip error, directory and command-prefix recognition. Zero disables that bound.
+`_parse_errors` invokes both stages synchronously.
 Rescanning a full edited log also removes metadata beyond its new end.
 
 Process exit records a status; completion waits until the consumer and queue are
@@ -113,6 +118,15 @@ The legacy `errors.error_list` and `dir.dir_changes` locations are retained for
 existing consumers; always access the current table rather than holding a
 reference across a run/reset.
 
+Internal edits use `errors.set_error`, `dir.set_directory`, and their closed-range
+`clear_range` helpers. Error ordering, severity counts, directory lookup and
+source-file diagnostic groups share these mutation boundaries. Whole-table
+replacement is detected automatically; callers that mutate the legacy tables or
+error records in place must call the corresponding module's `invalidate()`.
+`errors.ordered_lines()` returns a shared read-only index. `errors.counts()` returns
+a copy. Jumping to a file uses `errors.diagnostics_for_buffer`; the generic
+`todiagnostic(bufnr, error_list)` export remains uncached.
+
 Coordinate rules are particularly important for future changes:
 
 - The header occupies four lines; line four is the command. Output starts at
@@ -126,8 +140,9 @@ Coordinate rules are particularly important for future changes:
 - A directory transition applies to later lines: lookup tests
   `transition_line < error_line`. Quickfix and diagnostics resolve filenames using
   `error.linenum`; their destination positions still use `error.row`.
-- Normalization returns both displayed lines and a raw unfinished tail. Hidden
-  patterns and carriage returns must be reevaluated when the next chunk arrives.
+- Normalization returns displayed lines and a replayable unfinished tail. A
+  trailing CR takes effect only when following content arrives. Hidden patterns
+  still require raw-tail replay, including text before earlier carriage returns.
 - `max_lines` limits output, excluding the header. The callback budget accounts
   for replacement of the unfinished line. Overflow stops the job; the footer is
   written without trimming. This is not a rolling output window.
@@ -138,7 +153,8 @@ Coordinate rules are particularly important for future changes:
 
 Runnable issue probes, benchmarks, recorded results, and prioritized follow-ups
 are in the [baseline report](performance.md) and the
-[optimization results](optimization.md). `scripts/profile.lua` records sampled
+[optimization results](optimization.md) and [hotspot acceptance results](hotspots.md).
+`scripts/profile.lua` records sampled
 LuaJIT call stacks; profiling instrumentation is absent from normal execution.
 Use the following functions to isolate costs before choosing an optimization.
 
@@ -175,20 +191,20 @@ buffer responsiveness in a real editor as a separate workload.
 
 ## Remaining investigation points
 
-- Status counts traverse all errors; navigation collects and sorts error keys
-  per action; directory lookup scans all recorded transitions.
-- Matching lines still pay both compiled `match_str` and `vim.fn.matchlist`
-  capture extraction. Candidate prefilters only reject impossible matches and
-  preserve matcher priority and mixed-language support. Custom regexes with
-  unknown text run without a prefilter.
+- Common GNU captures use a narrow, differential-tested shortcut while retaining
+  native `match_str` validation. Other formats and ambiguous GNU cases still pay
+  `matchlist` capture extraction. Custom regexes retain the general path.
+- Independent closed whole-line ANSI colors can reuse Baleia-generated style
+  plans and omit empty reset spans. Other layouts and incompatible optional
+  Baleia helpers use its public writer; multi-span rendering still costs more
+  than stripping escapes.
 - ANSI state and session metadata are shared; stdout/stderr share an unfinished
   line. Independent stream reconstruction needs a separate compatibility design.
-- The batch byte budget cannot interrupt a single expensive Vim regex call or
-  an oversized line. A queue also does not impose an output retention limit;
-  `max_lines` remains the explicit finite-output guard.
-- Diagnostics cache resolved-file buffer numbers within one conversion. They
-  still resolve each error's directory; streams with many directory transitions
-  may benefit from an indexed lookup.
+- The batch byte budget cannot interrupt a single expensive Vim regex call.
+  The line-length bound limits input to parsing, but does not bound buffer writes,
+  ANSI rendering, or arbitrary custom regex complexity below that threshold.
+  `max_lines` remains the finite-output guard; it does not bound an unfinished
+  raw tail when hidden patterns require replay.
 
 ## Validation map
 

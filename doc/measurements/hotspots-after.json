@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T19:53:27.923147+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "d3fcbd80f9c96fd80b0a4355d4b89c9a32a4dc8f",
+    "git_dirty": true,
+    "source_sha256": "20ad92b584039d0e8b4a88f97cfbb8dccdb6c7bfd0c615726ef877652a1698c7",
+    "suite": "hotspots",
+    "samples": 5,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "samples_ms": [
+        2.823125,
+        2.807292,
+        2.719792,
+        2.678125,
+        2.707375
+      ],
+      "median_ms": 2.719792,
+      "p95_ms": 2.823125,
+      "retained_lua_kib": [
+        17.5703125,
+        14.23046875,
+        9.7421875,
+        9.6015625,
+        9.48046875
+      ],
+      "passed": true,
+      "units": 1000,
+      "name": "ansi/hyperlinks/1000"
+    },
+    {
+      "units": 2000,
+      "samples_ms": [
+        5.552667,
+        5.602417,
+        5.553792,
+        5.443709,
+        5.385792
+      ],
+      "median_ms": 5.552667,
+      "p95_ms": 5.602417,
+      "retained_lua_kib": [
+        25.0078125,
+        20.5859375,
+        17.81640625,
+        16.46875,
+        17.33203125
+      ],
+      "name": "ansi/hyperlinks/2000",
+      "passed": true
+    },
+    {
+      "p95_ms": 11.153417,
+      "retained_lua_kib": [
+        25.015625,
+        21.5078125,
+        17.1171875,
+        16.46875,
+        17.19140625
+      ],
+      "name": "ansi/hyperlinks/4000",
+      "passed": true,
+      "units": 4000,
+      "samples_ms": [
+        11.153417,
+        11.011125,
+        10.894792,
+        11.10525,
+        11.077708
+      ],
+      "median_ms": 11.077708
+    },
+    {
+      "name": "metadata/diagnostics/0_transitions",
+      "p95_ms": 8.987459,
+      "retained_lua_kib": [
+        2629.7890625,
+        2628.34375,
+        2628.58984375,
+        2628.2421875,
+        2628.2734375
+      ],
+      "passed": true,
+      "median_ms": 8.268458,
+      "units": 1,
+      "samples_ms": [
+        8.265875,
+        8.987459,
+        8.268458,
+        8.260333,
+        8.337833
+      ]
+    },
+    {
+      "retained_lua_kib": [
+        2374.2890625,
+        2372.3359375,
+        2372.58203125,
+        2372.234375,
+        2372.265625
+      ],
+      "units": 1,
+      "passed": true,
+      "name": "metadata/diagnostics/10000_transitions",
+      "samples_ms": [
+        12.181917,
+        12.138,
+        11.834875,
+        12.082208,
+        11.897375
+      ],
+      "median_ms": 12.082208,
+      "p95_ms": 12.181917
+    },
+    {
+      "units": 3,
+      "samples_ms": [
+        9.608667,
+        9.052625,
+        8.94075,
+        8.995166,
+        8.917792
+      ],
+      "median_ms": 8.995166,
+      "p95_ms": 9.608667,
+      "retained_lua_kib": [
+        2.41015625,
+        0.171875,
+        1.23046875,
+        0.171875,
+        1.6484375
+      ],
+      "passed": true,
+      "name": "metadata/diagnostics_repeat/0_transitions"
+    },
+    {
+      "samples_ms": [
+        14.562,
+        14.195958,
+        14.397458,
+        14.304833,
+        14.240125
+      ],
+      "median_ms": 14.304833,
+      "p95_ms": 14.562,
+      "name": "metadata/diagnostics_repeat/10000_transitions",
+      "passed": true,
+      "retained_lua_kib": [
+        -253.07421875,
+        -255.8359375,
+        -255.8203125,
+        -255.29296875,
+        -255.8046875
+      ],
+      "units": 3
+    },
+    {
+      "name": "metadata/quickfix/0_transitions",
+      "passed": true,
+      "retained_lua_kib": [
+        2634.98046875,
+        2629.21484375,
+        2628.2578125,
+        2628.2421875,
+        2628.2734375
+      ],
+      "units": 1,
+      "samples_ms": [
+        9.621334,
+        9.497833,
+        9.819666,
+        9.474458,
+        9.678959
+      ],
+      "median_ms": 9.621334,
+      "p95_ms": 9.819666
+    },
+    {
+      "units": 1,
+      "samples_ms": [
+        12.968417,
+        12.98,
+        13.420958,
+        12.939625,
+        12.841709
+      ],
+      "median_ms": 12.968417,
+      "name": "metadata/quickfix/10000_transitions",
+      "retained_lua_kib": [
+        2374.74609375,
+        2373.53515625,
+        2372.25,
+        2372.234375,
+        2372.265625
+      ],
+      "p95_ms": 13.420958,
+      "passed": true
+    },
+    {
+      "passed": true,
+      "samples_ms": [
+        5.01425,
+        4.944667,
+        4.774083,
+        4.930625,
+        4.732667
+      ],
+      "units": 1000,
+      "name": "output/carriage_returns/1000",
+      "median_ms": 4.930625,
+      "p95_ms": 5.01425,
+      "retained_lua_kib": [
+        0.96875,
+        0.9453125,
+        0.859375,
+        0.84375,
+        0.875
+      ]
+    },
+    {
+      "retained_lua_kib": [
+        0.96875,
+        0.9453125,
+        0.859375,
+        1.14453125,
+        0.875
+      ],
+      "name": "output/carriage_returns/2000",
+      "passed": true,
+      "units": 2000,
+      "samples_ms": [
+        9.628208,
+        9.552917,
+        9.58525,
+        9.448542,
+        10.016666
+      ],
+      "median_ms": 9.58525,
+      "p95_ms": 10.016666
+    },
+    {
+      "passed": true,
+      "samples_ms": [
+        19.083833,
+        19.738333,
+        19.797959,
+        19.761541,
+        19.704334
+      ],
+      "median_ms": 19.738333,
+      "p95_ms": 19.797959,
+      "retained_lua_kib": [
+        0.8671875,
+        0.84375,
+        0.859375,
+        0.84375,
+        0.875
+      ],
+      "units": 4000,
+      "name": "output/carriage_returns/4000"
+    },
+    {
+      "samples_ms": [
+        0.067583,
+        0.055084,
+        0.053375,
+        0.05575,
+        0.053625
+      ],
+      "median_ms": 0.055084,
+      "p95_ms": 0.067583,
+      "retained_lua_kib": [
+        1024.453125,
+        1024.4296875,
+        1024.34375,
+        1024.328125,
+        1024.640625
+      ],
+      "name": "parser/one_mib_colon",
+      "passed": true,
+      "units": 1048576
+    }
+  ]
+}

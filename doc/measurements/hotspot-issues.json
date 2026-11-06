@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "recorded_at": "2026-11-06T19:54:25.682403+00:00",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "nvim": [
+      "NVIM v0.12.5",
+      "Build type: Release",
+      "LuaJIT 2.1.1788856981"
+    ],
+    "git_head": "d3fcbd80f9c96fd80b0a4355d4b89c9a32a4dc8f",
+    "git_dirty": true,
+    "source_sha256": "20ad92b584039d0e8b4a88f97cfbb8dccdb6c7bfd0c615726ef877652a1698c7",
+    "suite": "issues",
+    "samples": 7,
+    "sizes": [
+      1000,
+      10000
+    ],
+    "dependencies": {
+      "PLENARY_PATH": {
+        "path": "/Users/taolintian/.local/share/nvim/lazy/plenary.nvim",
+        "revision": "74b06c6c75e4eeb3108ec01852001636d85a932b"
+      },
+      "BALEIA_PATH": {
+        "path": "/private/tmp/compile-mode-dev/baleia.nvim",
+        "revision": "fb3aff021b2b64ef820d0230d2c22ebfaf71bb6a"
+      }
+    }
+  },
+  "results": [
+    {
+      "passed": true,
+      "name": "ansi_cargo"
+    },
+    {
+      "name": "ansi_recompile_extmarks",
+      "passed": true
+    },
+    {
+      "name": "ansi_underline",
+      "passed": true
+    },
+    {
+      "name": "directory_diagnostics",
+      "passed": true
+    },
+    {
+      "name": "directory_quickfix",
+      "passed": true
+    },
+    {
+      "name": "highlight_scope",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "matcher_priority"
+    },
+    {
+      "passed": true,
+      "name": "max_lines"
+    },
+    {
+      "passed": true,
+      "name": "mixed_matcher_languages"
+    },
+    {
+      "name": "nul_streams",
+      "passed": true
+    },
+    {
+      "name": "quickfix_threshold",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "reparse_extmarks"
+    },
+    {
+      "passed": true,
+      "name": "reparse_stale_error"
+    },
+    {
+      "name": "scroll_filter",
+      "passed": true
+    },
+    {
+      "passed": true,
+      "name": "scroll_render"
+    },
+    {
+      "name": "window_reuse",
+      "passed": true
+    }
+  ]
+}
