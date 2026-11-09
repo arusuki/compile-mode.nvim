@@ -239,6 +239,7 @@ function check.get_errors(cfg)
 		auto_scroll = { cfg.auto_scroll, "boolean" },
 		debug = { cfg.debug, "boolean" },
 		use_pseudo_terminal = { cfg.use_pseudo_terminal, "boolean" },
+		pty_echo = { cfg.pty_echo, "boolean" },
 	})
 end
 

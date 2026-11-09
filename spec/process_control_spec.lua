@@ -50,6 +50,41 @@ describe("interactive process controls", function()
 	end)
 
 	for _, pty in ipairs({ false, true }) do
+		for _, newlines in ipairs({ 0, 1, 2 }) do
+			it("reuses the prompt's empty tail with pty=" .. tostring(pty) .. ", newlines=" .. newlines, function()
+				start(" --prompt-newlines " .. newlines, { use_pseudo_terminal = pty })
+				local expected = { "prompt>" }
+				for _ = 2, newlines do
+					expected[#expected + 1] = ""
+				end
+				edit("one")
+				expected[#expected + 1] = "one"
+				assert.are.same(expected, vim.api.nvim_buf_get_lines(vim.g.compilation_buffer, 4, -1, false))
+				vim.cmd.write()
+				wait_for("received:one")
+				-- Later output must also end immediately above the editable line.
+				assert.is_nil(output():match("\n\n$"), output())
+				edit("two")
+				vim.cmd.write()
+				wait_for("received:two")
+				assert.is_truthy(output():find("received:two\n", 1, true))
+				assert.is_nil(output():match("\n\n$"), output())
+				edit("quit")
+				vim.cmd.write()
+				finish()
+				assert.are.equal(0, vim.g.compilation_exit_code)
+			end)
+		end
+
+		it("reuses a newline prompt for :w before Insert with pty=" .. tostring(pty), function()
+			start(" --prompt-newlines 1", { use_pseudo_terminal = pty })
+			vim.cmd.write()
+			wait_for("received:")
+			assert.is_truthy(output():find("prompt>\n> \n", 1, true))
+			assert.is_true(cm.send_eof())
+			finish()
+		end)
+
 		it("submits through :w and preserves output with pty=" .. tostring(pty), function()
 			start("", { use_pseudo_terminal = pty })
 			edit("hello")
@@ -79,7 +114,7 @@ describe("interactive process controls", function()
 	end)
 
 	it("rejects EOF while a draft exists and rejects closed stdin", function()
-		start()
+		start("", { use_pseudo_terminal = false })
 		edit("keep")
 		assert.is_false(cm.send_eof())
 		vim.cmd.write()
@@ -128,6 +163,106 @@ describe("interactive process controls", function()
 	end)
 
 	if vim.fn.has("win32") == 0 then
+		it("reports missing stty and allows opting out of PTY echo setup", function()
+			helpers.setup_tests()
+			support.setup({ use_pseudo_terminal = true })
+			local exepath = vim.fn.exepath
+			---@diagnostic disable-next-line: duplicate-set-field
+			vim.fn.exepath = function(name)
+				return name == "stty" and "" or exepath(name)
+			end
+			local ok, err = xpcall(function()
+				local failed = support.compile("printf 'started\\n'")
+				assert.are.equal(-1, failed.code)
+				assert.is_truthy(output():find("requires stty", 1, true))
+				assert.is_false(require("compile-mode.runner").is_busy())
+				require("compile-mode.config.internal").pty_echo = true
+				local finished = support.compile("printf 'started\\n'")
+				assert.are.equal(0, finished.code)
+				assert.are.same({ "started", "" }, vim.api.nvim_buf_get_lines(finished.bufnr, 4, -3, false))
+			end, debug.traceback)
+			vim.fn.exepath = exepath
+			assert.is_true(ok, err)
+		end)
+
+		it("keeps shell commands, environment and exit status when disabling PTY echo", function()
+			helpers.setup_tests()
+			support.setup({
+				use_pseudo_terminal = true,
+				clear_environment = true,
+				environment = { COMPILE_MODE_ECHO_TEST = "hello echo" },
+			})
+			local command = [[printf '%s\n' "$COMPILE_MODE_ECHO_TEST" | /usr/bin/tr '[:lower:]' '[:upper:]'; exit 7]]
+			local ev = support.compile(command)
+			assert.are.equal(7, ev.code)
+			assert.are.equal(command, ev.command)
+			assert.are.same({ "HELLO ECHO", "" }, vim.api.nvim_buf_get_lines(ev.bufnr, 4, -3, false))
+		end)
+
+		for _, echo in ipairs({ false, true }) do
+			it("controls PTY echo for multiline input with pty_echo=" .. tostring(echo), function()
+				start(" --prompt-newlines 1", { use_pseudo_terminal = true, pty_echo = echo })
+				edit("123")
+				local buf = vim.g.compilation_buffer
+				vim.api.nvim_buf_set_lines(buf, input.count(buf), -1, false, { "123", "456", "789" })
+				vim.cmd.write()
+				wait_for("received:789")
+				local lines = vim.api.nvim_buf_get_lines(buf, 4, -1, false)
+				for _, value in ipairs({ "123", "456", "789" }) do
+					local copies = 0
+					for _, line in ipairs(lines) do
+						if line == value then
+							copies = copies + 1
+						end
+					end
+					assert.are.equal(echo and 1 or 0, copies)
+					assert.is_true(vim.tbl_contains(lines, "> " .. value))
+					assert.is_true(vim.tbl_contains(lines, "received:" .. value))
+				end
+			end)
+		end
+
+		it("uses a PTY with echo disabled by default, including an empty answer", function()
+			start(" --prompt-newlines 1")
+			assert.is_string(vim.api.nvim_get_chan_info(vim.g.compile_job_id).pty)
+			vim.cmd.write()
+			wait_for("received:")
+			assert.are.same(
+				{ "prompt>", "> ", "received:", "" },
+				vim.api.nvim_buf_get_lines(vim.g.compilation_buffer, 4, -1, false)
+			)
+		end)
+
+		for _, extra in ipairs({ "--repeat-input", "--enable-echo" }) do
+			it("preserves program output and terminal changes with " .. extra, function()
+				start(" --prompt-newlines 1 " .. extra, { use_pseudo_terminal = true })
+				edit("same text")
+				vim.cmd.write()
+				wait_for("received:same text")
+				assert.are.same(
+					{ "prompt>", "> same text", "same text", "received:same text", "" },
+					vim.api.nvim_buf_get_lines(vim.g.compilation_buffer, 4, -1, false)
+				)
+			end)
+		end
+
+		for _, pty in ipairs({ false, true }) do
+			it("inserts asynchronous output directly above an unsent draft with pty=" .. tostring(pty), function()
+				start(" --prompt-newlines 1", { use_pseudo_terminal = pty })
+				edit("keep")
+				vim.api.nvim_win_set_cursor(0, { input.count(vim.g.compilation_buffer) + 1, 2 })
+				assert.is_true(cm.signal("USR1"))
+				wait_for("signal:SIGUSR1")
+				assert.are.same(
+					{ "prompt>", "signal:SIGUSR1", "keep" },
+					vim.api.nvim_buf_get_lines(vim.g.compilation_buffer, 4, -1, false)
+				)
+				assert.are.same({ 7, 2 }, vim.api.nvim_win_get_cursor(0))
+				vim.cmd.write()
+				wait_for("received:keep")
+			end)
+		end
+
 		it("keeps a signal-catching process alive and accepts names and numbers", function()
 			start()
 			local job = vim.g.compile_job_id

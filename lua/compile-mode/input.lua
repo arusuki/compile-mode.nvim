@@ -34,6 +34,11 @@ function M.has_draft(buf)
 	return s and s.start ~= nil and table.concat(s.draft, "\n") ~= "" or false
 end
 
+function M.has_draft_area(buf)
+	local s = states[buf]
+	return s ~= nil and s.start ~= nil
+end
+
 function M.count(buf)
 	local s = states[buf]
 	return s and s.start or vim.api.nvim_buf_line_count(buf)
@@ -107,7 +112,15 @@ local function activate(buf)
 	if not session or not session.active then
 		return nil
 	end
-	local s = { active = true, send = session.send, draft = { "" }, undo = { { "" } }, index = 1, records = {} }
+	local s = {
+		active = true,
+		send = session.send,
+		take_tail = session.take_tail,
+		draft = { "" },
+		undo = { { "" } },
+		index = 1,
+		records = {},
+	}
 	states[buf] = s
 	s.old_undolevels = vim.bo[buf].undolevels
 	-- Native undo includes process output. Keep a separate draft-only journal.
@@ -217,9 +230,9 @@ local function activate(buf)
 	return s
 end
 
-function M.attach(buf, send)
+function M.attach(buf, send, take_tail)
 	M.detach(buf)
-	local session = { active = true, send = send }
+	local session = { active = true, send = send, take_tail = take_tail }
 	sessions[buf] = session
 	-- :w must work even before the first Insert command.
 	vim.bo[buf].buftype = "acwrite"
@@ -248,6 +261,20 @@ function M.detach(buf)
 	states[buf] = nil
 end
 
+local function start_draft(buf, s)
+	s.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+	-- The runner can hand over its empty continuation row after a newline.
+	-- Only that placeholder is reused; actual blank output stays in history.
+	if s.take_tail and s.take_tail() then
+		table.remove(s.history)
+	end
+	s.start = #s.history
+	s.editing = true
+	vim.bo[buf].modifiable = true
+	vim.api.nvim_buf_set_lines(buf, s.start, -1, false, { "" })
+	s.editing = false
+end
+
 function M.enter(buf, key)
 	local s = activate(buf)
 	if not s or (not s.active and not s.start) then
@@ -257,12 +284,7 @@ function M.enter(buf, key)
 	settle(buf, s)
 	local in_draft = M.in_draft(buf)
 	if not s.start then
-		s.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-		s.start = #s.history
-		s.editing = true
-		vim.bo[buf].modifiable = true
-		vim.api.nvim_buf_set_lines(buf, -1, -1, false, { "" })
-		s.editing = false
+		start_draft(buf, s)
 	end
 	if not in_draft then
 		vim.api.nvim_win_set_cursor(0, { s.start + #s.draft, #s.draft[#s.draft] })
@@ -307,8 +329,7 @@ function M.submit(buf)
 	end
 	if not s.start then
 		-- :w without entering Insert still sends an empty answer.
-		s.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-		s.start = #s.history
+		start_draft(buf, s)
 	end
 	local records = {}
 	for _, line in ipairs(s.draft) do

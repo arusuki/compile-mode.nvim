@@ -22,6 +22,8 @@ describe("compilation session ownership and recovery", function()
 	end)
 
 	it("supersedes a pending setup before starting its subprocess", function()
+		-- Compare the original commands without PTY initialization commands.
+		require("compile-mode.config.internal").use_pseudo_terminal = false
 		local launched, finished = {}, {}
 		vim.fn.jobstart = function(command, opts)
 			launched[#launched + 1] = command

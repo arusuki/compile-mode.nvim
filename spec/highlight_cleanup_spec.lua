@@ -28,7 +28,8 @@ describe("bounded compilation highlight cleanup", function()
 	local delay, jobstart, jobstop, launched, finished, event
 	before_each(function()
 		helpers.setup_tests()
-		s.setup()
+		-- The mock selects fixtures by the exact command text.
+		s.setup({ use_pseudo_terminal = false })
 		delay, jobstart, jobstop = utils.delay, vim.fn.jobstart, vim.fn.jobstop
 		launched, finished = {}, {}
 		vim.fn.jobstart = function(command, opts)

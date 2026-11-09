@@ -37,6 +37,7 @@ Table of Contents                             *compile-mode-table-of-contents*
   - auto_scroll                                     |compile-mode.auto_scroll|
   - debug                                                 |compile-mode.debug|
   - use_pseudo_terminal                     |compile-mode.use_pseudo_terminal|
+  - pty_echo                                           |compile-mode.pty_echo|
   - ansi_osc                                   |compile-mode.ansi_osc|
 6. API                                                      |compile-mode-api|
   - compile()                                         |compile-mode.compile()|
@@ -398,7 +399,10 @@ Here is the full default configuration:
         debug = false,
         -- Use a pseudo terminal for command execution.
         -- :h compile-mode.use_pseudo_terminal
-        use_pseudo_terminal = false,
+        use_pseudo_terminal = true,
+        -- Retain terminal input echo for Unix PTY jobs.
+        -- :h compile-mode.pty_echo
+        pty_echo = false,
         -- A table controlling how OSC sequences are handled.
         -- The default `handlers` is empty; when `kind` is `"render"`, built-in
         -- handlers for OSC 0/1/2/8/9 are injected automatically.
@@ -647,9 +651,21 @@ debug                                                     *compile-mode.debug*
     can inspect it with |:messages|.
 
 use_pseudo_terminal                         *compile-mode.use_pseudo_terminal*
-    Use a pseudo terminal for command execution.
+    Defaults to true. Use a pseudo terminal for command execution.
     This is useful when the program doesn't automatically flush the buffer so
     that the output cannot be displayed at realtime.
+    Set false to use pipes instead. PTY input echo is disabled by default on
+    Unix; see |compile-mode.pty_echo|.
+
+pty_echo                                               *compile-mode.pty_echo*
+    Defaults to false. For Unix PTY jobs, disable terminal input echo before
+    executing the command, matching Emacs. Submitted input remains visible once
+    in the '> ' records. Requires stty on the editor's PATH.
+
+    Set true to retain the terminal's default echo, which can duplicate the
+    input records. This option does not affect pipe jobs or Windows. Programs
+    can still change their own terminal settings; output is never filtered by
+    comparing it with submitted input.
 
 ansi_osc                                         *compile-mode.ansi_osc*
     A table controlling how OSC (Operating System Command) sequences are
@@ -1125,8 +1141,10 @@ statusline({colors})                               *compile-mode.statusline()*
                                                         *compile-mode-input*
     In the active compilation buffer, i/I/a/A/o/O enter the draft area. From
     history they move to the draft's end; within the draft they behave normally.
-    The draft starts on its own line below the output. Esc pauses editing
-    without sending or discarding the draft; i resumes it without adding a line.
+    The draft starts on its own line below the output, reusing the empty trailing
+    line when output ends with a newline. Actual blank output lines are preserved.
+    Esc pauses editing without sending or discarding the draft; i resumes it
+    without adding a line.
     The inline stdin hint follows the cursor within the draft and reflects
     entering and leaving Insert mode. In history it marks the draft's first line.
     Output and previously submitted input are read-only. Cross-boundary edits
@@ -1136,7 +1154,7 @@ statusline({colors})                               *compile-mode.statusline()*
     Enter inserts a newline. :w (without a file name) sends the entire draft,
     appending a newline if needed. Empty drafts send a newline. Accepted sends
     become read-only records prefixed with '> '; failures preserve the draft.
-    PTY echo is retained and may appear alongside these records.
+    Unix PTY echo is disabled by default; see |compile-mode.pty_echo|.
 
     u and Ctrl-R undo/redo draft changes using an independent edit journal;
     native :undo/:earlier do not edit the transcript. In history Ctrl-R retains

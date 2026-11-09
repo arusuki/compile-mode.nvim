@@ -14,7 +14,8 @@ rerun that command over and over again as much as you need.
 
 In a running compilation buffer, press `i` to edit a draft at the bottom. Use
 normal Vim editing keys, then `Esc` and `:w` to send the whole draft to stdin.
-The draft starts on a separate line below the read-only output. `Esc` pauses
+The draft starts on a separate line below the read-only output, reusing the
+empty trailing line when output ends with a newline. `Esc` pauses
 editing without sending or discarding it; `i` resumes the same draft. The inline
 hint follows the cursor within the draft and updates when entering or leaving
 Insert mode.
@@ -41,12 +42,17 @@ Signals now leave completion to the process exit callback (`CompilationFinished`
 
 Signals target the compilation job's Unix process group, including children in
 that group. They do not track a job-control shell's changing foreground group;
-Unix signals are unsupported on Windows. Pipe/PTY selection still uses
-`use_pseudo_terminal`. EOF closes stdin with pipes; with a PTY it sends `^D`,
+Unix signals are unsupported on Windows. Commands use a PTY by default;
+set `use_pseudo_terminal = false` to use pipes. EOF closes stdin with pipes;
+with a PTY it sends `^D`,
 which requires the usual terminal EOF configuration and does not permanently
-close the channel. PTY echo is retained, so the terminal may echo submitted input
-in addition to its `> ` record. This is a line-oriented buffer, not a terminal
-emulator or a password-entry interface.
+close the channel. On Unix, PTY input echo is disabled before running the command,
+matching Emacs; the `> ` record remains as the single copy of submitted input.
+Set `pty_echo = true` to retain the terminal's default echo instead. Programs may
+change their own echo settings, and their output is never removed by matching it
+against submitted input. Echo setup requires `stty`; it does not apply to pipes or
+Windows. This is a line-oriented buffer, not a terminal emulator or a
+password-entry interface.
 
 Failed sends and drafts left at process exit are preserved. Recompiling asks
 before discarding a nonempty draft. Drafts use an independent edit journal;
@@ -223,7 +229,10 @@ vim.g.compile_mode = {
     debug = false,
     -- Use a pseudo terminal for command execution.
     -- :h compile-mode.use_pseudo_terminal
-    use_pseudo_terminal = false,
+    use_pseudo_terminal = true,
+    -- Retain terminal input echo for Unix PTY jobs (off by default, like Emacs).
+    -- :h compile-mode.pty_echo
+    pty_echo = false,
     -- Control how OSC sequences are handled (hyperlinks, titles, etc.)
     -- The default `handlers` is empty; when `kind` is `"render"`, built-in
     -- handlers for OSC 0/1/2/8/9 are injected automatically.

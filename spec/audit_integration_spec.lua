@@ -33,6 +33,8 @@ describe("compilation audit integration", function()
 		}, producer)
 		local notifications = 0
 		local config = require("compile-mode.config.internal")
+		-- This case needs separate stdout/stderr; a PTY merges both streams.
+		config.use_pseudo_terminal = false
 		config.ansi_osc.handlers = {
 			[9] = function()
 				notifications = notifications + 1

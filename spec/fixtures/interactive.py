@@ -21,12 +21,22 @@ for name in ("SIGINT", "SIGUSR1", "SIGQUIT"):
     if hasattr(signal, name):
         signal.signal(getattr(signal, name), lambda *_, name=name: emit("signal:" + name))
 
-os.write(sys.stdout.fileno(), b"prompt>")
+prompt_newlines = 0
+if "--prompt-newlines" in sys.argv:
+    prompt_newlines = int(sys.argv[sys.argv.index("--prompt-newlines") + 1])
+if "--enable-echo" in sys.argv:
+    import termios
+    attrs = termios.tcgetattr(sys.stdin.fileno())
+    attrs[3] |= termios.ECHO
+    termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, attrs)
+os.write(sys.stdout.fileno(), b"prompt>" + b"\n" * prompt_newlines)
 try:
     for line in sys.stdin:
         text = line.rstrip("\n")
         if text == "quit":
             break
+        if "--repeat-input" in sys.argv:
+            emit(text)
         emit("received:" + text)
     emit("eof")
 finally:

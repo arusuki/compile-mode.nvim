@@ -59,7 +59,9 @@ local default_config = {
 	---@type boolean
 	use_circular_error_navigation = false,
 	---@type boolean
-	use_pseudo_terminal = false,
+	use_pseudo_terminal = true,
+	---@type boolean
+	pty_echo = false,
 	---@type CompileModeAnsiOsc
 	ansi_osc = {
 		kind = "render",

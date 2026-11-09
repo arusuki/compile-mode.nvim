@@ -39,9 +39,6 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 	owner.streams = streams
 	owner.pty = config.use_pseudo_terminal
 	local empty_tail = true
-	owner.input_sent = function()
-		empty_tail = false
-	end
 
 	local function active()
 		return current_session == owner and vim.api.nvim_buf_is_valid(bufnr)
@@ -229,6 +226,12 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 				stream.row = not empty_tail and append + #lines - 1 or nil
 			end
 		end
+		if empty_tail and not line_limit_exceeded and input.has_draft_area(bufnr) then
+			-- The draft supplies the row after the final newline. Remove only
+			-- that placeholder, after ANSI has consumed the full line boundary.
+			buffer.set_lines(bufnr, -2, -1, {}, false)
+			empty_tail = false
+		end
 		if line_limit_exceeded then
 			queue.close()
 			lookahead = nil
@@ -291,7 +294,20 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		end)
 	end
 
-	local ok, result = pcall(vim.fn.jobstart, cmd, {
+	local launch_cmd = cmd
+	if config.use_pseudo_terminal and not config.pty_echo and vim.fn.has("win32") == 0 then
+		local stty = vim.fn.exepath("stty")
+		if stty == "" then
+			started = true
+			fail("Disabling PTY echo requires stty; install it or set pty_echo = true")
+			return
+		end
+		-- Emacs disables PTY echo before executing the command. Do the same
+		-- in the child's shell, so programs can subsequently change their own
+		-- terminal settings. Never guess which output is an echoed input line.
+		launch_cmd = vim.fn.shellescape(stty) .. " -echo -echonl\n" .. cmd
+	end
+	local ok, result = pcall(vim.fn.jobstart, launch_cmd, {
 		cwd = owner.directory,
 		on_stdout = function(_, data)
 			receive("stdout", data)
@@ -339,8 +355,11 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		if not sent or result == 0 then
 			return false, "Unable to send compilation input: " .. tostring(result)
 		end
-		owner.input_sent()
 		return true
+	end, function()
+		local reuse = empty_tail
+		empty_tail = false
+		return reuse
 	end)
 	vim.cmd.redrawstatus()
 	delete_event = vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {

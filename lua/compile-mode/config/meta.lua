@@ -132,6 +132,10 @@
 ---Use a pseudo terminal for command execution.
 ---For more info, run `:h compile-mode.use_pseudo_terminal`
 ---@field use_pseudo_terminal?      boolean
+---
+---Keep the terminal's default input echo for Unix PTY jobs.
+---For more info, run `:h compile-mode.pty_echo`
+---@field pty_echo?                 boolean
 
 ---@type CompileModeOpts
 vim.g.compile_mode = vim.g.compile_mode
