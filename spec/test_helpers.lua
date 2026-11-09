@@ -36,8 +36,8 @@ function M.recompile(param)
 	M.wait_for_compilation()
 end
 
-function M.interrupt()
-	compile_mode.interrupt()
+function M.stop()
+	compile_mode.stop()
 	M.wait_for_interruption()
 end
 

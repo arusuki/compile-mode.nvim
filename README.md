@@ -10,6 +10,45 @@ rerun that command over and over again as much as you need.
 
 [Compile Mode Features](https://github.com/ej-shafran/compile-mode.nvim/assets/116496520/5541b9dd-70b7-4647-9c13-9e57813dac27)
 
+## Input and process control
+
+In a running compilation buffer, press `i` to edit a draft at the bottom. Use
+normal Vim editing keys, then `Esc` and `:w` to send the whole draft to stdin.
+Enter inserts a newline; an empty `:w` sends an empty answer. Submitted input
+is recorded with a `> ` prefix. Output and submitted input remain read-only;
+history editing and recall are not supported. `u` and `Ctrl-R` undo/redo draft
+edits without undoing process output. In the history area, `Ctrl-R` recompiles.
+
+Normal-mode `Ctrl-C` (or `:CompileInterrupt`) sends `SIGINT` and keeps collecting
+output, including when the program handles the signal and continues running.
+Insert-mode `Ctrl-C` keeps its Vim behavior. Other buffer-local controls are:
+
+| Command | Action |
+| --- | --- |
+| `:CompileSignal USR1` | Send a signal by name, `SIG`-prefixed name, or number |
+| `:CompileSignal STOP` / `CONT` | Suspend / resume the process group |
+| `:CompileEOF` | Send EOF after submitting any draft |
+| `:CompileStop` | Stop the job and immediately release the compilation session |
+
+Lua equivalents are `require("compile-mode").signal("INT")`, `interrupt()`,
+`send_eof()`, and `stop()`. The first three return `ok, error`; `stop()` retains
+the previous `interrupt()` lifecycle, including `CompilationInterrupted`.
+Signals now leave completion to the process exit callback (`CompilationFinished`).
+
+Signals target the compilation job's Unix process group, including children in
+that group. They do not track a job-control shell's changing foreground group;
+Unix signals are unsupported on Windows. Pipe/PTY selection still uses
+`use_pseudo_terminal`. EOF closes stdin with pipes; with a PTY it sends `^D`,
+which requires the usual terminal EOF configuration and does not permanently
+close the channel. PTY echo is retained, so the terminal may echo submitted input
+in addition to its `> ` record. This is a line-oriented buffer, not a terminal
+emulator or a password-entry interface.
+
+Failed sends and drafts left at process exit are preserved. Recompiling asks
+before discarding a nonempty draft. Drafts use an independent edit journal;
+native `:undo`/`:earlier` do not alter the transcript. Only unnamed `:w` submits
+input; use `:Compile!` only for jobs that can complete without interactive input.
+
 ## Installation
 
 Use your favorite plugin manager. `compile-mode.nvim` depends on

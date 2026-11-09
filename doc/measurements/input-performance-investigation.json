@@ -1,0 +1,1294 @@
+{
+  "recorded_at": "2026-11-09T11:16:37.697535+00:00",
+  "baseline_commit": "49e02be",
+  "method": "Uninstrumented end-to-end wall timing, no per-stage wrappers. Each version uses a fresh headless process, one discarded warmup and seven measured samples, repeated in reverse version order. All benchmarks are serial. Diagnostic substitutions are temporary-process controls only, not shipped changes.",
+  "baseline_runtime_sha256": "727ea12dcbb6aa31dc797348f5c9f2c9a70f32e20f54b096499c9f0a1b690f3e",
+  "pre_fix_runtime_sha256": "645a62fdc25e4da0077aa0cc3bc72cd9952bc838e4cc16ec2183af86334564f7",
+  "fixed_runtime_sha256": "a0c12af13999465d236577316c6ab8af7342d24dce215561a76346a702fd9e3e",
+  "findings": [
+    "Before the fix, every job eagerly allocated editable input state, attached an on_lines listener, changed undolevels, and registered input-mode autocmds even if no input was ever used.",
+    "Every output batch consequently entered input bookkeeping: building an empty shifted record table, visiting marker maintenance, and using vim.bo proxy accesses on the write path.",
+    "Replacing the parser or ANSI writer alone did not consistently explain the slowdown; the initial parser hypothesis was not confirmed by reverse-order trials.",
+    "The fix separates the lightweight send session from editable state. on_lines and undo setup now start only on first Insert or :w. In untouched output-only jobs the editable-state lookup is nil, avoiding the input bookkeeping path. Hot option writes use nvim_set_option_value directly.",
+    "Two reversed-order final trials reduced 100k ANSI medians in both rounds. Residual overhead and process-to-process variation remain; this is not a claim of zero-cost input support."
+  ],
+  "limitations": [
+    "Headless local macOS measurement, not GUI latency.",
+    "Host CPU scheduling and LuaJIT behavior are not held constant; intermediate substitution trials showed significant variation.",
+    "These experiments identify the combined eager-initialization/output-bookkeeping path; they do not assign a precise share of elapsed time to each individual option or callback."
+  ],
+  "summary": [
+    {
+      "variant": "baseline",
+      "case": "ansi100k",
+      "median_ms": 725.1403124999999,
+      "sample_count": 14
+    },
+    {
+      "variant": "baseline",
+      "case": "writer_closed100k",
+      "median_ms": 3.3912500000000003,
+      "sample_count": 14
+    },
+    {
+      "variant": "eager_input",
+      "case": "ansi100k",
+      "median_ms": 854.792833,
+      "sample_count": 14
+    },
+    {
+      "variant": "eager_input",
+      "case": "writer_closed100k",
+      "median_ms": 3.8203755,
+      "sample_count": 14
+    },
+    {
+      "variant": "lazy_input",
+      "case": "ansi100k",
+      "median_ms": 754.650521,
+      "sample_count": 14
+    },
+    {
+      "variant": "lazy_input",
+      "case": "writer_closed100k",
+      "median_ms": 3.6716255,
+      "sample_count": 14
+    }
+  ],
+  "summary_changes": {
+    "ansi_original_over_baseline_percent": 17.879645947831648,
+    "ansi_fixed_over_baseline_percent": 4.069585980989032,
+    "ansi_fix_change_percent": -11.715389756900308
+  },
+  "final_verification": [
+    {
+      "round": 1,
+      "variant": "baseline",
+      "case": "ansi100k",
+      "result": {
+        "passed": true,
+        "retained_lua_kib": [
+          80.8203125,
+          73.3349609375,
+          26.900390625,
+          27.509765625,
+          27.373046875,
+          21.041015625,
+          22.392578125
+        ],
+        "samples_ms": [
+          918.440083,
+          723.366417,
+          718.871875,
+          718.844125,
+          720.206583,
+          733.71575,
+          734.746959
+        ],
+        "median_ms": 723.366417,
+        "p95_ms": 918.440083,
+        "name": "uninstrumented ANSI wall time",
+        "variant": "current",
+        "units": 100000
+      }
+    },
+    {
+      "round": 1,
+      "variant": "baseline",
+      "case": "writer_closed100k",
+      "result": {
+        "units": 10000,
+        "samples_ms": [
+          3.445875,
+          3.353292,
+          3.349292,
+          3.366917,
+          3.382667,
+          3.370334,
+          3.358792
+        ],
+        "name": "closed/100000",
+        "p95_ms": 3.445875,
+        "retained_lua_kib": [
+          -382.64453125,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -384,
+          -384
+        ],
+        "median_ms": 3.366917,
+        "history_lines": 100000,
+        "passed": true
+      }
+    },
+    {
+      "round": 1,
+      "variant": "eager_input",
+      "case": "ansi100k",
+      "result": {
+        "passed": true,
+        "units": 100000,
+        "retained_lua_kib": [
+          85.30078125,
+          63.1865234375,
+          24.5947265625,
+          18.49609375,
+          22.5703125,
+          16.2265625,
+          16.4765625
+        ],
+        "variant": "current",
+        "samples_ms": [
+          866.376667,
+          788.838708,
+          757.597041,
+          854.294416,
+          855.29125,
+          954.359208,
+          734.3105
+        ],
+        "median_ms": 854.294416,
+        "p95_ms": 954.359208,
+        "name": "uninstrumented ANSI wall time"
+      }
+    },
+    {
+      "round": 1,
+      "variant": "eager_input",
+      "case": "writer_closed100k",
+      "result": {
+        "name": "closed/100000",
+        "retained_lua_kib": [
+          -381.77734375,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -384,
+          -384
+        ],
+        "history_lines": 100000,
+        "passed": true,
+        "units": 10000,
+        "samples_ms": [
+          4.012416,
+          3.905542,
+          4.239292,
+          3.854333,
+          3.769375,
+          3.794417,
+          3.657084
+        ],
+        "median_ms": 3.854333,
+        "p95_ms": 4.239292
+      }
+    },
+    {
+      "round": 1,
+      "variant": "lazy_input",
+      "case": "ansi100k",
+      "result": {
+        "retained_lua_kib": [
+          66.78125,
+          59.09765625,
+          22.71484375,
+          14.94921875,
+          19.40234375,
+          15.80859375,
+          14.703125
+        ],
+        "passed": true,
+        "units": 100000,
+        "name": "uninstrumented ANSI wall time",
+        "variant": "current",
+        "samples_ms": [
+          741.278375,
+          760.046,
+          749.255042,
+          737.662917,
+          732.669416,
+          731.700916,
+          741.268875
+        ],
+        "median_ms": 741.268875,
+        "p95_ms": 760.046
+      }
+    },
+    {
+      "round": 1,
+      "variant": "lazy_input",
+      "case": "writer_closed100k",
+      "result": {
+        "p95_ms": 4.049416,
+        "retained_lua_kib": [
+          -377.36328125,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -384,
+          -384
+        ],
+        "name": "closed/100000",
+        "history_lines": 100000,
+        "passed": true,
+        "units": 10000,
+        "samples_ms": [
+          3.774416,
+          3.665834,
+          3.71475,
+          3.709458,
+          3.677417,
+          3.636167,
+          4.049416
+        ],
+        "median_ms": 3.709458
+      }
+    },
+    {
+      "round": 2,
+      "variant": "lazy_input",
+      "case": "ansi100k",
+      "result": {
+        "p95_ms": 835.786125,
+        "median_ms": 792.165375,
+        "passed": true,
+        "samples_ms": [
+          739.03425,
+          771.61625,
+          820.38825,
+          793.625166,
+          778.004708,
+          792.165375,
+          835.786125
+        ],
+        "units": 100000,
+        "name": "uninstrumented ANSI wall time",
+        "retained_lua_kib": [
+          68.296875,
+          55.4716796875,
+          51.14453125,
+          28.69921875,
+          35.11328125,
+          25.35546875,
+          22.07421875
+        ],
+        "variant": "current"
+      }
+    },
+    {
+      "round": 2,
+      "variant": "lazy_input",
+      "case": "writer_closed100k",
+      "result": {
+        "passed": true,
+        "history_lines": 100000,
+        "units": 10000,
+        "samples_ms": [
+          3.9225,
+          3.626041,
+          3.586833,
+          3.596833,
+          3.654083,
+          3.618083,
+          3.715458
+        ],
+        "name": "closed/100000",
+        "p95_ms": 3.9225,
+        "retained_lua_kib": [
+          -377.109375,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -383.74609375,
+          -384
+        ],
+        "median_ms": 3.626041
+      }
+    },
+    {
+      "round": 2,
+      "variant": "eager_input",
+      "case": "ansi100k",
+      "result": {
+        "name": "uninstrumented ANSI wall time",
+        "passed": true,
+        "samples_ms": [
+          792.378625,
+          849.744125,
+          880.582541,
+          786.253625,
+          898.020917,
+          895.40525,
+          882.792834
+        ],
+        "median_ms": 880.582541,
+        "p95_ms": 898.020917,
+        "retained_lua_kib": [
+          69.75390625,
+          51.51953125,
+          29.390625,
+          20.421875,
+          30.2421875,
+          20.5703125,
+          19.2421875
+        ],
+        "variant": "current",
+        "units": 100000
+      }
+    },
+    {
+      "round": 2,
+      "variant": "eager_input",
+      "case": "writer_closed100k",
+      "result": {
+        "retained_lua_kib": [
+          -379.6953125,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -384,
+          -384
+        ],
+        "p95_ms": 4.241583,
+        "history_lines": 100000,
+        "passed": true,
+        "units": 10000,
+        "samples_ms": [
+          4.241583,
+          3.936667,
+          3.774875,
+          3.846334,
+          3.783917,
+          3.728709,
+          3.740708
+        ],
+        "median_ms": 3.783917,
+        "name": "closed/100000"
+      }
+    },
+    {
+      "round": 2,
+      "variant": "baseline",
+      "case": "ansi100k",
+      "result": {
+        "passed": true,
+        "samples_ms": [
+          725.989333,
+          740.253833,
+          739.870542,
+          723.691209,
+          721.18975,
+          724.291292,
+          808.51525
+        ],
+        "median_ms": 725.989333,
+        "p95_ms": 808.51525,
+        "retained_lua_kib": [
+          72.47265625,
+          66.3310546875,
+          25.951171875,
+          40.650390625,
+          27.669921875,
+          25.642578125,
+          31.380859375
+        ],
+        "variant": "current",
+        "units": 100000,
+        "name": "uninstrumented ANSI wall time"
+      }
+    },
+    {
+      "round": 2,
+      "variant": "baseline",
+      "case": "writer_closed100k",
+      "result": {
+        "p95_ms": 3.701958,
+        "retained_lua_kib": [
+          -383.5703125,
+          -384,
+          -383.984375,
+          -384,
+          -383.96875,
+          -384,
+          -384
+        ],
+        "passed": true,
+        "history_lines": 100000,
+        "name": "closed/100000",
+        "units": 10000,
+        "samples_ms": [
+          3.477292,
+          3.570083,
+          3.701958,
+          3.406,
+          3.521625,
+          3.36325,
+          3.399833
+        ],
+        "median_ms": 3.477292
+      }
+    }
+  ],
+  "diagnostics": {
+    "module_substitution": [
+      {
+        "round": 1,
+        "variant": "baseline",
+        "result": {
+          "passed": true,
+          "variant": "baseline",
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000,
+          "samples_ms": [
+            718.273584,
+            763.746042,
+            821.894875,
+            773.151334,
+            780.586
+          ],
+          "median_ms": 773.151334,
+          "p95_ms": 821.894875,
+          "retained_lua_kib": [
+            69.08203125,
+            67.2685546875,
+            31.244140625,
+            26.275390625,
+            32.669921875
+          ]
+        }
+      },
+      {
+        "round": 1,
+        "variant": "current",
+        "result": {
+          "samples_ms": [
+            798.536916,
+            825.7655,
+            811.979709,
+            896.257125,
+            874.218166
+          ],
+          "median_ms": 825.7655,
+          "p95_ms": 896.257125,
+          "retained_lua_kib": [
+            71.4140625,
+            48.25,
+            25.09375,
+            19.18359375,
+            36.38671875
+          ],
+          "variant": "current",
+          "units": 100000,
+          "name": "uninstrumented ANSI wall time",
+          "passed": true
+        }
+      },
+      {
+        "round": 1,
+        "variant": "old_parser",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000,
+          "passed": true,
+          "variant": "old_parser",
+          "samples_ms": [
+            759.152375,
+            733.197042,
+            740.602375,
+            741.170583,
+            771.673041
+          ],
+          "median_ms": 741.170583,
+          "p95_ms": 771.673041,
+          "retained_lua_kib": [
+            69.5234375,
+            62.2060546875,
+            30.03515625,
+            30.28125,
+            33.953125
+          ]
+        }
+      },
+      {
+        "round": 1,
+        "variant": "old_ansi",
+        "result": {
+          "passed": true,
+          "variant": "old_ansi",
+          "samples_ms": [
+            748.90175,
+            837.659,
+            830.346,
+            860.19525,
+            842.311125
+          ],
+          "median_ms": 837.659,
+          "name": "uninstrumented ANSI wall time",
+          "retained_lua_kib": [
+            64.390625,
+            64.9521484375,
+            30.28515625,
+            28.3359375,
+            27.12109375
+          ],
+          "p95_ms": 860.19525,
+          "units": 100000
+        }
+      },
+      {
+        "round": 1,
+        "variant": "no_ns_clear",
+        "result": {
+          "units": 100000,
+          "passed": true,
+          "variant": "no_ns_clear",
+          "samples_ms": [
+            830.567125,
+            747.322333,
+            788.529959,
+            902.694291,
+            853.700834
+          ],
+          "median_ms": 830.567125,
+          "name": "uninstrumented ANSI wall time",
+          "retained_lua_kib": [
+            62.2265625,
+            49.5625,
+            25.16796875,
+            19.8359375,
+            26.75
+          ],
+          "p95_ms": 902.694291
+        }
+      },
+      {
+        "round": 1,
+        "variant": "old_hotpaths",
+        "result": {
+          "passed": true,
+          "units": 100000,
+          "variant": "old_hotpaths",
+          "samples_ms": [
+            789.695125,
+            839.199666,
+            835.08975,
+            818.891375,
+            818.41525
+          ],
+          "name": "uninstrumented ANSI wall time",
+          "median_ms": 818.891375,
+          "p95_ms": 839.199666,
+          "retained_lua_kib": [
+            64.16796875,
+            52.45703125,
+            26.14453125,
+            9.83984375,
+            36.1328125
+          ]
+        }
+      },
+      {
+        "round": 2,
+        "variant": "old_hotpaths",
+        "result": {
+          "passed": true,
+          "variant": "old_hotpaths",
+          "samples_ms": [
+            775.110166,
+            784.397208,
+            773.52775,
+            775.265333,
+            771.636584
+          ],
+          "median_ms": 775.110166,
+          "p95_ms": 784.397208,
+          "retained_lua_kib": [
+            62.20703125,
+            60.9873046875,
+            36.14453125,
+            32.609375,
+            35.0234375
+          ],
+          "units": 100000,
+          "name": "uninstrumented ANSI wall time"
+        }
+      },
+      {
+        "round": 2,
+        "variant": "no_ns_clear",
+        "result": {
+          "p95_ms": 853.801916,
+          "retained_lua_kib": [
+            76.640625,
+            55.09765625,
+            32.55078125,
+            15.421875,
+            17.9453125
+          ],
+          "passed": true,
+          "units": 100000,
+          "variant": "no_ns_clear",
+          "name": "uninstrumented ANSI wall time",
+          "samples_ms": [
+            731.245708,
+            853.801916,
+            839.067458,
+            752.042125,
+            824.0795
+          ],
+          "median_ms": 824.0795
+        }
+      },
+      {
+        "round": 2,
+        "variant": "old_ansi",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "passed": true,
+          "units": 100000,
+          "variant": "old_ansi",
+          "retained_lua_kib": [
+            88.578125,
+            52.10546875,
+            26.2265625,
+            17.1640625,
+            25.3671875
+          ],
+          "samples_ms": [
+            777.036583,
+            766.299458,
+            814.083541,
+            782.294,
+            810.435125
+          ],
+          "median_ms": 782.294,
+          "p95_ms": 814.083541
+        }
+      },
+      {
+        "round": 2,
+        "variant": "old_parser",
+        "result": {
+          "retained_lua_kib": [
+            65.5546875,
+            55.37109375,
+            19.328125,
+            19.7734375,
+            17.921875
+          ],
+          "passed": true,
+          "name": "uninstrumented ANSI wall time",
+          "variant": "old_parser",
+          "units": 100000,
+          "samples_ms": [
+            804.494542,
+            850.514625,
+            900.01525,
+            776.75725,
+            856.00175
+          ],
+          "median_ms": 850.514625,
+          "p95_ms": 900.01525
+        }
+      },
+      {
+        "round": 2,
+        "variant": "current",
+        "result": {
+          "retained_lua_kib": [
+            69.3671875,
+            61.79296875,
+            30.01953125,
+            35.6640625,
+            27.9765625
+          ],
+          "passed": true,
+          "name": "uninstrumented ANSI wall time",
+          "variant": "current",
+          "units": 100000,
+          "samples_ms": [
+            889.342375,
+            783.563541,
+            758.816459,
+            743.87675,
+            773.553792
+          ],
+          "median_ms": 773.553792,
+          "p95_ms": 889.342375
+        }
+      },
+      {
+        "round": 2,
+        "variant": "baseline",
+        "result": {
+          "p95_ms": 762.232542,
+          "retained_lua_kib": [
+            82.33203125,
+            64.953125,
+            34.6474609375,
+            30.619140625,
+            28.787109375
+          ],
+          "passed": true,
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000,
+          "variant": "baseline",
+          "samples_ms": [
+            728.89725,
+            730.726959,
+            730.240792,
+            734.199583,
+            762.232542
+          ],
+          "median_ms": 730.726959
+        }
+      }
+    ],
+    "parser_gate_and_jit": [
+      {
+        "round": 1,
+        "variant": "current",
+        "result": {
+          "retained_lua_kib": [
+            71.3125,
+            57.9599609375,
+            39.0234375,
+            33.3203125,
+            29.76953125
+          ],
+          "passed": true,
+          "units": 100000,
+          "variant": "current",
+          "name": "uninstrumented ANSI wall time",
+          "samples_ms": [
+            732.538042,
+            726.093083,
+            742.539541,
+            749.112208,
+            741.403959
+          ],
+          "median_ms": 741.403959,
+          "p95_ms": 749.112208
+        }
+      },
+      {
+        "round": 1,
+        "variant": "fast_parser",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "passed": true,
+          "units": 100000,
+          "variant": "fast_parser",
+          "retained_lua_kib": [
+            76.96484375,
+            61.5458984375,
+            32.25,
+            32.984375,
+            35.1796875
+          ],
+          "samples_ms": [
+            745.688417,
+            819.779167,
+            972.255667,
+            828.123917,
+            924.744625
+          ],
+          "median_ms": 828.123917,
+          "p95_ms": 972.255667
+        }
+      },
+      {
+        "round": 1,
+        "variant": "baseline_jit_off",
+        "result": {
+          "p95_ms": 1116.32075,
+          "name": "uninstrumented ANSI wall time",
+          "passed": true,
+          "units": 100000,
+          "variant": "jit_off",
+          "retained_lua_kib": [
+            23.2265625,
+            11.1015625,
+            10.875,
+            11.4296875,
+            11.265625
+          ],
+          "samples_ms": [
+            1116.32075,
+            1107.88325,
+            1090.811333,
+            1086.747166,
+            1085.533833
+          ],
+          "median_ms": 1090.811333
+        }
+      },
+      {
+        "round": 1,
+        "variant": "current_jit_off",
+        "result": {
+          "samples_ms": [
+            1105.493917,
+            1187.681917,
+            1252.491917,
+            1261.331042,
+            1253.381625
+          ],
+          "median_ms": 1252.491917,
+          "p95_ms": 1261.331042,
+          "retained_lua_kib": [
+            22.7421875,
+            11.2890625,
+            11.046875,
+            11.4296875,
+            11.265625
+          ],
+          "passed": true,
+          "units": 100000,
+          "name": "uninstrumented ANSI wall time",
+          "variant": "jit_off"
+        }
+      },
+      {
+        "round": 2,
+        "variant": "current_jit_off",
+        "result": {
+          "samples_ms": [
+            1147.343459,
+            1126.583083,
+            1178.384042,
+            1240.562834,
+            1106.724
+          ],
+          "median_ms": 1147.343459,
+          "p95_ms": 1240.562834,
+          "retained_lua_kib": [
+            23.171875,
+            11.3359375,
+            10.9296875,
+            11.265625,
+            10.984375
+          ],
+          "passed": true,
+          "units": 100000,
+          "variant": "jit_off",
+          "name": "uninstrumented ANSI wall time"
+        }
+      },
+      {
+        "round": 2,
+        "variant": "baseline_jit_off",
+        "result": {
+          "passed": true,
+          "units": 100000,
+          "variant": "jit_off",
+          "retained_lua_kib": [
+            23.1875,
+            11.15625,
+            11.1171875,
+            10.8984375,
+            11.515625
+          ],
+          "samples_ms": [
+            1074.008042,
+            1083.307042,
+            1084.37475,
+            1084.35675,
+            1088.803416
+          ],
+          "median_ms": 1084.35675,
+          "p95_ms": 1088.803416,
+          "name": "uninstrumented ANSI wall time"
+        }
+      },
+      {
+        "round": 2,
+        "variant": "fast_parser",
+        "result": {
+          "passed": true,
+          "units": 100000,
+          "variant": "fast_parser",
+          "name": "uninstrumented ANSI wall time",
+          "samples_ms": [
+            759.317583,
+            851.469291,
+            812.198125,
+            848.552333,
+            753.073291
+          ],
+          "median_ms": 812.198125,
+          "p95_ms": 851.469291,
+          "retained_lua_kib": [
+            67.21875,
+            55.69921875,
+            23.7421875,
+            16.08203125,
+            23.1796875
+          ]
+        }
+      },
+      {
+        "round": 2,
+        "variant": "current",
+        "result": {
+          "median_ms": 810.767292,
+          "p95_ms": 899.145583,
+          "retained_lua_kib": [
+            90.953125,
+            58.28125,
+            18.9453125,
+            16.69921875,
+            19.6484375
+          ],
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000,
+          "passed": true,
+          "variant": "current",
+          "samples_ms": [
+            742.204209,
+            796.105917,
+            899.145583,
+            848.898917,
+            810.767292
+          ]
+        }
+      }
+    ],
+    "attachment_components": [
+      {
+        "round": 1,
+        "variant": "current",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "passed": true,
+          "variant": "current",
+          "samples_ms": [
+            742.691083,
+            792.782,
+            785.25825,
+            758.096166,
+            770.506292
+          ],
+          "median_ms": 770.506292,
+          "p95_ms": 792.782,
+          "retained_lua_kib": [
+            67.67578125,
+            59.7021484375,
+            37.875,
+            32.83203125,
+            32.203125
+          ],
+          "units": 100000
+        }
+      },
+      {
+        "round": 1,
+        "variant": "no_attach",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "retained_lua_kib": [
+            85.6083984375,
+            59.1640625,
+            29.5859375,
+            27.765625,
+            34.0234375
+          ],
+          "passed": true,
+          "units": 100000,
+          "variant": "no_attach",
+          "p95_ms": 744.787666,
+          "samples_ms": [
+            739.577458,
+            742.977666,
+            744.787666,
+            744.244916,
+            741.808125
+          ],
+          "median_ms": 742.977666
+        }
+      },
+      {
+        "round": 1,
+        "variant": "old_hot_no_attach",
+        "result": {
+          "retained_lua_kib": [
+            83.7998046875,
+            63.01953125,
+            33.0390625,
+            32.01953125,
+            29.53125
+          ],
+          "units": 100000,
+          "passed": true,
+          "variant": "old_hot_no_attach",
+          "samples_ms": [
+            837.513417,
+            736.547417,
+            740.692459,
+            774.902333,
+            738.587708
+          ],
+          "median_ms": 740.692459,
+          "name": "uninstrumented ANSI wall time",
+          "p95_ms": 837.513417
+        }
+      },
+      {
+        "round": 1,
+        "variant": "no_listener",
+        "result": {
+          "passed": true,
+          "name": "uninstrumented ANSI wall time",
+          "median_ms": 724.807709,
+          "p95_ms": 840.8485,
+          "retained_lua_kib": [
+            63.87890625,
+            68.4990234375,
+            30.28125,
+            29.6015625,
+            31.3984375
+          ],
+          "variant": "no_listener",
+          "units": 100000,
+          "samples_ms": [
+            840.8485,
+            719.570292,
+            723.468791,
+            724.807709,
+            727.272583
+          ]
+        }
+      },
+      {
+        "round": 1,
+        "variant": "keep_undo",
+        "result": {
+          "units": 100000,
+          "passed": true,
+          "variant": "keep_undo",
+          "samples_ms": [
+            820.418666,
+            738.37775,
+            740.74875,
+            757.734333,
+            742.876959
+          ],
+          "median_ms": 742.876959,
+          "name": "uninstrumented ANSI wall time",
+          "retained_lua_kib": [
+            67.21484375,
+            73.44921875,
+            24.3818359375,
+            18.09375,
+            23.8359375
+          ],
+          "p95_ms": 820.418666
+        }
+      },
+      {
+        "round": 1,
+        "variant": "keep_nofile",
+        "result": {
+          "p95_ms": 888.202916,
+          "retained_lua_kib": [
+            77.19140625,
+            62.5625,
+            32.6953125,
+            31.1328125,
+            33.96484375
+          ],
+          "passed": true,
+          "units": 100000,
+          "name": "uninstrumented ANSI wall time",
+          "variant": "keep_nofile",
+          "samples_ms": [
+            721.530958,
+            782.392708,
+            737.297083,
+            888.202916,
+            765.384167
+          ],
+          "median_ms": 765.384167
+        }
+      },
+      {
+        "round": 2,
+        "variant": "keep_nofile",
+        "result": {
+          "passed": true,
+          "variant": "keep_nofile",
+          "samples_ms": [
+            736.012417,
+            772.020334,
+            786.42125,
+            768.22475,
+            794.905
+          ],
+          "median_ms": 772.020334,
+          "p95_ms": 794.905,
+          "retained_lua_kib": [
+            71.82421875,
+            46.59765625,
+            22.9453125,
+            18.953125,
+            25.2265625
+          ],
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000
+        }
+      },
+      {
+        "round": 2,
+        "variant": "keep_undo",
+        "result": {
+          "retained_lua_kib": [
+            60.6015625,
+            54.48828125,
+            29.37890625,
+            20.0625,
+            30.1708984375
+          ],
+          "passed": true,
+          "units": 100000,
+          "variant": "keep_undo",
+          "name": "uninstrumented ANSI wall time",
+          "samples_ms": [
+            811.5755,
+            797.982125,
+            773.852791,
+            757.235792,
+            775.588625
+          ],
+          "median_ms": 775.588625,
+          "p95_ms": 811.5755
+        }
+      },
+      {
+        "round": 2,
+        "variant": "no_listener",
+        "result": {
+          "name": "uninstrumented ANSI wall time",
+          "units": 100000,
+          "passed": true,
+          "variant": "no_listener",
+          "samples_ms": [
+            806.786542,
+            870.3065,
+            850.4265,
+            825.964958,
+            780.644875
+          ],
+          "median_ms": 825.964958,
+          "p95_ms": 870.3065,
+          "retained_lua_kib": [
+            85.84765625,
+            64.65234375,
+            31.30078125,
+            26.16015625,
+            39.48828125
+          ]
+        }
+      },
+      {
+        "round": 2,
+        "variant": "old_hot_no_attach",
+        "result": {
+          "samples_ms": [
+            784.247333,
+            791.090125,
+            857.802833,
+            925.240625,
+            815.996917
+          ],
+          "name": "uninstrumented ANSI wall time",
+          "median_ms": 815.996917,
+          "p95_ms": 925.240625,
+          "retained_lua_kib": [
+            58.67578125,
+            62.89453125,
+            11.203125,
+            33.35546875,
+            18.5703125
+          ],
+          "variant": "old_hot_no_attach",
+          "units": 100000,
+          "passed": true
+        }
+      },
+      {
+        "round": 2,
+        "variant": "no_attach",
+        "result": {
+          "units": 100000,
+          "passed": true,
+          "variant": "no_attach",
+          "samples_ms": [
+            749.489833,
+            756.016083,
+            733.979834,
+            732.885,
+            730.599375
+          ],
+          "median_ms": 733.979834,
+          "p95_ms": 756.016083,
+          "retained_lua_kib": [
+            65.45703125,
+            54.48046875,
+            28.81640625,
+            16.8203125,
+            16.8515625
+          ],
+          "name": "uninstrumented ANSI wall time"
+        }
+      },
+      {
+        "round": 2,
+        "variant": "current",
+        "result": {
+          "passed": true,
+          "units": 100000,
+          "variant": "current",
+          "retained_lua_kib": [
+            64.875,
+            58.4326171875,
+            32.35546875,
+            29.13671875,
+            39.1953125
+          ],
+          "samples_ms": [
+            807.58425,
+            809.392459,
+            856.302167,
+            842.912834,
+            855.041084
+          ],
+          "median_ms": 842.912834,
+          "p95_ms": 856.302167,
+          "name": "uninstrumented ANSI wall time"
+        }
+      }
+    ]
+  },
+  "harness_sources": {
+    "wall.lua": "local variant = arg[1] or 'current'\nlocal base = '/private/tmp/compile-input-perf-baseline-49e02be/'\nif variant == 'fast_parser' then\n package.loaded['compile-mode.input'] = assert(loadfile('/private/tmp/compile-input-cause/input-fast.lua'))()\n package.loaded['compile-mode.parser'] = assert(loadfile('/private/tmp/compile-input-cause/parser-fast.lua'))()\nend\nif variant == 'old_parser' or variant == 'old_hotpaths' then\n package.loaded['compile-mode.parser'] = assert(loadfile(base..'lua/compile-mode/parser.lua'))()\nend\nif variant == 'old_ansi' or variant == 'old_hotpaths' then\n package.loaded['compile-mode.ansi'] = assert(loadfile(base..'lua/compile-mode/ansi.lua'))()\nend\nif variant == 'no_ns_clear' then\n local clear=vim.api.nvim_buf_clear_namespace\n local ns=vim.api.nvim_create_namespace('compile-mode.input')\n vim.api.nvim_buf_clear_namespace=function(b,n,a,z)\n  if n~=ns then return clear(b,n,a,z) end\n end\nend\nif variant == 'no_attach' or variant == 'old_hot_no_attach' then\n require('compile-mode.input').attach = function() end\nend\nif variant == 'old_hot_no_attach' then\n package.loaded['compile-mode.parser'] = assert(loadfile(base..'lua/compile-mode/parser.lua'))()\n package.loaded['compile-mode.ansi'] = assert(loadfile(base..'lua/compile-mode/ansi.lua'))()\nend\nif variant == 'no_listener' then\n local attach=vim.api.nvim_buf_attach\n vim.api.nvim_buf_attach=function(b,send,opts)\n  if opts.on_lines and not opts.on_bytes and not opts.on_changedtick then return true end\n  return attach(b,send,opts)\n end\nend\nif variant == 'keep_undo' or variant == 'keep_nofile' then\n local input=require('compile-mode.input')\n local attach=input.attach\n input.attach=function(b,send)\n  local undo=vim.bo[b].undolevels\n  attach(b,send)\n  if variant=='keep_undo' then vim.bo[b].undolevels=undo else vim.bo[b].buftype='nofile' end\n end\nend\nif variant == 'jit_off' then jit.off();jit.flush() end\nlocal s = require('scripts.support')\ns.setup({ansi_color={kind='render'}})\nlocal runs=0\nlocal n=tonumber(vim.env.CAUSE_LINES) or 100000\nlocal command=s.command('scripts/producer.lua','ansi',tostring(n))\nlocal result=s.measure('uninstrumented ANSI wall time',n,function()return {} end,function()\n local ev=s.compile(command,nil,runs>0)\n runs=runs+1\n return ev\nend,function(_,ev)\n assert(ev.code==0)\n assert(vim.api.nvim_buf_line_count(ev.bufnr)==n+7)\nend,tonumber(vim.env.CAUSE_SAMPLES) or 5)\nresult.variant=variant\nresult.passed=true\ns.finish(result)\n",
+    "verify.py": "import pathlib,os,subprocess,json\nout=pathlib.Path('/private/tmp/compile-input-cause');root=pathlib.Path('/Users/taolintian/dev/compile-mode.nvim');base=pathlib.Path('/private/tmp/compile-input-perf-baseline-49e02be')\nenv=dict(os.environ,PLENARY_PATH='/Users/taolintian/.local/share/nvim/lazy/plenary.nvim',BALEIA_PATH='/private/tmp/compile-mode-dev/baleia.nvim',NVIM_LOG_FILE=str(out/'nvim.log'),XDG_STATE_HOME=str(out/'state'),CAUSE_SAMPLES='7',BENCH_SAMPLES='7')\nresults=[]\nfor rnd in (1,2):\n todo=[('baseline',base),('eager_input',out/'pre-fix'),('lazy_input',root)]\n if rnd==2:todo.reverse()\n for label,path in todo:\n  for case,script,args in [('ansi100k',out/'wall.lua',['current']),('writer_closed100k',pathlib.Path('/private/tmp/compile-input-micro.lua'),['closed','100000'])]:\n   dest=out/f'verify-{rnd}-{label}-{case}.json'\n   proc=subprocess.run(['nvim','--headless','--clean','-u','scripts/minimal_init.lua','-l',str(script),*args],cwd=path,env=dict(env,COMPILE_MODE_RESULT=str(dest)),capture_output=True,text=True,timeout=180)\n   r=json.loads(dest.read_text()) if dest.exists() else dict(error=proc.stdout+proc.stderr,passed=False)\n   results.append(dict(round=rnd,variant=label,case=case,result=r));(out/'verify-raw.json').write_text(json.dumps(results,indent=2));print(rnd,label,case,r.get('median_ms'),r.get('error',''),flush=True)\n",
+    "run.py": "import pathlib,os,subprocess,json\nout=pathlib.Path('/private/tmp/compile-input-cause');root=pathlib.Path('/Users/taolintian/dev/compile-mode.nvim');base=pathlib.Path('/private/tmp/compile-input-perf-baseline-49e02be')\nenv=dict(os.environ,PLENARY_PATH='/Users/taolintian/.local/share/nvim/lazy/plenary.nvim',BALEIA_PATH='/private/tmp/compile-mode-dev/baleia.nvim',NVIM_LOG_FILE=str(out/'nvim.log'),XDG_STATE_HOME=str(out/'state'),CAUSE_SAMPLES='5')\nresults=[]\nfor round in range(1,3):\n variants=['baseline','current','old_parser','old_ansi','no_ns_clear','old_hotpaths']\n if round==2:variants.reverse()\n for variant in variants:\n  dest=out/f'{round}-{variant}.json'\n  proc=subprocess.run(['nvim','--headless','--clean','-u','scripts/minimal_init.lua','-l',str(out/'wall.lua'),variant],cwd=base if variant=='baseline' else root,env=dict(env,COMPILE_MODE_RESULT=str(dest)),capture_output=True,text=True,timeout=150)\n  r=json.loads(dest.read_text()) if dest.exists() else dict(error=proc.stdout+proc.stderr,passed=False)\n  results.append(dict(round=round,variant=variant,result=r));(out/'raw.json').write_text(json.dumps(results,indent=2))\n  print(round,variant,round_num if False else r.get('median_ms'),r.get('error',''),flush=True)\n",
+    "run-targeted.py": "import pathlib,os,subprocess,json\nout=pathlib.Path('/private/tmp/compile-input-cause');root=pathlib.Path('/Users/taolintian/dev/compile-mode.nvim');base=pathlib.Path('/private/tmp/compile-input-perf-baseline-49e02be')\nenv=dict(os.environ,PLENARY_PATH='/Users/taolintian/.local/share/nvim/lazy/plenary.nvim',BALEIA_PATH='/private/tmp/compile-mode-dev/baleia.nvim',NVIM_LOG_FILE=str(out/'nvim.log'),XDG_STATE_HOME=str(out/'state'),CAUSE_SAMPLES='5')\nresults=[]\nfor rnd in (1,2):\n todo=[('current',root,'current'),('fast_parser',root,'fast_parser'),('baseline_jit_off',base,'jit_off'),('current_jit_off',root,'jit_off')]\n if rnd==2:todo.reverse()\n for label,path,variant in todo:\n  dest=out/f'target-{rnd}-{label}.json'\n  proc=subprocess.run(['nvim','--headless','--clean','-u','scripts/minimal_init.lua','-l',str(out/'wall.lua'),variant],cwd=path,env=dict(env,COMPILE_MODE_RESULT=str(dest)),capture_output=True,text=True,timeout=180)\n  r=json.loads(dest.read_text()) if dest.exists() else dict(error=proc.stdout+proc.stderr,passed=False)\n  results.append(dict(round=rnd,variant=label,result=r));(out/'target-raw.json').write_text(json.dumps(results,indent=2));print(rnd,label,r.get('median_ms'),r.get('error',''),flush=True)\n",
+    "run-attach.py": "import pathlib,os,subprocess,json\nout=pathlib.Path('/private/tmp/compile-input-cause');root=pathlib.Path('/Users/taolintian/dev/compile-mode.nvim');base=pathlib.Path('/private/tmp/compile-input-perf-baseline-49e02be')\nenv=dict(os.environ,PLENARY_PATH='/Users/taolintian/.local/share/nvim/lazy/plenary.nvim',BALEIA_PATH='/private/tmp/compile-mode-dev/baleia.nvim',NVIM_LOG_FILE=str(out/'nvim.log'),XDG_STATE_HOME=str(out/'state'),CAUSE_SAMPLES='5')\nresults=[]\nfor rnd in (1,2):\n todo=[(k,root,k) for k in ('current','no_attach','old_hot_no_attach','no_listener','keep_undo','keep_nofile')]\n if rnd==2:todo.reverse()\n for label,path,variant in todo:\n  dest=out/f'attach-{rnd}-{label}.json'\n  proc=subprocess.run(['nvim','--headless','--clean','-u','scripts/minimal_init.lua','-l',str(out/'wall.lua'),variant],cwd=path,env=dict(env,COMPILE_MODE_RESULT=str(dest)),capture_output=True,text=True,timeout=180)\n  r=json.loads(dest.read_text()) if dest.exists() else dict(error=proc.stdout+proc.stderr,passed=False)\n  results.append(dict(round=rnd,variant=label,result=r));(out/'attach-raw.json').write_text(json.dumps(results,indent=2));print(rnd,label,r.get('median_ms'),r.get('error',''),flush=True)\n"
+  },
+  "pre_fix_input_source": "-- A protected transcript followed by an editable, independently undoable draft.\nlocal M = {}\nlocal states = {}\nlocal ns = vim.api.nvim_create_namespace(\"compile-mode.input\")\nlocal group = vim.api.nvim_create_augroup(\"compile-mode.input\", { clear = false })\n\nlocal function mark(buf, s)\n\tvim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)\n\tif s.start then\n\t\tvim.api.nvim_buf_set_extmark(buf, ns, s.start, 0, {\n\t\t\tright_gravity = true,\n\t\t\tvirt_text = { { s.active and \"  [stdin \u00b7 :w sends]\" or \"  [unsent input \u00b7 process ended]\", \"Comment\" } },\n\t\t\tvirt_text_pos = \"eol\",\n\t\t})\n\tend\nend\n\nfunction M.has_draft(buf)\n\tlocal s = states[buf]\n\treturn s and s.start ~= nil and table.concat(s.draft, \"\\n\") ~= \"\" or false\nend\n\nfunction M.count(buf)\n\tlocal s = states[buf]\n\treturn s and s.start or vim.api.nvim_buf_line_count(buf)\nend\n\nfunction M.is_record(buf, row)\n\tlocal s = states[buf]\n\treturn s and s.records[row] or false\nend\n\nfunction M.output_count(buf)\n\tlocal s = states[buf]\n\treturn M.count(buf) - (s and vim.tbl_count(s.records) or 0)\nend\n\nfunction M.in_draft(buf, win)\n\tlocal s = states[buf]\n\treturn s and s.start and vim.api.nvim_win_get_cursor(win or 0)[1] > s.start or false\nend\n\nfunction M.lock(buf)\n\tif not vim.api.nvim_buf_is_valid(buf) then\n\t\treturn\n\tend\n\tlocal s = states[buf]\n\tvim.bo[buf].modifiable = s ~= nil and s.start ~= nil and not s.pending\n\tvim.bo[buf].modified = M.has_draft(buf)\nend\n\nlocal function settle(buf, s)\n\tif not s.pending then\n\t\treturn\n\tend\n\tlocal p = s.pending\n\ts.pending = nil\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, p.first, p.last, false, p.lines)\n\ts.editing = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\n-- Output writers bracket synchronous text changes. Async highlight work must\n-- never toggle modifiable independently of the input owner.\nfunction M.begin_output(buf)\n\tlocal s = states[buf]\n\tif s then\n\t\tsettle(buf, s)\n\t\ts.writing = true\n\tend\n\tvim.bo[buf].modifiable = true\nend\n\nfunction M.end_output(buf)\n\tlocal s = states[buf]\n\tif s then\n\t\ts.writing = false\n\t\tmark(buf, s)\n\tend\n\tM.lock(buf)\nend\n\nfunction M.attach(buf, send)\n\tM.detach(buf)\n\tlocal s = { active = true, send = send, draft = { \"\" }, undo = { { \"\" } }, index = 1, records = {} }\n\tstates[buf] = s\n\tvim.bo[buf].buftype = \"acwrite\"\n\tvim.bo[buf].bufhidden = \"hide\"\n\ts.old_undolevels = vim.bo[buf].undolevels\n\t-- Native undo includes process output. Keep a separate draft-only journal.\n\tvim.bo[buf].undolevels = -1\n\tvim.api.nvim_create_autocmd({ \"InsertEnter\", \"InsertLeave\" }, {\n\t\tgroup = group,\n\t\tbuffer = buf,\n\t\tcallback = function()\n\t\t\ts.insert_group = false\n\t\tend,\n\t})\n\tvim.api.nvim_buf_attach(buf, false, {\n\t\ton_lines = function(_, b, _, first, last, new_last)\n\t\t\tif states[b] ~= s then\n\t\t\t\treturn true\n\t\t\tend\n\t\t\tif s.editing then\n\t\t\t\treturn\n\t\t\tend\n\t\t\tif s.writing then\n\t\t\t\tlocal shifted = {}\n\t\t\t\tfor row in pairs(s.records) do\n\t\t\t\t\tif row < first then\n\t\t\t\t\t\tshifted[row] = true\n\t\t\t\t\telseif row >= last then\n\t\t\t\t\t\tshifted[row + new_last - last] = true\n\t\t\t\t\tend\n\t\t\t\tend\n\t\t\t\ts.records = shifted\n\t\t\t\tif not s.start then\n\t\t\t\t\treturn\n\t\t\t\tend\n\t\t\t\tlocal values = vim.api.nvim_buf_get_lines(b, first, new_last, false)\n\t\t\t\tfor _ = first + 1, last do\n\t\t\t\t\ttable.remove(s.history, first + 1)\n\t\t\t\tend\n\t\t\t\tfor i = #values, 1, -1 do\n\t\t\t\t\ttable.insert(s.history, first + 1, values[i])\n\t\t\t\tend\n\t\t\t\ts.start = s.start + new_last - last\n\t\t\telseif not s.start then\n\t\t\t\treturn\n\t\t\telseif first < s.start then\n\t\t\t\tlocal original = {}\n\t\t\t\tfor row = first, last - 1 do\n\t\t\t\t\toriginal[#original + 1] = row < s.start and s.history[row + 1] or s.draft[row - s.start + 1]\n\t\t\t\tend\n\t\t\t\ts.pending = { first = first, last = new_last, lines = original }\n\t\t\t\tvim.bo[b].modifiable = false\n\t\t\t\tvim.schedule(function()\n\t\t\t\t\tif states[b] == s and vim.api.nvim_buf_is_valid(b) then\n\t\t\t\t\t\tsettle(b, s)\n\t\t\t\t\t\tvim.notify(\"Compilation history is read-only\", vim.log.levels.WARN)\n\t\t\t\t\tend\n\t\t\t\tend)\n\t\t\telse\n\t\t\t\ts.draft = vim.api.nvim_buf_get_lines(b, s.start, -1, false)\n\t\t\t\tif #s.draft == 0 then\n\t\t\t\t\ts.draft = { \"\" }\n\t\t\t\t\ts.pending = { first = s.start, last = s.start, lines = { \"\" } }\n\t\t\t\t\tvim.bo[b].modifiable = false\n\t\t\t\t\tvim.schedule(function()\n\t\t\t\t\t\tif states[b] == s and vim.api.nvim_buf_is_valid(b) then\n\t\t\t\t\t\t\tsettle(b, s)\n\t\t\t\t\t\tend\n\t\t\t\t\tend)\n\t\t\t\tend\n\t\t\t\twhile #s.undo > s.index do\n\t\t\t\t\ttable.remove(s.undo)\n\t\t\t\tend\n\t\t\t\tlocal inserting = vim.api.nvim_get_mode().mode:sub(1, 1) == \"i\"\n\t\t\t\tif inserting and s.insert_group then\n\t\t\t\t\ts.undo[s.index] = vim.deepcopy(s.draft)\n\t\t\t\telse\n\t\t\t\t\ts.undo[#s.undo + 1] = vim.deepcopy(s.draft)\n\t\t\t\t\tlocal limit = math.max(2, vim.go.undolevels + 1)\n\t\t\t\t\tif #s.undo > limit then\n\t\t\t\t\t\ttable.remove(s.undo, 1)\n\t\t\t\t\tend\n\t\t\t\t\ts.index = #s.undo\n\t\t\t\tend\n\t\t\t\ts.insert_group = inserting\n\t\t\tend\n\t\tend,\n\t\ton_detach = function()\n\t\t\tif states[buf] == s then\n\t\t\t\tstates[buf] = nil\n\t\t\tend\n\t\tend,\n\t})\nend\n\nfunction M.detach(buf)\n\tvim.api.nvim_clear_autocmds({ group = group, buffer = buf })\n\tlocal s = states[buf]\n\tif s and vim.api.nvim_buf_is_valid(buf) then\n\t\tsettle(buf, s)\n\t\tvim.bo[buf].undolevels = s.old_undolevels\n\t\tvim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)\n\tend\n\tstates[buf] = nil\nend\n\nfunction M.enter(buf, key)\n\tlocal s = states[buf]\n\tif not s or (not s.active and not s.start) then\n\t\tvim.notify(\"No running compilation\", vim.log.levels.WARN)\n\t\treturn\n\tend\n\tsettle(buf, s)\n\tlocal in_draft = M.in_draft(buf)\n\tif not s.start then\n\t\ts.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)\n\t\ts.start = #s.history\n\t\ts.editing = true\n\t\tvim.bo[buf].modifiable = true\n\t\tvim.api.nvim_buf_set_lines(buf, -1, -1, false, { \"\" })\n\t\ts.editing = false\n\tend\n\tif not in_draft then\n\t\tvim.api.nvim_win_set_cursor(0, { s.start + #s.draft, #s.draft[#s.draft] })\n\t\tkey = \"A\"\n\tend\n\tmark(buf, s)\n\tM.lock(buf)\n\t-- feedkeys keeps normal Vim insertion semantics (including o/O and counts).\n\tlocal prefix = vim.v.count > 0 and tostring(vim.v.count) or \"\"\n\tvim.api.nvim_feedkeys(prefix .. (key or \"i\"), \"ni\", false)\nend\n\nfunction M.undo(buf, redo, count)\n\tlocal s = states[buf]\n\tif not s or not s.start then\n\t\treturn\n\tend\n\tsettle(buf, s)\n\ts.index = math.max(1, math.min(#s.undo, s.index + (redo and 1 or -1) * (count or 1)))\n\ts.draft = vim.deepcopy(s.undo[s.index])\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, s.draft)\n\ts.editing = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nfunction M.submit(buf)\n\tlocal s = states[buf]\n\tif not s or not s.active then\n\t\terror(\"No running compilation\")\n\tend\n\tsettle(buf, s)\n\tlocal text = table.concat(s.draft, \"\\n\")\n\tif text:sub(-1) ~= \"\\n\" then\n\t\ttext = text .. \"\\n\"\n\tend\n\tlocal ok, err = s.send(text)\n\tif not ok then\n\t\terror(err)\n\tend\n\tif not s.start then\n\t\t-- :w without entering Insert still sends an empty answer.\n\t\ts.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)\n\t\ts.start = #s.history\n\tend\n\tlocal records = {}\n\tfor _, line in ipairs(s.draft) do\n\t\trecords[#records + 1] = \"> \" .. line\n\tend\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, vim.list_extend(vim.deepcopy(records), { \"\" }))\n\ts.editing = false\n\tfor i = 0, #records - 1 do\n\t\ts.records[s.start + i] = true\n\tend\n\tvim.list_extend(s.history, records)\n\ts.start = s.start + #records\n\ts.draft, s.undo, s.index = { \"\" }, { { \"\" } }, 1\n\ts.insert_group = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nfunction M.finish(buf)\n\tlocal s = states[buf]\n\tif not s then\n\t\treturn\n\tend\n\tsettle(buf, s)\n\ts.active = false\n\tif s.start and not M.has_draft(buf) then\n\t\ts.editing = true\n\t\tvim.bo[buf].modifiable = true\n\t\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, {})\n\t\ts.editing = false\n\t\ts.start = nil\n\t\ts.history = nil\n\tend\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nreturn M\n",
+  "fixed_input_source": "-- A protected transcript followed by an editable, independently undoable draft.\nlocal M = {}\nlocal states = {}\nlocal sessions = {}\nlocal ns = vim.api.nvim_create_namespace(\"compile-mode.input\")\nlocal group = vim.api.nvim_create_augroup(\"compile-mode.input\", { clear = false })\n\nlocal function mark(buf, s)\n\tvim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)\n\tif s.start then\n\t\tvim.api.nvim_buf_set_extmark(buf, ns, s.start, 0, {\n\t\t\tright_gravity = true,\n\t\t\tvirt_text = { { s.active and \"  [stdin \u00b7 :w sends]\" or \"  [unsent input \u00b7 process ended]\", \"Comment\" } },\n\t\t\tvirt_text_pos = \"eol\",\n\t\t})\n\tend\nend\n\nfunction M.has_draft(buf)\n\tlocal s = states[buf]\n\treturn s and s.start ~= nil and table.concat(s.draft, \"\\n\") ~= \"\" or false\nend\n\nfunction M.count(buf)\n\tlocal s = states[buf]\n\treturn s and s.start or vim.api.nvim_buf_line_count(buf)\nend\n\nfunction M.is_record(buf, row)\n\tlocal s = states[buf]\n\treturn s and s.records[row] or false\nend\n\nfunction M.output_count(buf)\n\tlocal s = states[buf]\n\treturn M.count(buf) - (s and vim.tbl_count(s.records) or 0)\nend\n\nfunction M.in_draft(buf, win)\n\tlocal s = states[buf]\n\treturn s and s.start and vim.api.nvim_win_get_cursor(win or 0)[1] > s.start or false\nend\n\nfunction M.lock(buf)\n\tif not vim.api.nvim_buf_is_valid(buf) then\n\t\treturn\n\tend\n\tlocal s = states[buf]\n\tvim.api.nvim_set_option_value(\"modifiable\", s ~= nil and s.start ~= nil and not s.pending, { buf = buf })\n\tvim.api.nvim_set_option_value(\"modified\", M.has_draft(buf), { buf = buf })\nend\n\nlocal function settle(buf, s)\n\tif not s.pending then\n\t\treturn\n\tend\n\tlocal p = s.pending\n\ts.pending = nil\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, p.first, p.last, false, p.lines)\n\ts.editing = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\n-- Output writers bracket synchronous text changes. Async highlight work must\n-- never toggle modifiable independently of the input owner.\nfunction M.begin_output(buf)\n\tlocal s = states[buf]\n\tif s then\n\t\tsettle(buf, s)\n\t\ts.writing = true\n\tend\n\tvim.api.nvim_set_option_value(\"modifiable\", true, { buf = buf })\nend\n\nfunction M.end_output(buf)\n\tlocal s = states[buf]\n\tif s then\n\t\ts.writing = false\n\t\tmark(buf, s)\n\tend\n\tM.lock(buf)\nend\n\n-- Most compilation jobs never read input. Keep their output path free of\n-- buffer listeners, draft state, and changes to the native undo configuration.\nlocal function activate(buf)\n\tif states[buf] then\n\t\treturn states[buf]\n\tend\n\tlocal session = sessions[buf]\n\tif not session or not session.active then\n\t\treturn nil\n\tend\n\tlocal s = { active = true, send = session.send, draft = { \"\" }, undo = { { \"\" } }, index = 1, records = {} }\n\tstates[buf] = s\n\ts.old_undolevels = vim.bo[buf].undolevels\n\t-- Native undo includes process output. Keep a separate draft-only journal.\n\tvim.bo[buf].undolevels = -1\n\tvim.api.nvim_create_autocmd({ \"InsertEnter\", \"InsertLeave\" }, {\n\t\tgroup = group,\n\t\tbuffer = buf,\n\t\tcallback = function()\n\t\t\ts.insert_group = false\n\t\tend,\n\t})\n\tvim.api.nvim_buf_attach(buf, false, {\n\t\ton_lines = function(_, b, _, first, last, new_last)\n\t\t\tif states[b] ~= s then\n\t\t\t\treturn true\n\t\t\tend\n\t\t\tif s.editing then\n\t\t\t\treturn\n\t\t\tend\n\t\t\tif s.writing then\n\t\t\t\tlocal shifted = {}\n\t\t\t\tfor row in pairs(s.records) do\n\t\t\t\t\tif row < first then\n\t\t\t\t\t\tshifted[row] = true\n\t\t\t\t\telseif row >= last then\n\t\t\t\t\t\tshifted[row + new_last - last] = true\n\t\t\t\t\tend\n\t\t\t\tend\n\t\t\t\ts.records = shifted\n\t\t\t\tif not s.start then\n\t\t\t\t\treturn\n\t\t\t\tend\n\t\t\t\tlocal values = vim.api.nvim_buf_get_lines(b, first, new_last, false)\n\t\t\t\tfor _ = first + 1, last do\n\t\t\t\t\ttable.remove(s.history, first + 1)\n\t\t\t\tend\n\t\t\t\tfor i = #values, 1, -1 do\n\t\t\t\t\ttable.insert(s.history, first + 1, values[i])\n\t\t\t\tend\n\t\t\t\ts.start = s.start + new_last - last\n\t\t\telseif not s.start then\n\t\t\t\treturn\n\t\t\telseif first < s.start then\n\t\t\t\tlocal original = {}\n\t\t\t\tfor row = first, last - 1 do\n\t\t\t\t\toriginal[#original + 1] = row < s.start and s.history[row + 1] or s.draft[row - s.start + 1]\n\t\t\t\tend\n\t\t\t\ts.pending = { first = first, last = new_last, lines = original }\n\t\t\t\tvim.bo[b].modifiable = false\n\t\t\t\tvim.schedule(function()\n\t\t\t\t\tif states[b] == s and vim.api.nvim_buf_is_valid(b) then\n\t\t\t\t\t\tsettle(b, s)\n\t\t\t\t\t\tvim.notify(\"Compilation history is read-only\", vim.log.levels.WARN)\n\t\t\t\t\tend\n\t\t\t\tend)\n\t\t\telse\n\t\t\t\ts.draft = vim.api.nvim_buf_get_lines(b, s.start, -1, false)\n\t\t\t\tif #s.draft == 0 then\n\t\t\t\t\ts.draft = { \"\" }\n\t\t\t\t\ts.pending = { first = s.start, last = s.start, lines = { \"\" } }\n\t\t\t\t\tvim.bo[b].modifiable = false\n\t\t\t\t\tvim.schedule(function()\n\t\t\t\t\t\tif states[b] == s and vim.api.nvim_buf_is_valid(b) then\n\t\t\t\t\t\t\tsettle(b, s)\n\t\t\t\t\t\tend\n\t\t\t\t\tend)\n\t\t\t\tend\n\t\t\t\twhile #s.undo > s.index do\n\t\t\t\t\ttable.remove(s.undo)\n\t\t\t\tend\n\t\t\t\tlocal inserting = vim.api.nvim_get_mode().mode:sub(1, 1) == \"i\"\n\t\t\t\tif inserting and s.insert_group then\n\t\t\t\t\ts.undo[s.index] = vim.deepcopy(s.draft)\n\t\t\t\telse\n\t\t\t\t\ts.undo[#s.undo + 1] = vim.deepcopy(s.draft)\n\t\t\t\t\tlocal limit = math.max(2, vim.go.undolevels + 1)\n\t\t\t\t\tif #s.undo > limit then\n\t\t\t\t\t\ttable.remove(s.undo, 1)\n\t\t\t\t\tend\n\t\t\t\t\ts.index = #s.undo\n\t\t\t\tend\n\t\t\t\ts.insert_group = inserting\n\t\t\tend\n\t\tend,\n\t\ton_detach = function()\n\t\t\tif states[buf] == s then\n\t\t\t\tstates[buf] = nil\n\t\t\tend\n\t\tend,\n\t})\n\treturn s\nend\n\nfunction M.attach(buf, send)\n\tM.detach(buf)\n\tlocal session = { active = true, send = send }\n\tsessions[buf] = session\n\t-- :w must work even before the first Insert command.\n\tvim.bo[buf].buftype = \"acwrite\"\n\tvim.bo[buf].bufhidden = \"hide\"\n\tvim.api.nvim_create_autocmd({ \"BufDelete\", \"BufWipeout\" }, {\n\t\tgroup = group,\n\t\tbuffer = buf,\n\t\tonce = true,\n\t\tcallback = function()\n\t\t\tif sessions[buf] == session then\n\t\t\t\tsessions[buf], states[buf] = nil, nil\n\t\t\tend\n\t\tend,\n\t})\nend\n\nfunction M.detach(buf)\n\tsessions[buf] = nil\n\tvim.api.nvim_clear_autocmds({ group = group, buffer = buf })\n\tlocal s = states[buf]\n\tif s and vim.api.nvim_buf_is_valid(buf) then\n\t\tsettle(buf, s)\n\t\tvim.bo[buf].undolevels = s.old_undolevels\n\t\tvim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)\n\tend\n\tstates[buf] = nil\nend\n\nfunction M.enter(buf, key)\n\tlocal s = activate(buf)\n\tif not s or (not s.active and not s.start) then\n\t\tvim.notify(\"No running compilation\", vim.log.levels.WARN)\n\t\treturn\n\tend\n\tsettle(buf, s)\n\tlocal in_draft = M.in_draft(buf)\n\tif not s.start then\n\t\ts.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)\n\t\ts.start = #s.history\n\t\ts.editing = true\n\t\tvim.bo[buf].modifiable = true\n\t\tvim.api.nvim_buf_set_lines(buf, -1, -1, false, { \"\" })\n\t\ts.editing = false\n\tend\n\tif not in_draft then\n\t\tvim.api.nvim_win_set_cursor(0, { s.start + #s.draft, #s.draft[#s.draft] })\n\t\tkey = \"A\"\n\tend\n\tmark(buf, s)\n\tM.lock(buf)\n\t-- feedkeys keeps normal Vim insertion semantics (including o/O and counts).\n\tlocal prefix = vim.v.count > 0 and tostring(vim.v.count) or \"\"\n\tvim.api.nvim_feedkeys(prefix .. (key or \"i\"), \"ni\", false)\nend\n\nfunction M.undo(buf, redo, count)\n\tlocal s = states[buf]\n\tif not s or not s.start then\n\t\treturn\n\tend\n\tsettle(buf, s)\n\ts.index = math.max(1, math.min(#s.undo, s.index + (redo and 1 or -1) * (count or 1)))\n\ts.draft = vim.deepcopy(s.undo[s.index])\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, s.draft)\n\ts.editing = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nfunction M.submit(buf)\n\tlocal s = activate(buf)\n\tif not s or not s.active then\n\t\terror(\"No running compilation\")\n\tend\n\tsettle(buf, s)\n\tlocal text = table.concat(s.draft, \"\\n\")\n\tif text:sub(-1) ~= \"\\n\" then\n\t\ttext = text .. \"\\n\"\n\tend\n\tlocal ok, err = s.send(text)\n\tif not ok then\n\t\terror(err)\n\tend\n\tif not s.start then\n\t\t-- :w without entering Insert still sends an empty answer.\n\t\ts.history = vim.api.nvim_buf_get_lines(buf, 0, -1, false)\n\t\ts.start = #s.history\n\tend\n\tlocal records = {}\n\tfor _, line in ipairs(s.draft) do\n\t\trecords[#records + 1] = \"> \" .. line\n\tend\n\ts.editing = true\n\tvim.bo[buf].modifiable = true\n\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, vim.list_extend(vim.deepcopy(records), { \"\" }))\n\ts.editing = false\n\tfor i = 0, #records - 1 do\n\t\ts.records[s.start + i] = true\n\tend\n\tvim.list_extend(s.history, records)\n\ts.start = s.start + #records\n\ts.draft, s.undo, s.index = { \"\" }, { { \"\" } }, 1\n\ts.insert_group = false\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nfunction M.finish(buf)\n\tif sessions[buf] then\n\t\tsessions[buf].active = false\n\tend\n\tlocal s = states[buf]\n\tif not s then\n\t\treturn\n\tend\n\tsettle(buf, s)\n\ts.active = false\n\tif s.start and not M.has_draft(buf) then\n\t\ts.editing = true\n\t\tvim.bo[buf].modifiable = true\n\t\tvim.api.nvim_buf_set_lines(buf, s.start, -1, false, {})\n\t\ts.editing = false\n\t\ts.start = nil\n\t\ts.history = nil\n\tend\n\tmark(buf, s)\n\tM.lock(buf)\nend\n\nreturn M\n",
+  "validation": {
+    "regression_tests": 337,
+    "failures": 0,
+    "errors": 0,
+    "typecheck": "passed",
+    "format_check": "passed",
+    "diff_check": "passed"
+  }
+}

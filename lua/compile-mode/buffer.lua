@@ -1,6 +1,5 @@
-local utils = require("compile-mode.utils")
-
 local M = {}
+local input = require("compile-mode.input")
 
 local header_line_count = require("compile-mode.constants").header_line_count
 
@@ -12,7 +11,9 @@ function M.scroll(bufnr)
 	end
 	local last = vim.api.nvim_buf_line_count(bufnr)
 	for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-		vim.api.nvim_win_set_cursor(win, { last, 0 })
+		if not input.in_draft(bufnr, win) then
+			vim.api.nvim_win_set_cursor(win, { last, 0 })
+		end
 	end
 end
 
@@ -29,28 +30,33 @@ function M.set_lines(bufnr, start, end_, data, trim)
 		return 0
 	end
 
-	utils.buf_set_opt(bufnr, "modifiable", true)
+	local count = input.count(bufnr)
+	start = start < 0 and count + start + 1 or start
+	end_ = end_ < 0 and count + end_ + 1 or end_
+	input.begin_output(bufnr)
 	vim.api.nvim_buf_set_lines(bufnr, start, end_, false, data)
 
 	local removed_lines = 0
 	if trim ~= false and config.max_lines then
 		local effective_max_lines = config.max_lines + header_line_count
 
-		local line_count = vim.api.nvim_buf_line_count(bufnr)
+		local line_count = input.output_count(bufnr)
 		removed_lines = math.max(line_count - effective_max_lines, 0)
 
 		if removed_lines > 0 then
+			local outputs, rows = 0, 0
+			while outputs < removed_lines do
+				if not input.is_record(bufnr, header_line_count + rows) then
+					outputs = outputs + 1
+				end
+				rows = rows + 1
+			end
+			removed_lines = rows
 			vim.api.nvim_buf_set_lines(bufnr, header_line_count, header_line_count + removed_lines, false, {})
 		end
 	end
 
-	vim.schedule(function()
-		if not vim.api.nvim_buf_is_valid(bufnr) then
-			return
-		end
-		utils.buf_set_opt(bufnr, "modifiable", false)
-		utils.buf_set_opt(bufnr, "modified", false)
-	end)
+	input.end_output(bufnr)
 
 	M.scroll(bufnr)
 

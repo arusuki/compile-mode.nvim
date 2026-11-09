@@ -89,7 +89,7 @@ describe("compilation session ownership and recovery", function()
 		assert.are.equal("accepted", vim.g.compile_command)
 		assert.are.equal("/tmp/accepted", dir.compilation_directory)
 		assert.are.equal(101, vim.g.compile_job_id)
-		runner.interrupt()
+		runner.stop()
 		s.drain()
 	end)
 
@@ -99,7 +99,7 @@ describe("compilation session ownership and recovery", function()
 			parse(buf, first, last)
 			if first >= 4 then
 				scans = scans + 1
-				runner.interrupt()
+				runner.stop()
 			end
 		end
 		vim.fn.jobstart = function(_, opts)
@@ -292,7 +292,7 @@ describe("compilation session ownership and recovery", function()
 				vim.schedule(function()
 					opts.on_stdout(101, { string.rep("x", 2 * 1024 * 1024) })
 					if action == "interrupt" then
-						runner.interrupt()
+						runner.stop()
 					else
 						vim.api.nvim_buf_delete(vim.g.compilation_buffer, { force = true })
 					end
@@ -329,7 +329,7 @@ describe("compilation session ownership and recovery", function()
 		vim.fn.jobstop = function()
 			return 1
 		end
-		runner.interrupt()
+		runner.stop()
 		s.drain()
 		assert.are.same({ 5 }, errors.ordered_lines())
 		assert.are.equal(3, errors.error_list[5].row.value)

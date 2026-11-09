@@ -8,6 +8,7 @@ local buffer = require("compile-mode.buffer")
 local output = require("compile-mode.output")
 local parser = require("compile-mode.parser")
 local state = require("compile-mode.state")
+local input = require("compile-mode.input")
 
 local M = {}
 
@@ -36,7 +37,11 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		stderr = { output = output.new_stream(config.hidden_output), ansi = {} },
 	}
 	owner.streams = streams
+	owner.pty = config.use_pseudo_terminal
 	local empty_tail = true
+	owner.input_sent = function()
+		empty_tail = false
+	end
 
 	local function active()
 		return current_session == owner and vim.api.nvim_buf_is_valid(bufnr)
@@ -192,7 +197,7 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 			ranges[#ranges + 1] = { start, start + #values }
 		end
 
-		local line_count = vim.api.nvim_buf_line_count(bufnr)
+		local line_count = input.count(bufnr)
 		local old_row = stream.row
 		if old_row and old_row < line_count - 1 then
 			-- The other stream has appended output since this unfinished line.
@@ -207,7 +212,7 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 			local append = stream.row or (empty_tail and line_count - 1 or line_count)
 			local replacing = append < line_count
 			local available = config.max_lines
-				and config.max_lines + header_line_count - line_count + (replacing and 1 or 0)
+				and config.max_lines + header_line_count - input.output_count(bufnr) + (replacing and 1 or 0)
 			if available and #lines > available then
 				lines = vim.list_slice(lines, 1, math.max(0, available))
 				line_limit_exceeded = true
@@ -295,6 +300,7 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 			receive("stderr", data)
 		end,
 		on_exit = function(_, code)
+			owner.exited = true
 			if not owner.failure then
 				exit_status = code
 			end
@@ -325,6 +331,17 @@ M.run_job = a.wrap(function(cmd, bufnr, param, callback)
 		return
 	end
 	vim.g.compile_job_id = job_id
+	input.attach(bufnr, function(data)
+		if current_session ~= owner or owner.exited or owner.stdin_closed then
+			return false, "Compilation input is closed"
+		end
+		local sent, result = pcall(vim.fn.chansend, job_id, data)
+		if not sent or result == 0 then
+			return false, "Unable to send compilation input: " .. tostring(result)
+		end
+		owner.input_sent()
+		return true
+	end)
 	vim.cmd.redrawstatus()
 	delete_event = vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
 		buffer = bufnr,
@@ -372,6 +389,13 @@ M.run = a.void(
 
 			log.debug("calling runcommand()")
 
+			local old_buf = vim.g.compilation_buffer
+			if old_buf and input.has_draft(old_buf) then
+				if vim.fn.confirm("Discard unsent compilation input?", "&Yes\n&No", 2) ~= 1 then
+					return
+				end
+			end
+
 			if config.ask_about_save and utils.ask_to_save(param.smods or {}) then
 				return
 			end
@@ -384,7 +408,7 @@ M.run = a.void(
 					end
 				end
 
-				M.interrupt()
+				M.stop()
 			end
 
 			cdir.compilation_directory = directory or cdir.compilation_directory or vim.fn.getcwd()
@@ -444,6 +468,8 @@ M.run = a.void(
 			utils.buf_set_opt(bufnr, "buftype", "nofile")
 			utils.buf_set_opt(bufnr, "buflisted", not config.hidden_buffer)
 
+			input.detach(bufnr)
+
 			-- reset compilation buffer
 			buffer.set_lines(bufnr, 0, -1, {})
 			utils.wait()
@@ -480,6 +506,7 @@ M.run = a.void(
 				return
 			end
 			vim.g.compile_job_id = nil
+			input.finish(bufnr)
 
 			for _, stream in pairs(session.streams or {}) do
 				ansi.flush(bufnr, stream.ansi)
@@ -540,6 +567,7 @@ M.run = a.void(
 				pcall(vim.fn.jobstop, session.job_id)
 			end
 			if session.bufnr and vim.api.nvim_buf_is_valid(session.bufnr) then
+				input.finish(session.bufnr)
 				pcall(
 					buffer.set_lines,
 					session.bufnr,
@@ -558,10 +586,10 @@ M.run = a.void(
 	end
 )
 
----Interrupt the currently running compilation command.
+---Force-stop the currently running compilation and release its session.
 ---
 ---@type fun()
-M.interrupt = a.void(function()
+M.stop = a.void(function()
 	local session = current_session
 	local job_id = session and session.job_id or vim.g.compile_job_id
 	if not session and not job_id then
@@ -578,6 +606,7 @@ M.interrupt = a.void(function()
 		pcall(vim.fn.jobstop, job_id)
 	end
 	if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+		input.finish(bufnr)
 		state.trim_lines(buffer.set_lines(bufnr, -1, -1, {
 			"",
 			"Compilation interrupted at " .. time(),
@@ -590,5 +619,44 @@ M.interrupt = a.void(function()
 		data = { job_id = job_id, bufnr = bufnr },
 	})
 end)
+
+---Send a signal without relinquishing ownership of the running job.
+---@param signal string|integer
+---@return boolean, string?
+function M.signal(signal)
+	local session = current_session
+	if not session or not session.job_id or session.exited then
+		return false, "No running compilation"
+	end
+	return require("compile-mode.signals").send(session.job_id, signal)
+end
+
+---@return boolean, string?
+function M.interrupt()
+	return M.signal("INT")
+end
+
+---@return boolean, string?
+function M.send_eof()
+	local session = current_session
+	if not session or not session.job_id or session.exited or session.stdin_closed then
+		return false, "Compilation input is closed"
+	end
+	if input.has_draft(session.bufnr) then
+		return false, "Submit the draft with :w before sending EOF"
+	end
+	local pty = session.pty
+	local ok, result
+	if pty then
+		ok, result = pcall(vim.fn.chansend, session.job_id, "\004")
+		ok = ok and result > 0
+	else
+		ok, result = pcall(vim.fn.chanclose, session.job_id, "stdin")
+		if ok then
+			session.stdin_closed = true
+		end
+	end
+	return ok, not ok and tostring(result) or nil
+end
 
 return M

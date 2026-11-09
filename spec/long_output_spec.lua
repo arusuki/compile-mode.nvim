@@ -181,7 +181,7 @@ describe("long unfinished compilation output", function()
 		emit({ string.rep("x", 65536) })
 		emit({ "must not leak" })
 		local old = callbacks
-		require("compile-mode").interrupt()
+		require("compile-mode").stop()
 		drain()
 		start()
 		old.on_exit(987654, 0)

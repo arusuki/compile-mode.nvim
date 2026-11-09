@@ -2,7 +2,7 @@ local helpers = require("spec.test_helpers")
 
 local assert = require("luassert")
 
-describe("interrupting a compilation", function()
+describe("force-stopping a compilation", function()
 	before_each(function()
 		helpers.setup_tests({
 			ask_to_interrupt = false,
@@ -13,7 +13,7 @@ describe("interrupting a compilation", function()
 		helpers.compile({ args = "sleep 10" }, true)
 		helpers.wait_ms(100)
 
-		helpers.interrupt()
+		helpers.stop()
 
 		local bufnr = helpers.get_compilation_bufnr()
 
@@ -27,7 +27,7 @@ describe("interrupting a compilation", function()
 
 		local id = vim.g.compile_job_id
 
-		helpers.interrupt()
+		helpers.stop()
 
 		-- the id is now invalid
 		assert.are.same(0, vim.fn.jobstop(id))

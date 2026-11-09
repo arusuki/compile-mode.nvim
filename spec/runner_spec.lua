@@ -126,7 +126,7 @@ describe("queued compilation output", function()
 			local result = scan(buf, first, last)
 			if first >= 4 and not requested then
 				requested = true
-				vim.schedule(require("compile-mode").interrupt)
+				vim.schedule(require("compile-mode").stop)
 			end
 			return result
 		end

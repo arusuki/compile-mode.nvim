@@ -2,6 +2,7 @@ local errors = require("compile-mode.errors")
 local utils = require("compile-mode.utils")
 local cdir = require("compile-mode.dir")
 local state = require("compile-mode.state")
+local input = require("compile-mode.input")
 
 local M = {}
 local namespace = vim.api.nvim_create_namespace("compile-mode.nvim")
@@ -43,7 +44,7 @@ end
 ---@return CompileModeScanHighlights output_highlights
 function M.scan(bufnr, start_line, end_line)
 	local config = require("compile-mode.config.internal")
-	local line_count = vim.api.nvim_buf_line_count(bufnr)
+	local line_count = input.count(bufnr)
 	start_line = index(start_line, line_count)
 	end_line = index(end_line, line_count)
 	local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line, false)
@@ -77,7 +78,10 @@ function M.scan(bufnr, start_line, end_line)
 		linenum = start_line + linenum
 
 		-- Keep oversized output intact, but bound synchronous matcher work.
-		if config.max_parse_line_length == 0 or #line <= config.max_parse_line_length then
+		if
+			not input.is_record(bufnr, linenum - 1)
+			and (config.max_parse_line_length == 0 or #line <= config.max_parse_line_length)
+		then
 			local error = errors.parse(line, linenum)
 
 			if error then

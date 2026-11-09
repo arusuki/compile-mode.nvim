@@ -95,7 +95,7 @@ describe("bounded compilation highlight cleanup", function()
 		local buf = s.compile("seed").bufnr
 		local marker, interrupted
 		timed_action(function()
-			runner.interrupt()
+			runner.stop()
 			marker = vim.api.nvim_buf_set_extmark(buf, ns, 300, 0, {})
 			interrupted = true
 		end)

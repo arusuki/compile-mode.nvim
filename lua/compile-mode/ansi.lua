@@ -1,3 +1,4 @@
+local input = require("compile-mode.input")
 local log = require("compile-mode.log")
 
 -- Lua pattern building blocks for ANSI escape sequence processing.
@@ -380,14 +381,14 @@ function M.buf_set_lines(bufnr, start, end_, lines, replay_partial, supplied)
 		initialized = true
 	end
 	local ctx = context(bufnr, supplied)
-	local count = vim.api.nvim_buf_line_count(bufnr)
+	local count = input.count(bufnr)
 	start = math.max(0, math.min(count, start < 0 and count + start + 1 or start))
 	end_ = math.max(0, math.min(count, end_ < 0 and count + end_ + 1 or end_))
 	if start < end_ then
 		clear_colors(bufnr, start, end_)
 		vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, start, end_)
 	end
-	vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+	input.begin_output(bufnr)
 	if mode == "passthrough" or #lines == 0 then
 		vim.api.nvim_buf_set_lines(bufnr, start, end_, false, lines)
 	else
@@ -480,11 +481,7 @@ function M.buf_set_lines(bufnr, start, end_, lines, replay_partial, supplied)
 	end
 	ctx.replay_prefix, ctx.replay_reset = nil, nil
 	ctx.discarded_prefix, ctx.discarded_prefixes = nil, nil
-	vim.schedule(function()
-		if vim.api.nvim_buf_is_valid(bufnr) then
-			vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-		end
-	end)
+	input.end_output(bufnr)
 end
 
 ---Reset escape state and remove our highlights from a reused compilation buffer.
@@ -517,13 +514,9 @@ function M.flush(bufnr, supplied)
 	if not last then
 		return
 	end
-	vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+	input.begin_output(bufnr)
 	vim.api.nvim_buf_set_text(bufnr, row, #last, row, #last, { line })
-	vim.schedule(function()
-		if vim.api.nvim_buf_is_valid(bufnr) then
-			vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-		end
-	end)
+	input.end_output(bufnr)
 end
 
 M._strip_csi = strip_csi

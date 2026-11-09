@@ -70,11 +70,26 @@ require("compile-mode.window_highlights").attach(bufnr, matches)
 local undo =
 	"lua require('compile-mode.window_highlights').detach(0); require('compile-mode.parser').detach_log(0); vim.api.nvim_clear_autocmds({ group = 'compile-mode.nvim', buffer = 0 })"
 local previous_undo = vim.b[bufnr].undo_ftplugin
-vim.b[bufnr].undo_ftplugin = previous_undo and (previous_undo .. " | " .. undo) or undo
+vim.b[bufnr].undo_ftplugin = previous_undo and (previous_undo .. "\n" .. undo) or undo
 
 command("CompileGotoError", compile_mode.goto_error)
 command("CompileDebugError", compile_mode.debug_error)
-command("CompileInterrupt", compile_mode.interrupt)
+local function control(fn)
+	return function()
+		local ok, err = fn()
+		if not ok then
+			vim.notify(err, vim.log.levels.ERROR)
+		end
+	end
+end
+command("CompileInterrupt", control(compile_mode.interrupt))
+command("CompileStop", compile_mode.stop)
+command("CompileEOF", control(compile_mode.send_eof))
+command("CompileSignal", function(args)
+	control(function()
+		return compile_mode.signal(args.args)
+	end)()
+end, { nargs = 1, complete = require("compile-mode.signals").complete })
 command("CompileCloseBuffer", compile_mode.close_buffer)
 command("CompileNextError", compile_mode.move_to_next_error, { count = 1 })
 command("CompileNextFile", compile_mode.move_to_next_file, { count = 1 })
@@ -116,4 +131,38 @@ if not vim.b[bufnr].compilation_main_buffer then
 	parser.attach_log(bufnr)
 else
 	parser.detach_log(bufnr)
+end
+
+if vim.b[bufnr].compilation_main_buffer then
+	local input = require("compile-mode.input")
+	for _, key in ipairs({ "i", "I", "a", "A", "o", "O" }) do
+		set("n", key, function()
+			input.enter(bufnr, key)
+		end)
+	end
+	set("n", "u", function()
+		input.undo(bufnr, false, vim.v.count1)
+	end)
+	set("n", "<C-r>", function()
+		if input.in_draft(bufnr) then
+			input.undo(bufnr, true, vim.v.count1)
+		else
+			vim.cmd.Recompile()
+		end
+	end)
+	autocmd("FileWriteCmd", {
+		buffer = bufnr,
+		callback = function()
+			error("Use :w without a range or file name to send compilation input")
+		end,
+	})
+	autocmd("BufWriteCmd", {
+		buffer = bufnr,
+		callback = function(ev)
+			if vim.fn.fnamemodify(ev.match, ":p") ~= vim.api.nvim_buf_get_name(bufnr) then
+				error("Use :w without a file name to send compilation input")
+			end
+			input.submit(bufnr)
+		end,
+	})
 end

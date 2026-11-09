@@ -176,7 +176,7 @@ After a command has been run, the buffer’s output will contain:
 - the output (`stdout` and `stderr`) of the command
 - the exit status of the command and when it occurred; a command can exit
   successfully (exit code 0), abnormally (non-zero exit code), by interruption
-  (running another compilation command or calling |:CompileInterrupt|), by
+  (running another compilation command or calling |:CompileStop|), by
   segfault (SIGSEGV), or by termination (SIGTERM)
 
 If a compilation command is running and another one is triggered, the user is
@@ -202,7 +202,7 @@ commands (and their keymaps, if mentioned) are:
                                                  *compile-mode-buffer-keymaps*
 Additional keymaps within the compilation buffer are:
 
-- `<C-r>` is mapped to `<CMD>Recompile<CR>` for quick recompilation.
+- `<C-r>` redoes draft edits in the input area; elsewhere it recompiles.
 - `<C-g>f` is mapped to `<CMD>NextErrorFollow<CR>` to preview the error under
   the cursor.
 - `gf` is mapped to a custom function that behaves similarly to how |gf| does
@@ -829,7 +829,8 @@ move_to_prev_file({param})                  *compile-mode.move_to_prev_file()*
         • {count} (`integer`) how many files backwards to move; default `1`
 
 interrupt()                                         *compile-mode.interrupt()*
-    Interrupts the currently running compilation. See |:CompileInterrupt|.
+    Sends SIGINT; returns boolean success and optional error.
+    See |:CompileInterrupt|.
 
 close_buffer()                                   *compile-mode.close_buffer()*
     Closes the compilation buffer. See |:CompileCloseBuffer|.
@@ -1097,10 +1098,59 @@ statusline({colors})                               *compile-mode.statusline()*
 :[N]CompileInterrupt
     Only available within the compilation buffer itself.
 
-    Interrupt the currently running compilation command, reporting on this in
-    the compilation buffer.
+    Send SIGINT to the compilation process group. Keep the session alive until
+    the process exits, allowing it to handle the signal and continue output.
+    Mapped to Normal-mode `<C-c>`; Insert-mode `<C-c>` keeps Vim behavior.
+    Unlike previous versions, this does not call jobstop() or emit
+    CompilationInterrupted. Use |:CompileStop| for the previous behavior.
 
-    Mapped to `<C-c>` within the compilation buffer.
+:CompileSignal {signal}                                      *:CompileSignal*
+    Send a Unix signal to the active compilation job's process group. Accepts
+    names (INT, USR1), SIG-prefixed names, or positive signal numbers. Completion
+    lists signal names known to Neovim's runtime. Unsupported signals and
+    unavailable/unsafe groups report errors. Windows is not supported.
+    Children in the same group receive the signal; a job-control shell's
+    changing foreground process group is not tracked.
+    Examples: :CompileSignal STOP, :CompileSignal CONT, :CompileSignal TERM.
+
+:CompileEOF                                                    *:CompileEOF*
+    Require an empty draft, then close stdin (pipe mode) or send ^D (PTY mode).
+    PTY EOF assumes normal terminal EOF settings and does not close the channel.
+
+:CompileStop                                                  *:CompileStop*
+    Call jobstop(), discard queued output, and release the session immediately.
+    Reports interruption and emits CompilationInterrupted. Recompile and buffer
+    deletion retain their existing force-stop behavior.
+
+                                                        *compile-mode-input*
+    In the active compilation buffer, i/I/a/A/o/O enter the draft area. From
+    history they move to the draft's end; within the draft they behave normally.
+    Output and previously submitted input are read-only. Cross-boundary edits
+    are rejected as a whole. New output appears before the draft without
+    replacing its text or moving its cursor into output.
+
+    Enter inserts a newline. :w (without a file name) sends the entire draft,
+    appending a newline if needed. Empty drafts send a newline. Accepted sends
+    become read-only records prefixed with '> '; failures preserve the draft.
+    PTY echo is retained and may appear alongside these records.
+
+    u and Ctrl-R undo/redo draft changes using an independent edit journal;
+    native :undo/:earlier do not edit the transcript. In history Ctrl-R retains
+    its Recompile mapping. Drafts and input records are excluded from error
+    parsing and output limits. History editing, recall, terminal emulation, and
+    password-specific input are not provided.
+
+    Unsent drafts survive process exit and failed sends. Recompiling asks
+    before discarding a nonempty draft. :Compile! blocks interactive input.
+
+signal({signal})                                    *compile-mode.signal()*
+    Lua equivalent of :CompileSignal; returns boolean success, optional error.
+
+send_eof()                                        *compile-mode.send_eof()*
+    Lua equivalent of :CompileEOF; returns boolean success, optional error.
+
+stop()                                                *compile-mode.stop()*
+    Lua equivalent of :CompileStop. Replaces the old interrupt() behavior.
 
 :CompileCloseBuffer                                      *:CompileCloseBuffer*
     Only available within the compilation buffer itself.
