@@ -6,13 +6,22 @@ local ns = vim.api.nvim_create_namespace("compile-mode.input")
 local group = vim.api.nvim_create_augroup("compile-mode.input", { clear = false })
 
 local function mark(buf, s)
+	-- Buffer-local autocmds can survive :bdelete and fire when it is reopened.
+	if states[buf] ~= s then
+		return
+	end
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 	if s.start then
+		local row = s.start
+		if vim.api.nvim_get_current_buf() == buf then
+			-- Follow editing within the draft, but never label read-only output.
+			row = math.max(row, vim.api.nvim_win_get_cursor(0)[1] - 1)
+		end
 		local hint = "  [unsent input · process ended]"
 		if s.active then
 			hint = s.inserting and "  [stdin · Esc then :w sends]" or "  [stdin · i edits · :w sends]"
 		end
-		vim.api.nvim_buf_set_extmark(buf, ns, s.start, 0, {
+		vim.api.nvim_buf_set_extmark(buf, ns, row, 0, {
 			right_gravity = true,
 			virt_text = { { hint, "Comment" } },
 			virt_text_pos = "eol",
@@ -115,6 +124,15 @@ local function activate(buf)
 			s.inserting = inserting
 			s.insert_group = false
 			mark(buf, s)
+		end,
+	})
+	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "BufEnter", "WinEnter" }, {
+		group = group,
+		buffer = buf,
+		callback = function()
+			if not s.pending then
+				mark(buf, s)
+			end
 		end,
 	})
 	vim.api.nvim_buf_attach(buf, false, {

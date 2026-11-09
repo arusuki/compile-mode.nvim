@@ -18,11 +18,11 @@ local function keys(text)
 	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(text, true, false, true), "xt", false)
 end
 
-local function hint(buf)
+local function hint(buf, row)
 	local ns = vim.api.nvim_get_namespaces()["compile-mode.input"]
 	local marks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })
 	assert.are.equal(1, #marks)
-	assert.are.equal(input.count(buf), marks[1][2])
+	assert.are.equal(row or input.count(buf), marks[1][2])
 	return marks[1][4].virt_text[1][1]
 end
 
@@ -197,6 +197,77 @@ describe("protected compilation input", function()
 			assert.are.equal("  [unsent input · process ended]", hint(buf))
 		end)
 	end
+
+	it("places the hint on the resumed draft line and keeps it there across output", function()
+		vim.cmd("filetype plugin on")
+		vim.b[buf].compilation_main_buffer = true
+		vim.bo[buf].filetype = "compilation"
+		keys("ione<CR>two<CR>three<Esc>ki!<Esc>")
+		assert.are.equal("  [stdin · i edits · :w sends]", hint(buf, 3))
+		buffer.set_lines(buf, -1, -1, { "new output" }, false)
+		assert.are.equal("  [stdin · i edits · :w sends]", hint(buf, 4))
+		assert.are.same({ "one", "tw!o", "three" }, vim.api.nvim_buf_get_lines(buf, input.count(buf), -1, false))
+		assert.are.same({}, sent)
+	end)
+
+	it("does not revive stale hints when a deleted buffer is reopened", function()
+		draft(buf, { "unsent" })
+		vim.cmd.bdelete({ args = { tostring(buf) }, bang = true })
+		vim.api.nvim_set_current_buf(buf)
+		local ns = vim.api.nvim_get_namespaces()["compile-mode.input"]
+		assert.are.same({}, vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {}))
+	end)
+
+	it("follows cursor movements and newlines during a live insert session", function()
+		-- A separate event loop lets real CursorMovedI events run between keys,
+		-- without feedkeys() implicitly leaving Insert mode at the end of a batch.
+		local child = vim.fn.jobstart({ vim.v.progpath, "--headless", "--clean", "-n", "--embed" }, { rpc = true })
+		local function exec(code, args)
+			return vim.rpcrequest(child, "nvim_exec_lua", code, args or {})
+		end
+		local function check(text, row, mode, hint_row)
+			vim.rpcrequest(child, "nvim_input", text)
+			local actual
+			local expected = { row, mode, hint_row or row - 1 }
+			local matched = vim.wait(2000, function()
+				actual = exec([[
+					local ns = vim.api.nvim_get_namespaces()["compile-mode.input"]
+					local marks = vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {})
+					return { vim.api.nvim_win_get_cursor(0)[1], vim.api.nvim_get_mode().mode, #marks == 1 and marks[1][2] or -1 }
+				]])
+				return vim.deep_equal(expected, actual)
+			end, 5)
+			assert.is_true(matched, "expected " .. vim.inspect(expected) .. ", got " .. vim.inspect(actual))
+		end
+		local ok, err = pcall(function()
+			exec(
+				[[
+				vim.o.runtimepath = ...
+				require("scripts.support").setup()
+				vim.cmd("filetype plugin on")
+				vim.api.nvim_buf_set_lines(0, 0, -1, false, { "header", "prompt: " })
+				vim.b.compilation_main_buffer = true
+				vim.bo.filetype = "compilation"
+				require("compile-mode.input").attach(vim.api.nvim_get_current_buf(), function() return true end)
+			]],
+				{ vim.o.runtimepath }
+			)
+			check("ione<CR>two<CR>three", 5, "i")
+			check("<Up>", 4, "i")
+			check("<Esc>k", 3, "n")
+			check("A", 3, "i")
+			check("<Down>", 4, "i")
+			exec(
+				[[require("compile-mode.buffer").set_lines(vim.api.nvim_get_current_buf(), -1, -1, { "output" }, false)]]
+			)
+			check("", 5, "i")
+			check("<CR>", 6, "i")
+			check("<Esc>gg", 1, "n", 3)
+			check("i", 7, "i")
+		end)
+		vim.fn.jobstop(child)
+		assert.is_true(ok, err)
+	end)
 
 	it("defers text listeners and undo changes until input is used", function()
 		local other = support.buffer({ "output" })
