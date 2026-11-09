@@ -1125,6 +1125,9 @@ statusline({colors})                               *compile-mode.statusline()*
                                                         *compile-mode-input*
     In the active compilation buffer, i/I/a/A/o/O enter the draft area. From
     history they move to the draft's end; within the draft they behave normally.
+    The draft starts on its own line below the output. Esc pauses editing
+    without sending or discarding the draft; i resumes it without adding a line.
+    The inline stdin hint reflects entering and leaving Insert mode.
     Output and previously submitted input are read-only. Cross-boundary edits
     are rejected as a whole. New output appears before the draft without
     replacing its text or moving its cursor into output.

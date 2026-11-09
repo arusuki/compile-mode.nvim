@@ -14,6 +14,9 @@ rerun that command over and over again as much as you need.
 
 In a running compilation buffer, press `i` to edit a draft at the bottom. Use
 normal Vim editing keys, then `Esc` and `:w` to send the whole draft to stdin.
+The draft starts on a separate line below the read-only output. `Esc` pauses
+editing without sending or discarding it; `i` resumes the same draft. The inline
+hint updates when entering or leaving Insert mode.
 Enter inserts a newline; an empty `:w` sends an empty answer. Submitted input
 is recorded with a `> ` prefix. Output and submitted input remain read-only;
 history editing and recall are not supported. `u` and `Ctrl-R` undo/redo draft

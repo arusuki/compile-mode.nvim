@@ -14,6 +14,18 @@ local function draft(buf, lines)
 	vim.api.nvim_buf_set_lines(buf, input.count(buf), -1, false, lines)
 end
 
+local function keys(text)
+	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(text, true, false, true), "xt", false)
+end
+
+local function hint(buf)
+	local ns = vim.api.nvim_get_namespaces()["compile-mode.input"]
+	local marks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })
+	assert.are.equal(1, #marks)
+	assert.are.equal(input.count(buf), marks[1][2])
+	return marks[1][4].virt_text[1][1]
+end
+
 describe("protected compilation input", function()
 	local buf, sent, fail
 	before_each(function()
@@ -142,6 +154,50 @@ describe("protected compilation input", function()
 		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-r>", true, false, true), "xt", false)
 		assert.are.same({ "hello" }, vim.api.nvim_buf_get_lines(buf, input.count(buf), -1, false))
 	end)
+	it("resumes the existing draft after Esc without adding a line", function()
+		vim.cmd("filetype plugin on")
+		vim.b[buf].compilation_main_buffer = true
+		vim.bo[buf].filetype = "compilation"
+		keys("ihello<Esc>i!<Esc>")
+		assert.are.same({ "header", "prompt: ", "hell!o" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+		buffer.set_lines(buf, -1, -1, { "more output" }, false)
+		vim.api.nvim_win_set_cursor(0, { 1, 0 })
+		keys("i again<Esc>")
+		assert.are.same(
+			{ "header", "prompt: ", "more output", "hell!o again" },
+			vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		)
+		assert.are.same({}, sent)
+	end)
+
+	for _, leave in ipairs({ "<Esc>", "<C-c>" }) do
+		it("updates the stdin hint on entry, " .. leave .. ", and re-entry", function()
+			vim.cmd("filetype plugin on")
+			vim.b[buf].compilation_main_buffer = true
+			vim.bo[buf].filetype = "compilation"
+			local hints = {}
+			local event = vim.api.nvim_create_autocmd("ModeChanged", {
+				buffer = buf,
+				callback = function()
+					hints[#hints + 1] = hint(buf)
+				end,
+			})
+			keys("ihello" .. leave .. "A!" .. leave)
+			vim.api.nvim_del_autocmd(event)
+			assert.are.same({
+				"  [stdin · Esc then :w sends]",
+				"  [stdin · i edits · :w sends]",
+				"  [stdin · Esc then :w sends]",
+				"  [stdin · i edits · :w sends]",
+			}, hints)
+			assert.are.same({ "hello!" }, vim.api.nvim_buf_get_lines(buf, input.count(buf), -1, false))
+			assert.are.same({}, sent)
+			input.finish(buf)
+			keys("A?<Esc>")
+			assert.are.equal("  [unsent input · process ended]", hint(buf))
+		end)
+	end
+
 	it("defers text listeners and undo changes until input is used", function()
 		local other = support.buffer({ "output" })
 		local native_undo = vim.bo[other].undolevels

@@ -8,9 +8,13 @@ local group = vim.api.nvim_create_augroup("compile-mode.input", { clear = false 
 local function mark(buf, s)
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 	if s.start then
+		local hint = "  [unsent input · process ended]"
+		if s.active then
+			hint = s.inserting and "  [stdin · Esc then :w sends]" or "  [stdin · i edits · :w sends]"
+		end
 		vim.api.nvim_buf_set_extmark(buf, ns, s.start, 0, {
 			right_gravity = true,
-			virt_text = { { s.active and "  [stdin · :w sends]" or "  [unsent input · process ended]", "Comment" } },
+			virt_text = { { hint, "Comment" } },
 			virt_text_pos = "eol",
 		})
 	end
@@ -99,11 +103,18 @@ local function activate(buf)
 	s.old_undolevels = vim.bo[buf].undolevels
 	-- Native undo includes process output. Keep a separate draft-only journal.
 	vim.bo[buf].undolevels = -1
-	vim.api.nvim_create_autocmd({ "InsertEnter", "InsertLeave" }, {
+	-- ModeChanged also catches Ctrl-C, which skips InsertLeave.
+	vim.api.nvim_create_autocmd("ModeChanged", {
 		group = group,
 		buffer = buf,
-		callback = function()
+		callback = function(ev)
+			local inserting = ev.match:match(":i") ~= nil
+			if inserting == (s.inserting or false) then
+				return
+			end
+			s.inserting = inserting
 			s.insert_group = false
+			mark(buf, s)
 		end,
 	})
 	vim.api.nvim_buf_attach(buf, false, {
